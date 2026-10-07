@@ -64,7 +64,7 @@ the `LayoutProps` / `PageProps` types into `.next`, which does not exist
 on a fresh clone or in CI.
 ````
 
-**Environments:** three separate Supabase projects (development, staging, production) and matching Vercel environments. Preview and dev deployments must **never** point to production data.
+**Environments (interim):** Two environments only — local Supabase (`supabase start`, no cloud slot used) for development and testing, and one free-tier cloud project for production. No true cloud staging environment until HLT commits to a paid plan. Preview and dev work must still **never** point to production data. See DEV-01 in Section 15.
 
 **Environment variables** (names only; never commit values):
 
@@ -248,7 +248,7 @@ Do not build these, even if they seem helpful:
 
 ## 13. Backup and recovery (for scripts in `/scripts`)
 
-- Production uses a **paid** Supabase plan (daily backups; PITR add-on if losing up to a day is unacceptable). Free tier is for development only.
+- Production is currently on a **free** Supabase plan pending HLT commitment (see DEV-01 in Section 15). Target: upgrade to a paid plan before go-live (M7) to enable automated daily backups and PITR.
 - Local export: `supabase db dump`, encrypted with `age` (or GPG, AES-256), written to the clinic's external drive, at least weekly (target nightly).
 - Retention: 7 daily, 4 weekly, 12 monthly. Record a checksum and verify integrity after every run. Write the last-success time to `backup_runs`.
 - The encryption key is **never** stored on the backup drive.
@@ -269,4 +269,26 @@ Do not build these, even if they seem helpful:
 
 ---
 
-*Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
+## 15. Deviations and assumptions
+
+These are known, documented departures from the SARD. Each must be re-evaluated at the trigger noted.
+
+| ID | Deviation | Reason | Impact | Upgrade trigger |
+|---|---|---|---|---|
+| DEV-01 | Two Supabase environments instead of three (local + one free-tier cloud project) | Free tier limit; HLT not yet committed to production | No true cloud staging; manual backups only; project may pause after ~1 week of inactivity; no PITR | HLT commits to production use — raise at M5 and M7 |
+
+**DEV-01 detail — Two Supabase projects (free tier interim)**
+
+- **Development and testing:** local Supabase via `supabase start` (Docker). No cloud project slot used. Run all migrations and seeds here first.
+- **Production:** one free-tier Supabase cloud project. Fake data only until NFR-SEC-08 and the go-live gate (M7) are signed off.
+- **Backups on free tier:** no automated downloadable backups. Use manual CLI dumps instead:
+  ```bash
+  supabase db dump --db-url "postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres" -f backup.sql
+  ```
+  Encrypt with `age`, store on external drive, record checksum. Run before every significant migration or change at minimum.
+- **Free tier risks to monitor:** project pauses after ~1 week of inactivity; no PITR; no vendor-side downloadable backup copies.
+- **No real client data** in any environment until the paid plan is in place and the Phase 5 security checklist (NFR-SEC-08) is signed off.
+
+---
+
+*Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Updated Oct 7, 2026 (DEV-01: two-project setup, free tier interim). Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
