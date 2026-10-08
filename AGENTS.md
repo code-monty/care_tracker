@@ -87,7 +87,10 @@ Only variables prefixed `NEXT_PUBLIC_` may reach the browser. Everything else st
 
 ```
 /app
-  /(auth)/login, /mfa            # public: login only, rate limited
+  /(auth)/login, /mfa, /pending   # public: login only, rate limited
+                                  # /pending: signed-in but status != Active
+                                  # (awaiting approval or disabled); no
+                                  # client/case data reachable from here
   /(app)/dashboard
   /(app)/appointments
   /(app)/clients, /clients/[id]
