@@ -180,7 +180,7 @@ Activity-log entries reference the record (`entity_type`, `entity_id`) and **nev
 - **Never** use, create, paste or commit real client data. Use fake data only in dev, tests, seeds, demos and screenshots.
 - **Never** commit secrets, keys, `.env*` files (except `.env.example` with empty values), or backup files.
 - **Never** log sensitive values (names, birthdates, addresses, contacts, notes) or passwords.
-- Login errors are **generic** ("Invalid username or password") and never reveal whether an account exists.
+- Login errors are **generic** ("Invalid email or password") and never reveal whether an account exists.
 - Passwords: minimum length 10. Lock out or back off after 5 failed attempts. Rate-limit login at Vercel and in Supabase.
 - Sessions expire after **10 minutes** idle (configurable): a Supabase session setting plus an app-level idle timer.
 - **MFA (TOTP) is mandatory for Admins**, recommended for Staff.
