@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { signOut } from "@/lib/auth/sign-out";
 
 /**
  * Shown to a signed-in user whose profiles.status is not 'active':
@@ -7,10 +8,6 @@ import { createClient } from "@/lib/supabase/server";
  *                accounts are Admin-created only; a stray sign-up path only
  *                ever creates a Pending account, relabelled "Request access")
  * - 'disabled' — account was deactivated by an Admin (BR-08)
- *
- * Not yet linked from the login flow — PR4 (login-to-DB walking skeleton)
- * wires the redirect here after a successful sign-in, and adds the
- * sign-out Server Action referenced below.
  */
 export default async function PendingApprovalPage() {
   const supabase = await createClient();
@@ -53,9 +50,14 @@ export default async function PendingApprovalPage() {
           Signed in as {profile?.full_name ?? user.email}
         </p>
 
-        {/* TODO(PR4): wire this to a sign-out Server Action once the
-            login flow exists. Left out of this PR so it doesn't link to
-            a route that doesn't exist yet. */}
+        <form action={signOut} className="mt-6">
+          <button
+            type="submit"
+            className="text-sm font-medium text-neutral-700 underline underline-offset-4 hover:text-neutral-900"
+          >
+            Sign out
+          </button>
+        </form>
       </div>
     </main>
   );
