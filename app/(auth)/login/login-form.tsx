@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/browser";
 import { loginSchema } from "@/lib/validation/auth";
 
@@ -11,8 +12,10 @@ export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
+  const forgotDialogRef = useRef<HTMLDialogElement>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,8 +40,8 @@ export function LoginForm() {
       // returns HTTP 429 when a client sends too many auth requests in a
       // short window. This is NOT the same as AGENTS.md Section 8's
       // "lock out after 5 failed attempts" (that's per-account, tracked
-      // in our own schema, and isn't built yet — see PR4 notes below).
-      // This branch only covers Supabase's built-in request-rate limit.
+      // in our own schema, and isn't built yet). This branch only covers
+      // Supabase's built-in request-rate limit.
       if (signInError.status === 429) {
         setError("Too many attempts. Please wait a few minutes and try again.");
       } else {
@@ -54,52 +57,103 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-        />
-      </div>
+    <>
+      <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+          />
+        </div>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
-          Password
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-        />
-      </div>
+        <div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
+              Password
+            </label>
+            <button
+              type="button"
+              onClick={() => forgotDialogRef.current?.showModal()}
+              className="text-sm text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
+            >
+              Forgot password?
+            </button>
+          </div>
+          <div className="relative mt-1">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="w-full rounded-md border border-neutral-300 py-2 pl-3 pr-10 text-sm focus:border-neutral-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500 hover:text-neutral-900"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
+        {error && (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
 
-      <button
-        type="submit"
-        disabled={status === "submitting"}
-        className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        <button
+          type="submit"
+          disabled={status === "submitting"}
+          className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          {status === "submitting" ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+
+      {/* Accounts are Admin-created only (AGENTS.md Section 6), so there is
+          no self-service reset: users are told to contact their Admin.
+          Native <dialog> gives focus trapping and Escape-to-close. */}
+      <dialog
+        ref={forgotDialogRef}
+        aria-labelledby="forgot-password-title"
+        className="m-auto w-full max-w-sm rounded-lg border border-neutral-200 p-6 shadow-lg backdrop:bg-black/40"
       >
-        {status === "submitting" ? "Signing in…" : "Sign in"}
-      </button>
-    </form>
+        <h2 id="forgot-password-title" className="text-lg font-semibold">
+          Forgot password?
+        </h2>
+        <p className="mt-2 text-sm text-neutral-600">
+          Please contact your administrator or head to reset your password.
+        </p>
+        <form method="dialog" className="mt-6 text-right">
+          <button
+            type="submit"
+            autoFocus
+            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
+          >
+            Okay
+          </button>
+        </form>
+      </dialog>
+    </>
   );
 }
