@@ -1,15 +1,13 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { createClient } from "@/lib/supabase/browser";
+import { signIn } from "@/lib/auth/sign-in";
 import { loginSchema } from "@/lib/validation/auth";
 
 type Status = "idle" | "submitting";
 
 export function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,32 +26,16 @@ export function LoginForm() {
     }
 
     setStatus("submitting");
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    });
+    // signIn is a Server Action: it validates again server-side, checks
+    // the AGENTS.md Section 8 lockout, calls Supabase Auth, and on
+    // success calls redirect("/dashboard") itself — so a resolved
+    // result here always means failure.
+    const result = await signIn(parsed.data);
     setStatus("idle");
 
-    if (signInError) {
-      // Supabase Auth applies its own endpoint-level rate limit and
-      // returns HTTP 429 when a client sends too many auth requests in a
-      // short window. This is NOT the same as AGENTS.md Section 8's
-      // "lock out after 5 failed attempts" (that's per-account, tracked
-      // in our own schema, and isn't built yet). This branch only covers
-      // Supabase's built-in request-rate limit.
-      if (signInError.status === 429) {
-        setError("Too many attempts. Please wait a few minutes and try again.");
-      } else {
-        // AGENTS.md Section 8: errors are generic — never reveal whether
-        // an account exists.
-        setError("Invalid email or password.");
-      }
-      return;
+    if (result?.error) {
+      setError(result.error);
     }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (

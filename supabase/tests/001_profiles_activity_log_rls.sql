@@ -5,7 +5,7 @@
 -- Run with: supabase test db
 
 begin;
-select plan(15);
+select plan(17);
 
 -- ---------------------------------------------------------------------------
 -- fixtures: four fake Auth users, never real client data (AGENTS.md Sec. 8)
@@ -23,6 +23,12 @@ values
 update public.profiles set role = 'admin', status = 'active'
   where id = '00000000-0000-0000-0000-000000000001';
 update public.profiles set role = 'staff', status = 'active'
+  where id = '00000000-0000-0000-0000-000000000002';
+-- nonzero on purpose: PR5's "staff cannot clear their own
+-- failed_login_attempts" test needs an actual change to trigger the
+-- guard — setting an already-zero value to zero again is a no-op that
+-- never fires the trigger's IS DISTINCT FROM check.
+update public.profiles set failed_login_attempts = 2
   where id = '00000000-0000-0000-0000-000000000002';
 -- id ...003 stays staff/pending (the default from the trigger)
 update public.profiles set role = 'staff', status = 'active'
@@ -123,8 +129,16 @@ select throws_ok(
   $$ update public.profiles set role = 'admin'
      where id = '00000000-0000-0000-0000-000000000002' $$,
   'P0001',
-  'Only Admins can change role or status',
+  'Only Admins can change role, status, or login-security fields',
   'staff cannot self-promote to admin'
+);
+
+select throws_ok(
+  $$ update public.profiles set failed_login_attempts = 0
+     where id = '00000000-0000-0000-0000-000000000002' $$,
+  'P0001',
+  'Only Admins can change role, status, or login-security fields',
+  'staff cannot clear their own failed_login_attempts (PR5)'
 );
 
 select is(
@@ -147,6 +161,12 @@ select lives_ok(
   $$ update public.profiles set status = 'active'
      where id = '00000000-0000-0000-0000-000000000003' $$,
   'admin can approve a pending user'
+);
+
+select lives_ok(
+  $$ update public.profiles set failed_login_attempts = 0, locked_until = null
+     where id = '00000000-0000-0000-0000-000000000003' $$,
+  'admin can clear a locked-out user''s lockout fields (PR5)'
 );
 
 select lives_ok(
