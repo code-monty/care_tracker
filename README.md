@@ -45,6 +45,7 @@ SUPABASE_SERVICE_ROLE_KEY      # server only — never exposed to the browser, n
 ENFORCE_IP_ALLOWLIST           # default "false" (deferred feature flag, see D-01)
 CLINIC_ALLOWED_IPS             # comma-separated; used only when the flag above is "true"
 QUEUE_TOKEN_SECRET             # signs the rotatable queue-display token
+STEP_UP_SECRET                 # signs the step-up-verified session cookie (DEV-02 email-code verification — see AGENTS.md Section 15)
 ```
 
 Never commit `.env.local` or any file containing real keys. Only `NEXT_PUBLIC_`-prefixed variables may reach the browser.

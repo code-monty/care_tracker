@@ -26,7 +26,7 @@ Use the **latest stable** version of each tool at scaffold time. Verify versions
 | UI | **Tailwind CSS** (shadcn/ui optional) | Teal/blue Figma design; accessible tables, dialogs, forms |
 | Hosting | **Vercel** | Preview deployment per PR; production on a custom domain |
 | Database | **Supabase Postgres** | Migrations via Supabase CLI, kept in Git |
-| Auth | **Supabase Auth + `@supabase/ssr`** | Secure cookie sessions; mandatory MFA (TOTP) for Admins |
+| Auth | **Supabase Auth + `@supabase/ssr`** | Secure cookie sessions; mandatory email-code step-up verification for all users (custom — not Supabase's native TOTP/MFA; see DEV-02) |
 | Access control | **Row Level Security + `profiles.role`** | Default deny on every table |
 | Data access | **`supabase-js` from server code only** | HTTPS API; service-role key in server env vars only |
 | Validation | **Zod** | Shared schemas for forms and server checks |
@@ -58,11 +58,9 @@ pnpm test                    # Vitest unit tests
 pnpm test:e2e                # Playwright end-to-end tests
 supabase test db             # pgTAP RLS / permission tests (release-blocking)
 ```
-````
 `pnpm typecheck` runs `next typegen` first because Next.js generates
 the `LayoutProps` / `PageProps` types into `.next`, which does not exist
 on a fresh clone or in CI.
-````
 
 **Environments (interim):** Two environments only — local Supabase (`supabase start`, no cloud slot used) for development and testing, and one free-tier cloud project for production. No true cloud staging environment until HLT commits to a paid plan. Preview and dev work must still **never** point to production data. See DEV-01 in Section 15.
 
@@ -88,6 +86,9 @@ Only variables prefixed `NEXT_PUBLIC_` may reach the browser. Everything else st
 ```
 /app
   /(auth)/login, /mfa, /pending   # public: login only, rate limited
+                                  # /mfa: email-code step-up verification
+                                  # (DEV-02), shown after password sign-in,
+                                  # before full session access
                                   # /pending: signed-in but status != Active
                                   # (awaiting approval or disabled); no
                                   # client/case data reachable from here
@@ -111,7 +112,7 @@ Only variables prefixed `NEXT_PUBLIC_` may reach the browser. Everything else st
   seed.sql                       # FAKE data only
 /tests                           # Vitest + Playwright
 /scripts                         # encrypted local backup export
-proxy.ts                         # Next.js 16 request proxy (replaces middleware.ts): session check; optional IP allowlist check
+proxy.ts                         # Next.js 16 request proxy (replaces middleware.ts): session check; step-up verification gate; optional IP allowlist check
 next.config.ts                   # includes allowedDevOrigins for LAN dev access
 ```
 
@@ -130,7 +131,7 @@ next.config.ts                   # includes allowedDevOrigins for LAN dev access
 9. **Migrations only.** Never change the schema by hand in the Supabase dashboard; every schema change is a migration committed to Git.
 
 ### Access model (Decision D-01, interim Option B)
-The app is hosted in the cloud and reachable from the internet. Protection is login, mandatory Admin MFA, RLS, rate limiting, lockout and alerts.
+The app is hosted in the cloud and reachable from the internet. Protection is login, mandatory step-up verification (DEV-02), RLS, rate limiting, lockout and alerts.
 The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE_IP_ALLOWLIST` (default off), with the `proxy.ts` check and a matching disabled Vercel firewall rule. Do not remove it and do not enable it without approval.
 
 ---
@@ -139,7 +140,7 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 
 | Capability | Admin | Staff |
 |---|---|---|
-| Log in/out, change own password, enrol own MFA | ✅ | ✅ |
+| Log in/out, change own password, complete step-up verification | ✅ | ✅ |
 | View dashboard, appointments, clients, attorneys | ✅ | ✅ |
 | Add/edit clients, attorneys, notes | ✅ | ✅ |
 | Add/edit/cancel appointments; tasks, deadlines, priority | ✅ | ✅ |
@@ -183,7 +184,7 @@ Activity-log entries reference the record (`entity_type`, `entity_id`) and **nev
 - Login errors are **generic** ("Invalid email or password") and never reveal whether an account exists.
 - Passwords: minimum length 10. Lock out or back off after 5 failed attempts. Rate-limit login at Vercel and in Supabase.
 - Sessions expire after **10 minutes** idle (configurable): a Supabase session setting plus an app-level idle timer.
-- **MFA (TOTP) is mandatory for Admins**, recommended for Staff.
+- **Step-up verification is mandatory for all users (Admin and Staff).** DEV-02: this is email-based, not TOTP — see Section 15. After password sign-in, a 6-digit code is emailed to the user's address on file; the session is not elevated to full access until the code is verified. Codes expire after a short window (target: 10 minutes) and are single-use. Rate-limit verify attempts the same way login attempts are rate-limited (lockout rule, above) to prevent brute-forcing a 6-digit code.
 - Security headers: CSP, HSTS, `noindex`; secure, HttpOnly, SameSite cookies; CSRF-safe Server Actions.
 - Queue display shows **queue numbers or initials only**, via a signed, rotatable, read-only token that cannot be used to log in.
 - Parameterized queries only (through the Supabase client). Encode all output.
@@ -234,7 +235,7 @@ A task is **done** only when:
 | Hardening (P5) | W12-13 | FR-BKP-01 to 07; security checklist; load test; runbook |
 
 **MVP cut line (cut in this order if time runs short):** queue display, calendar view, offsite backup copy, duplicate/conflict warnings, configurable settings, log CSV export.
-**Never cut:** login and roles, MFA and lockout, client/attorney records with search, appointments, deadlines, dashboard, export to text, activity log, encrypted backup and restore drill.
+**Never cut:** login and roles, step-up verification and lockout, client/attorney records with search, appointments, deadlines, dashboard, export to text, activity log, encrypted backup and restore drill.
 
 ---
 
@@ -279,6 +280,7 @@ These are known, documented departures from the SARD. Each must be re-evaluated 
 | ID | Deviation | Reason | Impact | Upgrade trigger |
 |---|---|---|---|---|
 | DEV-01 | Two Supabase environments instead of three (local + one free-tier cloud project) | Free tier limit; HLT not yet committed to production | No true cloud staging; manual backups only; project may pause after ~1 week of inactivity; no PITR | HLT commits to production use — raise at M5 and M7 |
+| DEV-02 | Email-code step-up verification instead of TOTP-based MFA, for all users instead of Admin-only | Team/client preference for inbox-based verification over an authenticator app | Weaker than TOTP if the user's email account is itself compromised (both factors can fall together); not Supabase's native MFA/AAL system, so it's custom-built (token generation, email delivery, verify endpoint, session step-up flag) rather than `supabase.auth.mfa.*` | Re-evaluate if an incident or audit flags email-based 2FA as insufficient for RA 10173 compliance |
 
 **DEV-01 detail — Two Supabase projects (free tier interim)**
 
@@ -292,6 +294,15 @@ These are known, documented departures from the SARD. Each must be re-evaluated 
 - **Free tier risks to monitor:** project pauses after ~1 week of inactivity; no PITR; no vendor-side downloadable backup copies.
 - **No real client data** in any environment until the paid plan is in place and the Phase 5 security checklist (NFR-SEC-08) is signed off.
 
+**DEV-02 detail — Email-code step-up verification**
+
+- Replaces Supabase's built-in TOTP/MFA (which the SARD and the original AGENTS.md draft specified) with a custom second factor: after password sign-in, a 6-digit code is generated server-side and emailed to the user's registered address.
+- Applies to **every** user, not Admin-only — the SARD's "mandatory for Admin, recommended for Staff" is overridden by this deviation per team instruction (Oct 11, 2026).
+- The session is held at an unverified state (a custom flag, not Supabase's AAL/MFA state) until the code is confirmed; `proxy.ts` and `requireActiveUser()` (or an equivalent helper) must check this flag in addition to `profiles.status`.
+- Local dev: codes are sent through Supabase's local SMTP testing inbox (`supabase/config.toml` `[local_smtp]`, already enabled, port 54324) — no real email sending needed in dev.
+- Production: requires a real SMTP/email provider configured in `[auth.email.smtp]` of the cloud project (currently unset) — flagged as a setup dependency for the PR that implements this.
+- `supabase/config.toml`'s `[auth.mfa.totp]` block stays disabled (`enroll_enabled = false`, `verify_enabled = false`); it is not used by this flow.
+
 ---
 
-*Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Updated Oct 7, 2026 (DEV-01: two-project setup, free tier interim). Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
+*Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Updated Oct 7, 2026 (DEV-01: two-project setup, free tier interim). Updated Oct 11, 2026 (DEV-02: email-code step-up verification replaces TOTP MFA, applies to all users). Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
