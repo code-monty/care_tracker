@@ -6,10 +6,12 @@
 // requireActiveUser() is the second, server-side check.
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { STEP_UP_COOKIE_NAME, verifyStepUpCookie } from "@/lib/auth/step-up";
 
 // Routes reachable without an Active session. /pending is public in the
 // sense that a signed-in-but-not-Active user must be able to reach it
-// without being redirected back to itself in a loop.
+// without being redirected back to itself in a loop. /mfa is public in the
+// same sense for a signed-in-but-not-step-up-verified user (DEV-02).
 const PUBLIC_PATHS = ["/login", "/mfa", "/pending"];
 
 export async function proxy(request: NextRequest) {
@@ -62,6 +64,18 @@ export async function proxy(request: NextRequest) {
     if (!profile || profile.status !== "active") {
       const url = request.nextUrl.clone();
       url.pathname = "/pending";
+      return NextResponse.redirect(url);
+    }
+
+    // DEV-02 (AGENTS.md Section 8/15): every user — Admin and Staff — must
+    // complete email-code step-up verification after password sign-in
+    // before reaching any protected route. This checks the signed cookie
+    // lib/auth/verify-step-up.ts sets on a correct code; lib/auth/session.ts's
+    // requireActiveUser() repeats this check server-side (Rule 2 above).
+    const stepUpCookie = request.cookies.get(STEP_UP_COOKIE_NAME)?.value;
+    if (!verifyStepUpCookie(stepUpCookie, user.id)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/mfa";
       return NextResponse.redirect(url);
     }
   }
