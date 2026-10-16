@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <p className="text-xl font-bold tracking-tight text-teal-800">CareTracker</p>
           <p className="mt-1 text-xs text-slate-500">HLT Psychological Services</p>
         </div>
-        <AppNavigation variant="sidebar" />
+        <AppNavigation variant="sidebar" isAdmin={profile.role === "admin"} />
       </aside>
 
       <div className="min-w-0 flex-1">
@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </button>
             </form>
           </div>
-          <AppNavigation variant="mobile" />
+          <AppNavigation variant="mobile" isAdmin={profile.role === "admin"} />
         </header>
         <div className="mx-auto max-w-7xl">{children}</div>
       </div>

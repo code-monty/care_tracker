@@ -12,7 +12,7 @@ import { STEP_UP_COOKIE_NAME, verifyStepUpCookie } from "@/lib/auth/step-up";
 // sense that a signed-in-but-not-Active user must be able to reach it
 // without being redirected back to itself in a loop. /mfa is public in the
 // same sense for a signed-in-but-not-step-up-verified user (DEV-02).
-const PUBLIC_PATHS = ["/login", "/mfa", "/pending"];
+const PUBLIC_PATHS = ["/login", "/mfa", "/pending", "/privacy-policy", "/terms-of-service", "/auth"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

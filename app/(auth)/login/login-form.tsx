@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { EyeOff } from "lucide-react";
 import { signIn } from "@/lib/auth/sign-in";
 import { loginSchema } from "@/lib/validation/auth";
+import styles from "./login.module.css";
 
 type Status = "idle" | "submitting";
 
@@ -26,114 +28,65 @@ export function LoginForm() {
     }
 
     setStatus("submitting");
-    // signIn is a Server Action: it validates again server-side, checks
-    // the AGENTS.md Section 8 lockout, calls Supabase Auth, and on
-    // success calls redirect("/dashboard") itself — so a resolved
-    // result here always means failure.
+    // The Server Action redirects on success; a returned result is an error.
     const result = await signIn(parsed.data);
     setStatus("idle");
-
-    if (result?.error) {
-      setError(result.error);
-    }
+    if (result?.error) setError(result.error);
   }
 
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
-            Email
+      <form onSubmit={handleSubmit} noValidate className={styles.form}>
+        <div className={styles.field}>
+          <label htmlFor="email" className={styles.label}>Email address</label>
+          <div className={styles.inputWrap}>
+            <Image src="/auth/email.svg" alt="" width={16} height={16} className={styles.inputIcon} />
+            <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="example@domain.com" className={styles.input} aria-invalid={Boolean(error)} />
+          </div>
+        </div>
+
+        <div className={styles.field}>
+          <div className={styles.labelRow}>
+            <label htmlFor="password" className={styles.label}>Password</label>
+            <button type="button" onClick={() => forgotDialogRef.current?.showModal()} className={styles.forgotButton}>Forgot Password?</button>
+          </div>
+          <div className={styles.inputWrap}>
+            <Image src="/auth/password.svg" alt="" width={16} height={16} className={styles.inputIcon} />
+            <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${styles.input} ${styles.passwordInput}`} aria-invalid={Boolean(error)} />
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} className={styles.visibilityButton}>
+              {showPassword ? <EyeOff size={17} aria-hidden="true" /> : <Image src="/auth/eye.svg" alt="" width={16} height={16} />}
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.rememberRow}>
+          <label className={styles.rememberLabel} title="Coming soon">
+            <input type="checkbox" disabled aria-describedby="remember-note" />
+            <span>Remember this workstation for 30 days</span>
           </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
-          />
+          <span id="remember-note" className={styles.comingSoon}>Coming soon</span>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between">
-            <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
-              Password
-            </label>
-            <button
-              type="button"
-              onClick={() => forgotDialogRef.current?.showModal()}
-              className="text-sm text-neutral-600 underline underline-offset-4 hover:text-neutral-900"
-            >
-              Forgot password?
-            </button>
-          </div>
-          <div className="relative mt-1">
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-md border border-neutral-300 py-2 pl-3 pr-10 text-sm focus:border-neutral-500 focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((visible) => !visible)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500 hover:text-neutral-900"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-        </div>
+        {error && <p role="alert" className={styles.error}>{error}</p>}
 
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={status === "submitting"}
-          className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {status === "submitting" ? "Signing in…" : "Sign in"}
+        <button type="submit" disabled={status === "submitting"} className={styles.submitButton}>
+          {status === "submitting" ? "Signing in…" : "Sign In to Portal"}
+          {status !== "submitting" && <Image src="/auth/arrow.svg" alt="" width={16} height={16} />}
         </button>
       </form>
 
-      {/* Accounts are Admin-created only (AGENTS.md Section 6), so there is
-          no self-service reset: users are told to contact their Admin.
-          Native <dialog> gives focus trapping and Escape-to-close. */}
-      <dialog
-        ref={forgotDialogRef}
-        aria-labelledby="forgot-password-title"
-        className="m-auto w-full max-w-sm rounded-lg border border-neutral-200 p-6 shadow-lg backdrop:bg-black/40"
-      >
-        <h2 id="forgot-password-title" className="text-lg font-semibold">
-          Forgot password?
-        </h2>
-        <p className="mt-2 text-sm text-neutral-600">
-          Please contact your administrator or head to reset your password.
-        </p>
-        <form method="dialog" className="mt-6 text-right">
-          <button
-            type="submit"
-            autoFocus
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Okay
-          </button>
+      <div className={styles.divider}><span>OR</span></div>
+      <button type="button" disabled className={styles.googleButton} aria-describedby="google-note">
+        <Image src="/auth/google.svg" alt="" width={16} height={16} />
+        Continue with Google
+      </button>
+      <p id="google-note" className={styles.googleNote}>Google sign-in coming soon</p>
+
+      <dialog ref={forgotDialogRef} aria-labelledby="forgot-password-title" className={styles.dialog}>
+        <h2 id="forgot-password-title">Forgot password?</h2>
+        <p>Please contact your administrator or head to reset your password.</p>
+        <form method="dialog">
+          <button type="submit" autoFocus className={styles.dialogButton}>Okay</button>
         </form>
       </dialog>
     </>

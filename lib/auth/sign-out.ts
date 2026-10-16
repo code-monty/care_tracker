@@ -1,7 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { STEP_UP_COOKIE_NAME } from "@/lib/auth/step-up";
 
 /**
  * AGENTS.md Section 9: mutations go through Server Actions that verify
@@ -12,5 +14,6 @@ import { createClient } from "@/lib/supabase/server";
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  (await cookies()).delete(STEP_UP_COOKIE_NAME);
   redirect("/login");
 }

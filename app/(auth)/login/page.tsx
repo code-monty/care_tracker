@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
-import { LoginForm } from "./login-form";
+import packageInfo from "../../../package.json";
+import { LoginExperience } from "./login-experience";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-login-body" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-login-heading" });
 
 export default async function LoginPage() {
   const supabase = await createClient();
@@ -16,14 +21,5 @@ export default async function LoginPage() {
     redirect("/dashboard");
   }
 
-  return (
-    <main className="flex min-h-full flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-center text-xl font-semibold">
-          Sign in to CareTracker
-        </h1>
-        <LoginForm />
-      </div>
-    </main>
-  );
+  return <div className={`${inter.variable} ${jakarta.variable}`}><LoginExperience version={packageInfo.version} /></div>;
 }
