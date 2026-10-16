@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
-import { StepUpForm } from "./step-up-form";
+import packageInfo from "../../../package.json";
+import { MfaExperience } from "./mfa-experience";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-login-body" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-login-heading" });
 
 /**
  * DEV-02 (AGENTS.md Section 8/15): shown after password sign-in, before
@@ -27,16 +32,6 @@ export default async function MfaPage() {
     redirect("/login");
   }
 
-  return (
-    <main className="flex min-h-full flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-center text-xl font-semibold">Check your email</h1>
-        <p className="mt-2 text-center text-sm text-neutral-600">
-          Enter the 6-digit code we sent to {user.email} to finish signing in.
-        </p>
-        <StepUpForm />
-      </div>
-    </main>
-  );
+  return <div className={`${inter.variable} ${jakarta.variable}`}><MfaExperience email={user.email ?? "your email address"} version={packageInfo.version} /></div>;
 }
 

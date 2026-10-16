@@ -1,0 +1,30 @@
+.intro { overflow-wrap: anywhere; }
+.email { color: var(--text); font-weight: 700; }
+.form { gap: 18px; }
+.codeInput {
+  height: 56px;
+  padding: 0 14px;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: .35em;
+  font-variant-numeric: tabular-nums;
+}
+.status { margin: 0; color: var(--muted); font-size: 13px; line-height: 19px; }
+.resendButton {
+  align-self: center;
+  min-height: 44px;
+  border: 0;
+  padding: 0 12px;
+  color: var(--link);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.resendButton:hover:not(:disabled) { text-decoration: underline; }
+.resendButton:disabled { color: var(--muted); cursor: not-allowed; }
+
+@media (max-width: 380px) {
+  .codeInput { letter-spacing: .25em; }
+}

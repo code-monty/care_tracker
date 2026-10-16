@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { verifyStepUp } from "@/lib/auth/verify-step-up";
 import { requestStepUp } from "@/lib/auth/request-step-up";
 import { stepUpSchema } from "@/lib/validation/step-up";
+import styles from "../login/login.module.css";
+import mfaStyles from "./mfa.module.css";
 
 type Status = "idle" | "submitting";
 
@@ -88,9 +90,9 @@ export function StepUpForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-      <div>
-        <label htmlFor="code" className="block text-sm font-medium text-neutral-700">
+    <form onSubmit={handleSubmit} noValidate className={`${styles.form} ${mfaStyles.form}`}>
+      <div className={styles.field}>
+        <label htmlFor="code" className={styles.label}>
           Verification code
         </label>
         <input
@@ -103,14 +105,16 @@ export function StepUpForm() {
           required
           value={code}
           onChange={(event) => setCode(event.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-[0.5em] focus:border-neutral-500 focus:outline-none"
+          className={`${styles.input} ${mfaStyles.codeInput}`}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "mfa-error" : undefined}
         />
       </div>
 
-      {sending && <p className="text-sm text-neutral-500">Sending your code…</p>}
+      {sending && <p role="status" className={mfaStyles.status}>Sending your code…</p>}
 
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p id="mfa-error" role="alert" className={styles.error}>
           {error}
         </p>
       )}
@@ -118,16 +122,17 @@ export function StepUpForm() {
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className={styles.submitButton}
+        aria-label="Verify"
       >
-        {status === "submitting" ? "Verifying…" : "Verify"}
+        {status === "submitting" ? "Verifying…" : "Verify code"}
       </button>
 
       <button
         type="button"
         onClick={handleResend}
         disabled={resendCooldown > 0}
-        className="w-full text-center text-sm text-neutral-600 underline underline-offset-4 hover:text-neutral-900 disabled:cursor-not-allowed disabled:text-neutral-400 disabled:no-underline"
+        className={mfaStyles.resendButton}
       >
         {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
       </button>
