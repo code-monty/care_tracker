@@ -10,7 +10,7 @@ import styles from "./login.module.css";
 type Theme = "dark" | "light";
 const THEME_KEY = "caretracker-login-theme";
 
-export function LoginExperience({ version }: { version: string }) {
+export function LoginExperience({ version, googleError }: { version: string; googleError: boolean }) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function LoginExperience({ version }: { version: string }) {
           <div className={styles.formInner}>
             <h1 className={styles.heading} aria-label="Sign in to CareTracker">Welcome back</h1>
             <p className={styles.intro}>Sign in with your verified email address to access your monitoring dashboard.</p>
-            <LoginForm />
+            <LoginForm googleError={googleError} />
           </div>
         </div>
 

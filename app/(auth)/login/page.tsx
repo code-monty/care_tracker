@@ -7,7 +7,7 @@ import { LoginExperience } from "./login-experience";
 const inter = Inter({ subsets: ["latin"], variable: "--font-login-body" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-login-heading" });
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const supabase = await createClient();
 
   const {
@@ -21,5 +21,6 @@ export default async function LoginPage() {
     redirect("/dashboard");
   }
 
-  return <div className={`${inter.variable} ${jakarta.variable}`}><LoginExperience version={packageInfo.version} /></div>;
+  const { error } = await searchParams;
+  return <div className={`${inter.variable} ${jakarta.variable}`}><LoginExperience version={packageInfo.version} googleError={error === "google"} /></div>;
 }

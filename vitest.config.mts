@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts", "tests/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "app/**/*.test.ts", "tests/**/*.test.ts"],
     exclude: ["tests/e2e/**", "node_modules/**"],
     // No unit tests exist yet; do not fail CI because of that.
     passWithNoTests: true,

@@ -22,7 +22,7 @@ blob-report/
 # environment files (keep .env.example only)
 .env
 .env.*
-!.env.example
+.env.example
 
 # secrets and keys
 *.pem
@@ -64,3 +64,6 @@ Thumbs.db
 !.vscode/extensions.json
 CareTracker_SARD_v1.3_Changes_Summary.md
 CareTracker_System_Architecture_and_Requirements_v1.2 (1) (1).md
+.env.example
+.env.example
+.env.example

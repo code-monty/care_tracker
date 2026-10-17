@@ -90,7 +90,9 @@
 .submitButton:disabled { opacity: .62; cursor: wait; }
 .divider { display: flex; align-items: center; gap: 14px; margin: 23px 0; color: var(--muted); font-size: 12px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--fine-line); }
-.googleButton { display: flex; align-items: center; justify-content: center; gap: 11px; width: 100%; min-height: 46px; border: 1px solid #cbd5e1; border-radius: 8px; color: #1e293b; background: #fff; font-size: 14px; font-weight: 700; opacity: .72; cursor: not-allowed; }
+.googleButton { display: flex; align-items: center; justify-content: center; gap: 11px; width: 100%; min-height: 46px; border: 1px solid #cbd5e1; border-radius: 8px; color: #1e293b; background: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+.googleButton:hover:not(:disabled) { background: #f8fafc; }
+.googleButton:disabled { opacity: .62; cursor: wait; }
 .googleMark { font-size: 16px; font-weight: 800; color: #4285f4; }
 .googleNote { margin: 8px 0 0; color: var(--muted); text-align: center; font-size: 11px; }
 .footer { flex: none; border-top: 1px solid var(--fine-line); padding-top: 16px; text-align: center; color: var(--muted); font-size: 12px; }

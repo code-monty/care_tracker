@@ -5,16 +5,18 @@ import Image from "next/image";
 import { EyeOff } from "lucide-react";
 import { signIn } from "@/lib/auth/sign-in";
 import { loginSchema } from "@/lib/validation/auth";
+import { createClient } from "@/lib/supabase/browser";
 import styles from "./login.module.css";
 
 type Status = "idle" | "submitting";
 
-export function LoginForm() {
+export function LoginForm({ googleError }: { googleError: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(googleError ? "Unable to sign in with Google. Contact your administrator if you need access." : null);
   const [status, setStatus] = useState<Status>("idle");
+  const [googlePending, setGooglePending] = useState(false);
   const forgotDialogRef = useRef<HTMLDialogElement>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -32,6 +34,22 @@ export function LoginForm() {
     const result = await signIn(parsed.data);
     setStatus("idle");
     if (result?.error) setError(result.error);
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    setGooglePending(true);
+    const { error: oauthError } = await createClient().auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { prompt: "select_account" },
+      },
+    });
+    if (oauthError) {
+      setGooglePending(false);
+      setError("Unable to sign in with Google. Please try again.");
+    }
   }
 
   return (
@@ -76,11 +94,11 @@ export function LoginForm() {
       </form>
 
       <div className={styles.divider}><span>OR</span></div>
-      <button type="button" disabled className={styles.googleButton} aria-describedby="google-note">
+      <button type="button" onClick={handleGoogleSignIn} disabled={googlePending} className={styles.googleButton} aria-describedby="google-note">
         <Image src="/auth/google.svg" alt="" width={16} height={16} />
-        Continue with Google
+        {googlePending ? "Connecting to Google…" : "Continue with Google"}
       </button>
-      <p id="google-note" className={styles.googleNote}>Google sign-in coming soon</p>
+      <p id="google-note" className={styles.googleNote}>Only administrator-created, active accounts can sign in with Google.</p>
 
       <dialog ref={forgotDialogRef} aria-labelledby="forgot-password-title" className={styles.dialog}>
         <h2 id="forgot-password-title">Forgot password?</h2>
