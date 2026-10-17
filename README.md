@@ -50,6 +50,14 @@ STEP_UP_SECRET                 # signs the step-up-verified session cookie (DEV-
 
 Never commit `.env.local` or any file containing real keys. Only `NEXT_PUBLIC_`-prefixed variables may reach the browser.
 
+## Google sign-in setup
+
+Google sign-in is available only for existing, active Admin-created users. In the Supabase Dashboard, disable **Allow new users to sign up** for the cloud project, then enable the Google provider. Create a Google OAuth web client in Google Cloud and enter its client ID and secret into the Supabase Google provider settings. Add the Supabase Auth callback URL shown there to Google's authorized redirect URIs. Add `https://<your-app-host>/auth/callback` (and `http://localhost:3000/auth/callback` for local testing) to Supabase Auth redirect URLs; set the site URL to the matching app origin. Keep the Google secret only in Supabase settings.
+
+For local Supabase, set `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` outside source control, set `[auth.external.google].enabled = true` in `supabase/config.toml`, and restart the local stack. The local project's `auth.enable_signup = false` prevents new OAuth identities; the callback also verifies the existing profile's ID, email, and active status before starting email-code verification. If Google returns an error, the login page displays a generic message. SMTP must be configured for the subsequent email-code step-up.
+
+Google sign-in requires a real Google OAuth application and provider configuration; automated local checks cannot complete Google's hosted consent flow without those credentials.
+
 ## Common commands
 
 ```bash
