@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loginSchema } from "@/lib/validation/auth";
 import { checkLockout, recordFailedAttempt, resetLockout } from "@/lib/rules/lockout";
+import { cookies } from "next/headers";
+import { REMEMBER_WORKSTATION_COOKIE_NAME, verifyRememberWorkstationCookie } from "@/lib/auth/remember-workstation";
+import { STEP_UP_COOKIE_NAME, STEP_UP_MAX_AGE_MS, signStepUpCookie } from "@/lib/auth/step-up";
+import { GOOGLE_REMEMBER_INTENT_COOKIE_NAME } from "@/lib/auth/google-remember-intent";
 
 const GENERIC_ERROR = "Invalid email or password.";
 const LOCKOUT_ERROR = "Too many failed attempts. Please try again in 15 minutes.";
@@ -54,7 +58,7 @@ export async function signIn(input: { email: string; password: string }) {
   }
 
   const supabase = await createClient();
-  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
   if (signInError) {
     if (profile) {
@@ -86,6 +90,17 @@ export async function signIn(input: { email: string; password: string }) {
         locked_until: reset.lockedUntil,
       })
       .eq("id", profile.id);
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
+  const userId = signInData.user?.id;
+  if (userId && verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, userId)) {
+    cookieStore.set(STEP_UP_COOKIE_NAME, signStepUpCookie(userId), {
+      httpOnly: true, secure: true, sameSite: "lax", maxAge: STEP_UP_MAX_AGE_MS / 1000, path: "/",
+    });
+  } else {
+    cookieStore.delete(STEP_UP_COOKIE_NAME);
   }
 
   redirect("/dashboard");

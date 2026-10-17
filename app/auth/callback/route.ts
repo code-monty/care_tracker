@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { STEP_UP_COOKIE_NAME } from "@/lib/auth/step-up";
 import { isApprovedGoogleUser, isDisposableGoogleSignup } from "@/lib/auth/google-eligibility";
+import { REMEMBER_WORKSTATION_COOKIE_NAME, verifyRememberWorkstationCookie } from "@/lib/auth/remember-workstation";
+import { STEP_UP_MAX_AGE_MS, signStepUpCookie } from "@/lib/auth/step-up";
+import { GOOGLE_REMEMBER_INTENT_COOKIE_NAME, GOOGLE_REMEMBER_INTENT_MAX_AGE_MS, signGoogleRememberIntent } from "@/lib/auth/google-remember-intent";
 
 export async function GET(request: NextRequest) {
   const loginUrl = new URL("/login?error=google", request.url);
@@ -28,7 +31,18 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!lookupError && isApprovedGoogleUser(user, profile)) {
-    (await cookies()).delete(STEP_UP_COOKIE_NAME);
+    const cookieStore = await cookies();
+    cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
+    if (verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, user.id)) {
+      cookieStore.set(STEP_UP_COOKIE_NAME, signStepUpCookie(user.id), {
+        httpOnly: true, secure: true, sameSite: "lax", maxAge: STEP_UP_MAX_AGE_MS / 1000, path: "/",
+      });
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    cookieStore.delete(STEP_UP_COOKIE_NAME);
+    cookieStore.set(GOOGLE_REMEMBER_INTENT_COOKIE_NAME, signGoogleRememberIntent(user.id), {
+      httpOnly: true, secure: true, sameSite: "lax", maxAge: GOOGLE_REMEMBER_INTENT_MAX_AGE_MS / 1000, path: "/",
+    });
     return NextResponse.redirect(new URL("/mfa", request.url));
   }
 
@@ -42,5 +56,6 @@ export async function GET(request: NextRequest) {
 
   await supabase.auth.signOut();
   (await cookies()).delete(STEP_UP_COOKIE_NAME);
+  (await cookies()).delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
   return NextResponse.redirect(loginUrl);
 }

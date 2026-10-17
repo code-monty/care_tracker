@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { verifyStepUp } from "@/lib/auth/verify-step-up";
 import { requestStepUp } from "@/lib/auth/request-step-up";
 import { stepUpSchema } from "@/lib/validation/step-up";
+import { REMEMBER_INTENT_KEY } from "@/lib/auth/remember-intent";
 import styles from "../login/login.module.css";
 import mfaStyles from "./mfa.module.css";
 
@@ -74,7 +75,7 @@ export function StepUpForm() {
     // verifyStepUp redirects to /dashboard itself on success, so a
     // resolved result here always means failure (same pattern as
     // app/(auth)/login/login-form.tsx's signIn call).
-    const result = await verifyStepUp(parsed.data);
+    const result = await verifyStepUp({ ...parsed.data, rememberWorkstation: sessionStorage.getItem(REMEMBER_INTENT_KEY) === "1" });
     setStatus("idle");
 
     if (result?.error) {

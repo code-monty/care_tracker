@@ -9,6 +9,8 @@ import {
   STEP_UP_MAX_AGE_MS,
   signStepUpCookie,
 } from "@/lib/auth/step-up";
+import { REMEMBER_WORKSTATION_COOKIE_NAME, REMEMBER_WORKSTATION_MAX_AGE_MS, signRememberWorkstationCookie } from "@/lib/auth/remember-workstation";
+import { GOOGLE_REMEMBER_INTENT_COOKIE_NAME, verifyGoogleRememberIntent } from "@/lib/auth/google-remember-intent";
 
 const GENERIC_ERROR = "Invalid or expired code.";
 
@@ -20,7 +22,7 @@ const GENERIC_ERROR = "Invalid or expired code.";
  * limit reached) — the same "never reveal why" philosophy AGENTS.md
  * Section 8 applies to login errors applies here too.
  */
-export async function verifyStepUp(input: { code: string }): Promise<{ error?: string }> {
+export async function verifyStepUp(input: { code: string; rememberWorkstation?: boolean }): Promise<{ error?: string }> {
   const parsed = stepUpSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? GENERIC_ERROR };
@@ -45,6 +47,7 @@ export async function verifyStepUp(input: { code: string }): Promise<{ error?: s
   }
 
   const cookieStore = await cookies();
+  const googleRememberIntent = cookieStore.get(GOOGLE_REMEMBER_INTENT_COOKIE_NAME)?.value;
   cookieStore.set(STEP_UP_COOKIE_NAME, signStepUpCookie(user.id), {
     httpOnly: true,
     secure: true,
@@ -55,6 +58,18 @@ export async function verifyStepUp(input: { code: string }): Promise<{ error?: s
     maxAge: STEP_UP_MAX_AGE_MS / 1000,
     path: "/",
   });
+
+  if (input.rememberWorkstation === true || verifyGoogleRememberIntent(googleRememberIntent, user.id)) {
+    const existing = cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value;
+    cookieStore.set(REMEMBER_WORKSTATION_COOKIE_NAME, signRememberWorkstationCookie(user.id, existing), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: REMEMBER_WORKSTATION_MAX_AGE_MS / 1000,
+      path: "/",
+    });
+  }
+  cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
 
   redirect("/dashboard");
 }

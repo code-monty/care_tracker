@@ -6,6 +6,7 @@ import { EyeOff } from "lucide-react";
 import { signIn } from "@/lib/auth/sign-in";
 import { loginSchema } from "@/lib/validation/auth";
 import { createClient } from "@/lib/supabase/browser";
+import { REMEMBER_INTENT_KEY } from "@/lib/auth/remember-intent";
 import styles from "./login.module.css";
 
 type Status = "idle" | "submitting";
@@ -17,6 +18,7 @@ export function LoginForm({ googleError }: { googleError: boolean }) {
   const [error, setError] = useState<string | null>(googleError ? "Unable to sign in with Google. Contact your administrator if you need access." : null);
   const [status, setStatus] = useState<Status>("idle");
   const [googlePending, setGooglePending] = useState(false);
+  const [rememberWorkstation, setRememberWorkstation] = useState(false);
   const forgotDialogRef = useRef<HTMLDialogElement>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -30,6 +32,7 @@ export function LoginForm({ googleError }: { googleError: boolean }) {
     }
 
     setStatus("submitting");
+    sessionStorage.setItem(REMEMBER_INTENT_KEY, rememberWorkstation ? "1" : "0");
     // The Server Action redirects on success; a returned result is an error.
     const result = await signIn(parsed.data);
     setStatus("idle");
@@ -39,6 +42,7 @@ export function LoginForm({ googleError }: { googleError: boolean }) {
   async function handleGoogleSignIn() {
     setError(null);
     setGooglePending(true);
+    sessionStorage.setItem(REMEMBER_INTENT_KEY, rememberWorkstation ? "1" : "0");
     const { error: oauthError } = await createClient().auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -78,11 +82,10 @@ export function LoginForm({ googleError }: { googleError: boolean }) {
         </div>
 
         <div className={styles.rememberRow}>
-          <label className={styles.rememberLabel} title="Coming soon">
-            <input type="checkbox" disabled aria-describedby="remember-note" />
-            <span>Remember this workstation for 30 days</span>
+          <label className={styles.rememberLabel}>
+            <input type="checkbox" checked={rememberWorkstation} onChange={(event) => setRememberWorkstation(event.target.checked)} />
+            <span>Remember this workstation for 1 day</span>
           </label>
-          <span id="remember-note" className={styles.comingSoon}>Coming soon</span>
         </div>
 
         {error && <p role="alert" className={styles.error}>{error}</p>}
@@ -98,7 +101,7 @@ export function LoginForm({ googleError }: { googleError: boolean }) {
         <Image src="/auth/google.svg" alt="" width={16} height={16} />
         {googlePending ? "Connecting to Google…" : "Continue with Google"}
       </button>
-      <p id="google-note" className={styles.googleNote}>Only administrator-created, active accounts can sign in with Google.</p>
+      <p id="google-note" className={styles.googleNote}>Only administrator-created, active accounts can sign in with Google. After email-code verification, this browser remembers your Google account for 1 day.</p>
 
       <dialog ref={forgotDialogRef} aria-labelledby="forgot-password-title" className={styles.dialog}>
         <h2 id="forgot-password-title">Forgot password?</h2>
