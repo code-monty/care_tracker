@@ -58,6 +58,12 @@ For local Supabase, set `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_
 
 Google sign-in requires a real Google OAuth application and provider configuration; automated local checks cannot complete Google's hosted consent flow without those credentials.
 
+## Remember this workstation
+
+On either sign-in method, selecting **Remember this workstation for 1 day** and then successfully entering the email code stores a signed, HttpOnly cookie in that browser. Each remembered account has its own 24-hour expiry, so switching between accounts remembered on the same browser does not replace the earlier account's status. A successful password or Google sign-in for a remembered active user can skip the email code. Sign-out ends the current session but keeps the workstation remembered until its original expiry. An account that has not been remembered, or one with an invalid or expired entry, must verify by email. The remembered cookie does not itself sign anyone in; protected access still uses the separate 10-minute step-up cookie. The documented 10-minute idle timer is not yet fully implemented.
+
+Google sign-in automatically remembers that approved account for 24 hours after its first successful email-code verification, even if the checkbox was not selected. Password sign-in still requires the checkbox to issue a new remembered entry. A remembered account continues to require its normal password or Google sign-in before access.
+
 ## Common commands
 
 ```bash
