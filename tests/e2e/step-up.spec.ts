@@ -49,9 +49,9 @@ async function login(page: Page) {
   // "Forgot password?" dialog both contain the substring "password", so a
   // loose getByLabel("Password") match resolves to three elements (the
   // real input plus both of those) and throws a strict-mode violation.
-  await page.getByLabel("Email", { exact: true }).fill(TEST_EMAIL);
+  await page.getByLabel("Email address", { exact: true }).fill(TEST_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Sign In to Portal" }).click();
 }
 
 test.describe("DEV-02 step-up verification", () => {
@@ -71,7 +71,7 @@ test.describe("DEV-02 step-up verification", () => {
   test("full flow: login -> /mfa -> correct code -> /dashboard", async ({ page, request }) => {
     await login(page);
     await expect(page).toHaveURL(/\/mfa$/);
-    await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Verify your identity" })).toBeVisible();
 
     const code = await latestCodeFor(request, TEST_EMAIL);
 

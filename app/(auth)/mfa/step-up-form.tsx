@@ -126,7 +126,7 @@ export function StepUpForm() {
         className={styles.submitButton}
         aria-label="Verify"
       >
-        {status === "submitting" ? "Verifying…" : "Verify code"}
+        {status === "submitting" ? <><span className={styles.buttonSpinner} aria-hidden="true" />Verifying…</> : "Verify code"}
       </button>
 
       <button
