@@ -1,0 +1,65 @@
+.shell {
+  --background: #0a0f1d;
+  --surface: #0f172a;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --line: #334155;
+  --brand: #6ee7b7;
+  --hover: #1e293b;
+  --active: #064e3b;
+  --active-text: #ecfdf5;
+  --badge: #1e293b;
+  display: flex;
+  min-height: 100dvh;
+  color: var(--text);
+  background: var(--background);
+}
+
+.shell[data-theme="light"] {
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --line: #cbd5e1;
+  --brand: #115e59;
+  --hover: #f1f5f9;
+  --active: #ccfbf1;
+  --active-text: #134e4a;
+  --badge: #f1f5f9;
+}
+
+.sidebar {
+  display: none;
+  flex: none;
+  width: 16rem;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.identity { margin: 0 0 2.5rem; padding: 0 .75rem; }
+.brand { color: var(--brand); font-size: 1.25rem; font-weight: 700; letter-spacing: -.025em; }
+.organization { margin-top: .25rem; color: var(--muted); font-size: .75rem; }
+.workspace { min-width: 0; flex: 1; }
+.header { padding: 1rem 1rem 0; border-bottom: 1px solid var(--line); background: var(--surface); }
+.headerInner { display: flex; max-width: 80rem; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 auto; }
+.greeting { min-width: 0; color: var(--muted); font-size: .875rem; }
+.greeting p:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mobileBrand { color: var(--brand); font-weight: 600; }
+.actions { display: flex; flex: none; align-items: center; gap: .75rem; }
+.signOut { padding: .5rem .75rem; border: 1px solid var(--line); border-radius: .375rem; color: var(--text); background: var(--surface); font-size: .875rem; font-weight: 500; cursor: pointer; }
+.signOut:hover { background: var(--hover); }
+.signOut:focus-visible, .navLink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.content { max-width: 80rem; margin: 0 auto; }
+.mobileNav { display: flex; gap: .25rem; overflow-x: auto; margin-top: 1rem; }
+.sidebarNav { display: grid; gap: .25rem; }
+.navLink { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem; border-radius: .375rem; color: var(--muted); font-size: .875rem; font-weight: 500; white-space: nowrap; }
+.navLink:hover { color: var(--text); background: var(--hover); }
+.navLink[aria-current="page"] { color: var(--active-text); background: var(--active); }
+
+@media (min-width: 640px) { .header { padding-right: 1.5rem; padding-left: 1.5rem; } }
+@media (min-width: 1024px) {
+  .sidebar { display: block; }
+  .mobileBrand, .mobileNav { display: none; }
+  .header { padding-bottom: 1rem; }
+}
