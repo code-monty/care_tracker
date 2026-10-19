@@ -1,39 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Moon } from "lucide-react";
+import { AuthThemeToggle, useAuthTheme } from "../auth-theme";
 import { LoginForm } from "./login-form";
 import styles from "./login.module.css";
 
-type Theme = "dark" | "light";
-const THEME_KEY = "caretracker-login-theme";
-
 export function LoginExperience({ version, googleError }: { version: string; googleError: boolean }) {
-  const [theme, setTheme] = useState<Theme>("dark");
-
-  useEffect(() => {
-    let frame: number | undefined;
-    try {
-      if (window.localStorage.getItem(THEME_KEY) === "light") {
-        frame = window.requestAnimationFrame(() => setTheme("light"));
-      }
-    } catch {
-      // The toggle still works when storage is unavailable.
-    }
-    return () => { if (frame !== undefined) window.cancelAnimationFrame(frame); };
-  }, []);
-
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    try {
-      window.localStorage.setItem(THEME_KEY, next);
-    } catch {
-      // Keep the selected theme for this visit.
-    }
-  }
+  const { theme, toggleTheme } = useAuthTheme();
 
   return (
     <main className={styles.page} data-theme={theme}>
@@ -59,9 +33,7 @@ export function LoginExperience({ version, googleError }: { version: string; goo
             <span className={styles.statusDivider} aria-hidden="true">|</span>
             <span className={styles.secureStatus}><Image src="/auth/secure.svg" alt="" width={12} height={12} /> Secure sign-in</span>
           </div>
-          <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
-            {theme === "dark" ? <Image src="/auth/theme.svg" alt="" width={38} height={37} /> : <Moon size={19} aria-hidden="true" />}
-          </button>
+          <AuthThemeToggle theme={theme} onToggle={toggleTheme} />
         </header>
 
         <div className={styles.formArea}>

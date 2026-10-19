@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/auth/sign-out";
+import { AuthCard } from "../auth-card";
+import styles from "../auth-card.module.css";
 
 /**
  * Shown to a signed-in user whose profiles.status is not 'active':
@@ -34,31 +36,26 @@ export default async function PendingApprovalPage() {
   const isDisabled = profile?.status === "disabled";
 
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-lg border border-neutral-200 p-8 text-center shadow-sm">
-        <h1 className="text-xl font-semibold">
-          {isDisabled ? "Account disabled" : "Awaiting approval"}
-        </h1>
+    <AuthCard>
+      <h1 className={styles.title}>
+        {isDisabled ? "Account disabled" : "Awaiting approval"}
+      </h1>
 
-        <p className="mt-3 text-sm text-neutral-600">
-          {isDisabled
-            ? "Your account has been disabled. Contact your clinic Admin if you believe this is a mistake."
-            : "Your account request has been received. An Admin needs to approve your access before you can sign in to CareTracker."}
-        </p>
+      <p className={styles.description}>
+        {isDisabled
+          ? "Your account has been disabled. Contact your clinic Admin if you believe this is a mistake."
+          : "Your account request has been received. An Admin needs to approve your access before you can sign in to CareTracker."}
+      </p>
 
-        <p className="mt-6 text-xs text-neutral-400">
-          Signed in as {profile?.full_name ?? user.email}
-        </p>
+      <p className={styles.detail}>
+        Signed in as {profile?.full_name ?? user.email}
+      </p>
 
-        <form action={signOut} className="mt-6">
-          <button
-            type="submit"
-            className="text-sm font-medium text-neutral-700 underline underline-offset-4 hover:text-neutral-900"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
-    </main>
+      <form action={signOut}>
+        <button type="submit" className={styles.action}>
+          Sign out
+        </button>
+      </form>
+    </AuthCard>
   );
 }

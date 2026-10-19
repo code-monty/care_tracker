@@ -58,8 +58,6 @@
 .version { padding: 4px 7px; border: 1px solid var(--line); border-radius: 4px; background: var(--badge); color: var(--muted); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .statusDivider { color: var(--muted); }
 .secureStatus { display: inline-flex; align-items: center; gap: 4px; color: var(--link); }
-.themeButton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; color: var(--text); background: var(--badge); cursor: pointer; }
-.themeButton:hover { border-color: var(--accent); }
 .formArea { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
 .formInner { width: min(100%, 448px); }
 .heading { margin: 0; color: var(--text); font-family: var(--font-login-heading), Arial, sans-serif; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -.025em; }
@@ -109,6 +107,7 @@
 .footer p { margin: 8px 0 0; }
 .dialog { width: min(calc(100% - 32px), 390px); margin: auto; border: 1px solid var(--line); border-radius: 16px; padding: 24px; color: var(--text); background: var(--panel); box-shadow: 0 25px 50px rgba(0, 0, 0, .3); }
 .dialog::backdrop { background: rgba(10, 15, 29, .7); backdrop-filter: blur(3px); }
+.page[data-theme="light"] .dialog::backdrop { background: rgba(71, 85, 105, .35); }
 .dialog h2 { margin: 0; font-size: 21px; }
 .dialog p { margin: 12px 0 24px; color: var(--muted); font-size: 14px; line-height: 21px; }
 .dialog form { display: flex; justify-content: flex-end; }
