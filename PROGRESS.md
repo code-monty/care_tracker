@@ -15,9 +15,9 @@ This file is a running log of PRs, milestones, and significant follow-up work. U
 | PR4 | Login-to-DB walking skeleton (login page, `proxy.ts` session gate, sign-out) | ✅ Pushed, CI green, manually tested |
 | PR5 | Per-account lockout (5 attempts / 15 min), sign-in moved to Server Action | ✅ Pushed, CI green, manually tested |
 | PR6 | Email-code step-up verification (DEV-02), replacing TOTP MFA | ✅ Closed out — functionally complete |
-| PR7 | App shell / navigation | In progress — shell and navigation implemented; checks green; not merged |
+| PR7 | App shell / navigation | Implemented locally, including Appointments and Deadlines links; not merged or browser-verified |
 
-Recent auth UI, Google sign-in, and loading work is recorded below as dated follow-up work; no new PR number or merge status is assigned. PR7 still needs Appointments and Deadlines navigation.
+Recent auth UI, Google sign-in, and loading work is recorded below as dated follow-up work; no new PR number or merge status is assigned. PR7 navigation now includes Appointments and Deadlines; authenticated browser verification and merge remain outstanding.
 
 ---
 
@@ -102,12 +102,21 @@ Added a light/dark switch to the authenticated app header and themed the shared 
 ### Shared clinical dashboard (October 19, 2026)
 Replaced the `/dashboard` placeholder with a responsive, Figma frame `8:4`-inspired dashboard for Admin and Staff within the existing authenticated shell. Added an Asia/Manila date selector with previous/next day controls, an appointments summary, upcoming appointments and deadlines panels, and links to the existing routes. Panels show explicit zero and empty states while appointment and deadline records are not yet available; no sample names, live-status claims, capacity figures, pipeline counts, or export control are shown. Existing navigation and authorization are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. `pnpm.cmd build` could not complete because the sandbox could not fetch the app's existing Google fonts; the network-enabled retry was declined. Authenticated desktop/mobile browser and keyboard walkthroughs have not been completed.
 
+### Authenticated shell redesign (October 21, 2026)
+Reworked the shared Admin and Staff shell from Figma frame `2302:382`: full-width branded header, profile details and menu, a compact desktop icon rail, and a five-route labeled mobile bottom bar. Added Appointments and Deadlines to main navigation and kept Admin routes in a separated rail group plus the Admin-only profile menu on mobile. Reused the signed-in profile, existing light/dark preference, sign-out action, and server-side Admin route gate. The dashboard and other page content were preserved. Exact local Figma assets were added for the custom Clients and Attorneys icons and header decorations; shell typography now uses the Inter and Plus Jakarta Sans families specified in `DESIGN.md`. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and a network-enabled `pnpm.cmd build` pass; authenticated desktop/mobile browser, keyboard, and role walkthroughs remain unverified.
+
+### Collapsible desktop sidebar (October 21, 2026)
+Added an accessible arrow button to the desktop navigation rail. It starts compact, expands to show labels for the existing main and Admin-only links, and collapses back to icons without changing the mobile bottom navigation or route authorization. The rail width transition respects reduced-motion preferences. `pnpm.cmd lint` and `pnpm.cmd typecheck` pass; authenticated browser interaction has not yet been verified.
+
+### Sticky sidebar and border toggle (October 21, 2026)
+Adjusted the authenticated shell so the desktop header stays at the top while the compact or expanded sidebar stays directly beneath it during page scrolling. The sidebar has its own scroll area for short viewports and long Admin navigation. Moved the expand/collapse arrow over the sidebar's right border; its visible circle is smaller while the clickable target remains 44px. The mobile bottom bar, routes, roles, and dashboard content are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; authenticated desktop/mobile browser scrolling and keyboard checks remain unverified.
+
 ---
 
 ## Remaining PR7 work
 
-Add Appointments and Deadlines to the shared navigation, per the Sprint 1 app-shell scope in AGENTS.md Section 11.
+Run authenticated Admin and Staff browser walkthroughs, including mobile navigation and keyboard access, then review/merge PR7 when ready.
 
 ---
 
-*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 19, 2026 shared clinical dashboard.*
+*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 21, 2026 sticky sidebar and border toggle.*
