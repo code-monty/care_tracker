@@ -1,7 +1,7 @@
 # CareTracker — Progress Report
 
 Client and attorney monitoring system for HLT Psychological Services.
-This file is a running log of completed PRs and milestones. Update it each time a PR merges or a milestone closes — add a new dated entry, don't rewrite history.
+This file is a running log of PRs, milestones, and significant follow-up work. Update it when work advances, a PR merges, or a milestone closes — add a new dated entry, don't rewrite history.
 
 ---
 
@@ -16,6 +16,8 @@ This file is a running log of completed PRs and milestones. Update it each time 
 | PR5 | Per-account lockout (5 attempts / 15 min), sign-in moved to Server Action | ✅ Pushed, CI green, manually tested |
 | PR6 | Email-code step-up verification (DEV-02), replacing TOTP MFA | ✅ Closed out — functionally complete |
 | PR7 | App shell / navigation | In progress — shell and navigation implemented; checks green; not merged |
+
+Recent auth UI, Google sign-in, and loading work is recorded below as dated follow-up work; no new PR number or merge status is assigned. PR7 still needs Appointments and Deadlines navigation.
 
 ---
 
@@ -35,6 +37,7 @@ This file is a running log of completed PRs and milestones. Update it each time 
 - **Login page UX asks:** show/hide password toggle, "Forgot password" dialog pointing users to contact their administrator (accounts are Admin-created only — no self-service reset), and a "Continue with Google" button idea (parked — conflicts with admin-created-only accounts and needs Google app approval).
 - **Step-up cookie:** signed, HttpOnly, separate `STEP_UP_SECRET` env var (not reusing `QUEUE_TOKEN_SECRET`); per-browser, so a new device re-triggers step-up.
 - **Email delivery:** Nodemailer (10.1.0) + `@types/nodemailer` (8.0.2). Local dev uses Supabase's local SMTP testing inbox (Inbucket/Mailpit, `127.0.0.1:54325`) with `local_smtp.smtp_port` uncommented in `supabase/config.toml`. Production needs a real SMTP provider configured under `[auth.email.smtp]` — flagged as an outstanding setup dependency.
+- **Google sign-in follow-up (October 17):** The earlier button idea is now implemented for existing, administrator-created active profiles. Unknown, pending, disabled, or locked accounts are rejected; eligible users still complete email-code step-up unless their workstation has a valid remembered entry. The Google account chooser is requested at every sign-in. Hosted consent and production provider/SMTP setup remain unverified.
 
 ---
 
@@ -78,6 +81,27 @@ Final state: manually verified end-to-end (login → `/mfa` → email → verify
 ### PR7 — App shell / navigation (October 16, 2026)
 Implemented locally; not merged. Added the authenticated app layout with responsive navigation for Dashboard, Clients, and Attorneys; Admin-only links for Users, Activity Logs, Settings, and Backup; server-side Admin route authorization; active-route styling; and a sign-out action that clears the step-up cookie. `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass (17 tests).
 
+### Login redesign (October 16, 2026)
+Implemented the Figma-based `/login` design with HLT branding, responsive split layout, light/dark themes, and local assets. Kept the existing Server Action sign-in, generic errors, password visibility control, and administrator-contact recovery dialog. Desktop/mobile presentation and typecheck were checked; lint was reported passing. This was a login-page design follow-up, not a new PR or an auth-policy change.
+
+### Email-code screen redesign (October 16–17, 2026)
+Matched `/mfa` to the login branding, layout, typography, theme, and responsive styling. Kept the six-digit code input, automatic email request, verify action, generic error, and 30-second resend cooldown. Historical lint, typecheck, and Vitest checks passed. Playwright coverage was not completed: the first run hit stale login selectors, and a later run remained on `/login` instead of reaching `/mfa`.
+
+### Restricted Google sign-in (October 17, 2026)
+Added the Google OAuth callback, profile eligibility checks, generic rejection path, local Supabase provider configuration, and `prompt=select_account` so users see the Google account chooser on each attempt. Access is limited to administrator-created active profiles with a matching Google identity and no lockout. Approved first-time sign-in goes through email-code step-up; a valid remembered-workstation entry may skip a repeat code after sign-in. Historical unit tests (24 across four files), lint, and typecheck passed. Google's hosted consent flow, the active Supabase provider settings, and SMTP delivery were not verified end to end; an `Unsupported provider` response was observed when the target provider was disabled.
+
+### Branded loading states (October 17, 2026)
+Added an accessible branded loading indicator, route fallbacks for login, MFA, the authenticated app, Admin, and queue display, plus an overlay while login or Google sign-in is submitting. Historical lint, typecheck, Vitest (41 tests across eight files), and the smoke Playwright test passed. The step-up Playwright flow still failed to reach `/mfa` and stopped on `/login` while the sign-in overlay was active; its cause remains open. Do not count the full auth E2E flow as passing.
+
+### Current checkout (October 18, 2026)
+Shared auth theme and card components are being extracted across login, MFA, pending, privacy-policy, and terms-of-service screens. These files are currently modified or untracked in the working tree. This refactor has not been committed or validated and is not recorded as a completed milestone.
+
+### Authenticated app theme switch (October 19, 2026)
+Added a light/dark switch to the authenticated app header and themed the shared shell and navigation for Dashboard, Clients, Attorneys, Appointments, Deadlines, and Admin routes. The switch reuses the auth screens' browser-stored preference, so it persists across navigation and reloads. Existing auth screens and route authorization are unchanged. `pnpm.cmd lint` and `pnpm.cmd typecheck` pass; an authenticated browser walkthrough has not been completed.
+
+### Shared clinical dashboard (October 19, 2026)
+Replaced the `/dashboard` placeholder with a responsive, Figma frame `8:4`-inspired dashboard for Admin and Staff within the existing authenticated shell. Added an Asia/Manila date selector with previous/next day controls, an appointments summary, upcoming appointments and deadlines panels, and links to the existing routes. Panels show explicit zero and empty states while appointment and deadline records are not yet available; no sample names, live-status claims, capacity figures, pipeline counts, or export control are shown. Existing navigation and authorization are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. `pnpm.cmd build` could not complete because the sandbox could not fetch the app's existing Google fonts; the network-enabled retry was declined. Authenticated desktop/mobile browser and keyboard walkthroughs have not been completed.
+
 ---
 
 ## Remaining PR7 work
@@ -86,4 +110,4 @@ Add Appointments and Deadlines to the shared navigation, per the Sprint 1 app-sh
 
 ---
 
-*Log format: add a new `###` entry per PR/milestone, keep the status table at the top current. Last entry: PR7 app shell/navigation progress.*
+*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 19, 2026 shared clinical dashboard.*
