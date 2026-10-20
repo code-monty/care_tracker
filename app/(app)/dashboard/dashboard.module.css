@@ -1,0 +1,69 @@
+.dashboard {
+  --dash-surface: var(--surface);
+  --dash-line: var(--line);
+  --dash-muted: var(--muted);
+  --dash-soft: #1e293b;
+  --dash-blue: #7dd3fc;
+  padding: 3.5rem 1.5rem 4rem;
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+:global([data-theme="light"]) .dashboard {
+  --dash-soft: #f2f3ff;
+  --dash-blue: #006398;
+}
+
+.topBar { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 1.5rem; }
+.topBar h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
+.topBar p { max-width: 29rem; margin-top: .35rem; color: var(--dash-muted); font-size: .875rem; line-height: 1.45; }
+.dateNavigator { display: flex; align-items: center; flex: none; padding: .3rem; border: 1px solid var(--dash-line); border-radius: 999px; background: var(--dash-surface); box-shadow: 0 1px 2px #0000000d; }
+.dateNavigator button { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; cursor: pointer; }
+.dateNavigator button:hover { background: var(--dash-soft); }
+.dateField { display: flex; align-items: center; gap: .4rem; padding: 0 .5rem; color: var(--brand); }
+.dateField input { width: 8.1rem; color: var(--text); background: transparent; font: 600 .82rem Arial, Helvetica, sans-serif; cursor: pointer; }
+.dateField input::-webkit-calendar-picker-indicator { cursor: pointer; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 1.5rem; }
+.leftColumn { display: grid; gap: 2.5rem; min-width: 0; }
+.summaryCard, .panel { border: 1px solid var(--dash-line); border-radius: .75rem; background: var(--dash-surface); box-shadow: 0 1px 2px #0000000d; }
+.summaryCard { display: flex; align-items: center; gap: 1.2rem; min-height: 9.25rem; padding: 1.5rem; }
+.summaryCard:hover { border-color: var(--brand); }
+.summaryIcon { display: grid; place-items: center; flex: none; width: 4rem; height: 4rem; border-radius: .75rem; color: var(--dash-blue); background: color-mix(in srgb, var(--dash-blue) 12%, transparent); }
+.summaryText { display: grid; min-width: 0; gap: .15rem; }
+.summaryLabel { color: var(--dash-muted); font-size: .875rem; }
+.summaryCount { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem; font-size: 2.5rem; font-weight: 700; line-height: 1; }
+.summaryCount span { align-self: center; padding: .25rem .45rem; border-radius: .25rem; color: var(--dash-blue); background: color-mix(in srgb, var(--dash-blue) 12%, transparent); font-size: .65rem; font-weight: 700; line-height: 1.3; text-transform: uppercase; letter-spacing: .04em; }
+.summaryDescription { color: var(--dash-muted); font-size: .75rem; line-height: 1.4; }
+.summaryArrow { display: grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; margin-left: auto; border-radius: 50%; background: var(--dash-soft); }
+.panel { min-width: 0; overflow: hidden; }
+.panelHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-height: 5rem; padding: 1.35rem 1.5rem 1rem; border-bottom: 1px solid var(--dash-line); }
+.headingTitle { display: flex; align-items: center; gap: .55rem; }
+.headingTitle svg { flex: none; color: var(--brand); }
+.headingTitle h2 { font-size: 1.3rem; font-weight: 650; line-height: 1.35; letter-spacing: -.025em; }
+.headingDescription { margin-top: .25rem; color: var(--dash-muted); font-size: .75rem; line-height: 1.4; }
+.badge { flex: none; margin-top: .2rem; padding: .25rem .6rem; border-radius: 999px; color: var(--dash-muted); background: var(--dash-soft); font-size: .7rem; white-space: nowrap; }
+.emptyState { display: flex; min-height: 15rem; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; color: var(--dash-muted); font-size: .8rem; line-height: 1.5; }
+.emptyState svg { margin-bottom: .75rem; color: var(--brand); opacity: .85; }
+.emptyTitle { margin-bottom: .2rem; color: var(--text); font-size: .95rem; font-weight: 600; }
+.panelLink { display: flex; justify-content: flex-end; align-items: center; gap: .4rem; min-height: 4rem; padding: 1rem 1.5rem; border-top: 1px solid var(--dash-line); color: var(--brand); font-size: .875rem; font-weight: 600; }
+.panelLink:hover { background: var(--dash-soft); }
+.deadlinesPanel .emptyState { min-height: 19.25rem; }
+.dashboard :is(button, input, a):focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .dashboard { padding: 2rem 1rem 3rem; }
+  .topBar { flex-wrap: wrap; }
+  .columns { grid-template-columns: 1fr; }
+  .leftColumn { gap: 1.5rem; }
+  .deadlinesPanel .emptyState { min-height: 15rem; }
+}
+
+@media (max-width: 420px) {
+  .summaryCard { gap: .8rem; padding: 1rem; }
+  .summaryIcon { width: 3rem; height: 3rem; }
+  .summaryArrow { width: 2rem; height: 2rem; }
+  .panelHeading { padding: 1rem; }
+  .headingTitle h2 { font-size: 1.1rem; }
+  .badge { font-size: .65rem; }
+}
