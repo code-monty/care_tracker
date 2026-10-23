@@ -111,6 +111,12 @@ Added an accessible arrow button to the desktop navigation rail. It starts compa
 ### Sticky sidebar and border toggle (October 21, 2026)
 Adjusted the authenticated shell so the desktop header stays at the top while the compact or expanded sidebar stays directly beneath it during page scrolling. The sidebar has its own scroll area for short viewports and long Admin navigation. Moved the expand/collapse arrow over the sidebar's right border; its visible circle is smaller while the clickable target remains 44px. The mobile bottom bar, routes, roles, and dashboard content are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; authenticated desktop/mobile browser scrolling and keyboard checks remain unverified.
 
+# Issue in SMTP Cloud in Brevo (October 22, 2026)
+It does not send the mail in designated mail, I think there is a problem in domain part
+
+# Vercel Problem after Sign In in Google (October 22, 2026)
+It goes to Vercel Page after Google Sign In
+
 ---
 
 ## Remaining PR7 work

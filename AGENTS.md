@@ -305,6 +305,12 @@ These are known, documented departures from the SARD. Each must be re-evaluated 
 - Production: requires a real SMTP/email provider configured in `[auth.email.smtp]` of the cloud project (currently unset) — flagged as a setup dependency for the PR that implements this.
 - `supabase/config.toml`'s `[auth.mfa.totp]` block stays disabled (`enroll_enabled = false`, `verify_enabled = false`); it is not used by this flow.
 
+# Issue in SMTP Cloud in Brevo (October 22, 2026)
+It does not send the mail in designated mail, I think there is a problem in domain part
+
+# Vercel Problem after Sign In in Google (October 22, 2026)
+It goes to Vercel Page after Google Sign In
+
 ---
 
 *Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Updated Oct 7, 2026 (DEV-01: two-project setup, free tier interim). Updated Oct 11, 2026 (DEV-02: email-code step-up verification replaces TOTP MFA, applies to all users). Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
