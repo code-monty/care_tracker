@@ -117,6 +117,15 @@ Reduced the visible desktop sidebar navigation icons while preserving the existi
 ### Compact authenticated header (October 23, 2026)
 Reduced the authenticated header from 80px to 68px on desktop and from 68px to 60px on mobile. Scaled down the header logo, avatar, theme icon, and settings icon while retaining the existing accessible button targets, and synchronized the sticky desktop sidebar offset and viewport height with the new header height. Routes, menus, theme behavior, and mobile navigation are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; authenticated desktop/mobile visual verification remains outstanding.
 
+### Dashboard consolidation (October 23, 2026)
+Renamed the authenticated page title from "Clinical Dashboard" to "Dashboard" and consolidated its summary cards into the two existing panels. The selected-date controls and appointment count now sit inside Upcoming Appointments, while Current Active Clients is shown inside Deadlines with a link to the client list. Counts remain explicit zero-value placeholders because appointment, deadline, and client records are not yet available; no schema or backend behavior changed. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; authenticated desktop/mobile, light/dark theme, date-control, and keyboard checks remain to be completed in a browser.
+
+### Dashboard panel alignment (October 23, 2026)
+Moved the appointment count onto the Upcoming Appointments title line and removed its separate summary row. Current Active Clients now has its own card above the appointments and deadlines panels. The two panels share a desktop row and stretch to equal height, with aligned empty states and footer links; they stack on mobile. Counts remain placeholders until records are available. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; browser verification remains outstanding.
+
+### Dashboard top spacing (October 23, 2026)
+Reduced the dashboard's top padding from 3.5rem to 1.5rem on desktop and from 2rem to 1rem on mobile so the heading and cards sit closer to the authenticated header. Other spacing and panel alignment are unchanged.
+
 # Issue in SMTP Cloud in Brevo (October 22, 2026)
 It does not send the mail in designated mail, I think there is a problem in domain part
 
