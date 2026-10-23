@@ -30,20 +30,23 @@
   --badge: #f2f3ff;
 }
 
-.header { position: sticky; top: 0; z-index: 30; display: flex; flex: none; align-items: center; justify-content: space-between; gap: 1rem; height: 80px; padding: 0 1.15rem .1rem .4rem; border-bottom: 1px solid var(--line); background: var(--surface); box-shadow: 0 2px 1px #0000000d; }
+.header { position: sticky; top: 0; z-index: 30; display: flex; flex: none; align-items: center; justify-content: space-between; gap: 1rem; height: 68px; padding: 0 1.15rem .1rem .4rem; border-bottom: 1px solid var(--line); background: var(--surface); box-shadow: 0 2px 1px #0000000d; }
 .identity { display: flex; flex: none; align-items: center; gap: .35rem; min-width: 0; }
-.logoWrap { position: relative; display: grid; place-items: center; width: 70px; height: 70px; flex: none; }
-.logoRing { position: absolute; width: 50px; height: 50px; }
-.logo { position: relative; width: 40px; height: 40px; object-fit: contain; }
+.logoWrap { position: relative; display: grid; place-items: center; width: 58px; height: 58px; flex: none; }
+.logoRing { position: absolute; width: 44px; height: 44px; }
+.logo { position: relative; width: 34px; height: 34px; object-fit: contain; }
+.shell[data-theme="light"] .logoRing { display: none; }
+.shell[data-theme="light"] .logo { opacity: 0; }
+.shell[data-theme="light"] .logoWrap::after { position: absolute; width: 34px; height: 34px; background: #306fa5; -webkit-mask: url("/auth/hlt-logo.png") center / contain no-repeat; mask: url("/auth/hlt-logo.png") center / contain no-repeat; content: ""; pointer-events: none; }
 .brand { font-family: var(--font-app-heading), Arial, Helvetica, sans-serif; font-size: 1.125rem; line-height: 1.12; font-weight: 700; letter-spacing: -.02em; }
 .headerActions { display: flex; align-items: center; gap: .75rem; min-width: 0; }
 .profile { display: flex; align-items: center; gap: .75rem; min-width: 0; }
 .profileText { display: flex; flex-direction: column; min-width: 0; text-align: right; line-height: 1.25; }
 .profileText strong { overflow: hidden; max-width: 15rem; font-size: .875rem; text-overflow: ellipsis; white-space: nowrap; }
 .profileText small { color: var(--muted); font-size: .75rem; font-style: italic; }
-.avatar { flex: none; width: 50px; height: 50px; }
-.headerDivider { display: grid; place-items: center; overflow: hidden; width: 1px; height: 59px; margin: 0 .1rem; }
-.headerDivider img { display: block; flex: none; width: 59px; height: 1px; transform: rotate(90deg); }
+.avatar { flex: none; width: 42px; height: 42px; }
+.headerDivider { display: grid; place-items: center; overflow: hidden; width: 1px; height: 48px; margin: 0 .1rem; }
+.headerDivider img { display: block; flex: none; width: 48px; height: 1px; transform: rotate(90deg); }
 .themeButton, .menuButton { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: .75rem; cursor: pointer; }
 .themeButton { color: var(--surface); background: var(--text); }
 .menuButton:hover, .themeButton:hover { opacity: .8; }
@@ -56,7 +59,7 @@
 .menuItem:hover, .menuItem[aria-current="page"] { background: var(--hover); }
 .adminMenuLinks { display: grid; }
 .body { display: flex; flex: 1; min-height: 0; }
-.railDock { position: sticky; top: 80px; z-index: 20; align-self: flex-start; flex: none; width: 75px; height: calc(100dvh - 80px); border-right: 1px solid var(--line); background: var(--surface); box-shadow: 2px 0 1px #0000000d; transition: width .2s ease; }
+.railDock { position: sticky; top: 68px; z-index: 20; align-self: flex-start; flex: none; width: 75px; height: calc(100dvh - 68px); border-right: 1px solid var(--line); background: var(--surface); box-shadow: 2px 0 1px #0000000d; transition: width .2s ease; }
 .railDock[data-expanded="true"] { width: 230px; }
 .railNav { display: flex; flex-direction: column; justify-content: space-between; align-items: center; overflow-x: hidden; overflow-y: auto; width: 100%; height: 100%; padding: 3.1rem .6rem 1rem; scrollbar-width: thin; }
 .railTop { display: grid; flex: none; justify-items: center; gap: 1rem; width: 100%; }
@@ -70,6 +73,8 @@
 .navLink:hover { background: var(--hover); }
 .navLink[aria-current="page"] { color: var(--active-text); background: var(--active); }
 .navLink img { display: block; width: 21px; height: 26px; object-fit: contain; }
+.railNav .navLink svg { width: 20px; height: 20px; }
+.railNav .navLink img { width: 18px; height: 22px; }
 .shell[data-theme="dark"] .navLink img { filter: invert(1); }
 .navLabel { display: none; }
 .railNav[data-expanded="true"] .railGroup { justify-items: stretch; }
@@ -83,14 +88,15 @@
 @media (prefers-reduced-motion: reduce) { .railDock { transition: none; } }
 
 @media (max-width: 767px) {
-  .header { height: 68px; padding: 0 .65rem 0 .15rem; }
-  .logoWrap { width: 52px; height: 52px; }
-  .logoRing { width: 42px; height: 42px; }
-  .logo { width: 34px; height: 34px; }
+  .header { height: 60px; padding: 0 .65rem 0 .15rem; }
+  .logoWrap { width: 46px; height: 46px; }
+  .logoRing { width: 38px; height: 38px; }
+  .logo { width: 30px; height: 30px; }
+  .shell[data-theme="light"] .logoWrap::after { width: 30px; height: 30px; }
   .brand { font-size: .94rem; }
   .headerActions { gap: .15rem; }
   .profileText, .headerDivider, .themeButton { display: none; }
-  .avatar { width: 36px; height: 36px; }
+  .avatar { width: 32px; height: 32px; }
   .menuButton { width: 40px; height: 40px; }
   .railDock { display: none; }
   .mobileNav .railTop { display: contents; }

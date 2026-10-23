@@ -111,6 +111,12 @@ Added an accessible arrow button to the desktop navigation rail. It starts compa
 ### Sticky sidebar and border toggle (October 21, 2026)
 Adjusted the authenticated shell so the desktop header stays at the top while the compact or expanded sidebar stays directly beneath it during page scrolling. The sidebar has its own scroll area for short viewports and long Admin navigation. Moved the expand/collapse arrow over the sidebar's right border; its visible circle is smaller while the clickable target remains 44px. The mobile bottom bar, routes, roles, and dashboard content are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; authenticated desktop/mobile browser scrolling and keyboard checks remain unverified.
 
+### App-shell icon and light-logo refinement (October 23, 2026)
+Reduced the visible desktop sidebar navigation icons while preserving the existing 50px link targets, expanded labels, active states, and mobile bottom-navigation sizing. In light mode, the HLT header logo now uses the established blue `#306fa5` treatment without the dark circular background; dark mode retains the existing white logo and dark ring. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. Authenticated visual checks for both sidebar states and both themes remain to be completed in a browser.
+
+### Compact authenticated header (October 23, 2026)
+Reduced the authenticated header from 80px to 68px on desktop and from 68px to 60px on mobile. Scaled down the header logo, avatar, theme icon, and settings icon while retaining the existing accessible button targets, and synchronized the sticky desktop sidebar offset and viewport height with the new header height. Routes, menus, theme behavior, and mobile navigation are unchanged. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass; authenticated desktop/mobile visual verification remains outstanding.
+
 # Issue in SMTP Cloud in Brevo (October 22, 2026)
 It does not send the mail in designated mail, I think there is a problem in domain part
 

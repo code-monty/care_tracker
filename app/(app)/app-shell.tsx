@@ -49,23 +49,23 @@ export function AppShell({ children, fullName, isAdmin, signOut }: {
       <header className={styles.header}>
         <div className={styles.identity}>
           <span className={styles.logoWrap}>
-            <Image className={styles.logoRing} src="/auth/shell-logo-ring.svg" alt="" width={50} height={50} />
-            <Image className={styles.logo} src="/auth/hlt-logo.png" alt="" width={40} height={40} />
+            <Image className={styles.logoRing} src="/auth/shell-logo-ring.svg" alt="" width={44} height={44} />
+            <Image className={styles.logo} src="/auth/hlt-logo.png" alt="" width={34} height={34} />
           </span>
           <span className={styles.brand}>HLT<br />CareTracker</span>
         </div>
         <div className={styles.headerActions}>
           <div className={styles.profile}>
             <span className={styles.profileText}><strong title={fullName}>{fullName}</strong><small>{isAdmin ? "Admin" : "Staff"}</small></span>
-            <Image className={styles.avatar} src="/auth/shell-avatar.svg" alt="" width={50} height={50} />
+            <Image className={styles.avatar} src="/auth/shell-avatar.svg" alt="" width={42} height={42} />
           </div>
           <span className={styles.headerDivider} aria-hidden="true"><Image src="/auth/shell-divider.svg" alt="" width={59} height={1} /></span>
           <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
-            {theme === "dark" ? <Sun aria-hidden="true" size={21} /> : <Moon aria-hidden="true" size={21} />}
+            {theme === "dark" ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
           </button>
           <div className={styles.menuWrap} ref={menuRef}>
             <button ref={menuButtonRef} type="button" className={styles.menuButton} aria-label="Open profile menu" aria-expanded={menuOpen} aria-controls={menuOpen ? "profile-menu" : undefined} onClick={() => setMenuOpen((open) => !open)} title="Profile menu">
-              <Settings aria-hidden="true" size={24} />
+              <Settings aria-hidden="true" size={20} />
             </button>
             {menuOpen && (
               <div id="profile-menu" className={styles.profileMenu}>
