@@ -16,6 +16,7 @@ This file is a running log of PRs, milestones, and significant follow-up work. U
 | PR5 | Per-account lockout (5 attempts / 15 min), sign-in moved to Server Action | ✅ Pushed, CI green, manually tested |
 | PR6 | Email-code step-up verification (DEV-02), replacing TOTP MFA | ✅ Closed out — functionally complete |
 | PR7 | App shell / navigation | Implemented locally, including Appointments and Deadlines links; not merged or browser-verified |
+| Client and appointment persistence | Local Supabase migrations, server actions, and dashboard queries | Implemented locally; browser verification pending |
 
 Recent auth UI, Google sign-in, and loading work is recorded below as dated follow-up work; no new PR number or merge status is assigned. PR7 navigation now includes Appointments and Deadlines; authenticated browser verification and merge remain outstanding.
 
@@ -164,4 +165,7 @@ Run authenticated Admin and Staff browser walkthroughs, including mobile navigat
 
 ---
 
-*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 24, 2026 Client Information page.*
+*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 24, 2026 Persistent clients, appointments, and dashboard records.*
+
+### Persistent clients, appointments, and dashboard records (October 24, 2026)
+Added local Supabase migrations for attorneys, clients, respondents, and appointments with active-user RLS, Admin-only client archive guard, actor checks, and metadata-only activity-log triggers. Client creation now uses one database transaction. Replaced temporary client and appointment storage with server reads and validated actions, enabled attorney reuse and linked appointments, and connected the dashboard's active-client count and selected-day appointments to the database. The deadline panel remains a placeholder. Three local migrations applied; 41 pgTAP tests pass, including anonymous, pending, disabled, Staff, and Admin access. Lint and typecheck pass; 44 Vitest tests pass. A local authenticated Chromium flow passed for client creation and reload, attorney reuse, appointment creation and reload, dashboard date navigation and count, edit, and cancellation. Hosted deployment remains unverified. No cloud migration or deployment was run.

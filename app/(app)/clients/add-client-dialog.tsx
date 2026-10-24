@@ -8,18 +8,21 @@ import styles from "./clients.module.css";
 type Values = Record<ClientField, string>;
 const emptyValues = Object.fromEntries(Object.keys(clientFieldSchemas).map((key) => [key, ""])) as Values;
 
-export default function AddClientDialog({ onSave, existingClients }: { onSave: (client: ClientInput) => void; existingClients: ClientInput[] }) {
+export default function AddClientDialog({ onSave, existingClients, attorneys }: { onSave: (client: ClientInput, attorneyId?: string) => Promise<void>; existingClients: ClientInput[]; attorneys: { id: string; full_name: string; contact_no: string; email: string }[] }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [values, setValues] = useState<Values>(emptyValues);
   const [touched, setTouched] = useState<Partial<Record<ClientField, boolean>>>({});
   const [formError, setFormError] = useState("");
   const [showAttorney, setShowAttorney] = useState(false);
+  const [attorneyId, setAttorneyId] = useState("");
+  const [saving, setSaving] = useState(false);
 
   function close() { dialogRef.current?.close(); }
-  function reset() { setValues(emptyValues); setTouched({}); setFormError(""); setShowAttorney(false); }
+  function reset() { setValues(emptyValues); setTouched({}); setFormError(""); setShowAttorney(false); setAttorneyId(""); }
 
-  function save() {
-    const result = addClientSchema.safeParse(values);
+  async function save() {
+    const chosen = attorneys.find((item) => item.id === attorneyId);
+    const result = addClientSchema.safeParse(chosen ? { ...values, attorneyName: chosen.full_name, attorneyContact: chosen.contact_no, attorneyEmail: chosen.email } : values);
     if (!result.success) {
       setTouched(Object.fromEntries(Object.keys(clientFieldSchemas).map((key) => [key, true])));
       setFormError("Check the highlighted fields before saving.");
@@ -32,11 +35,13 @@ export default function AddClientDialog({ onSave, existingClients }: { onSave: (
     }
     const duplicate = existingClients.some((client) => client.petitionerName.toLocaleLowerCase().trim() === result.data.petitionerName.toLocaleLowerCase().trim() && client.petitionerBirthdate === result.data.petitionerBirthdate);
     if (duplicate) {
-      setFormError("A temporary client with this name and birthdate already exists.");
+      setFormError("A client with this name and birthdate already exists.");
       return;
     }
-    onSave(result.data);
-    close();
+    setSaving(true);
+    try { await onSave(result.data, attorneyId || undefined); close(); }
+    catch { setFormError("Unable to save client. Check for an existing record and try again."); }
+    finally { setSaving(false); }
   }
 
   function field(key: ClientField, label: string, options: { type?: string; placeholder?: string; multiline?: boolean; autoFocus?: boolean } = {}) {
@@ -79,9 +84,9 @@ export default function AddClientDialog({ onSave, existingClients }: { onSave: (
       <div className={styles.dialogBody}>
         <section className={styles.formSection} aria-labelledby="petitioner-heading"><h3 id="petitioner-heading">Petitioner / Client Details</h3>{person("petitioner")}</section>
         <section className={styles.formSection} aria-labelledby="respondent-heading"><h3 id="respondent-heading">Respondent Details</h3>{person("respondent")}</section>
-        <section className={styles.formSection} aria-labelledby="attorney-heading"><h3 id="attorney-heading">Legal Counsel Information</h3>{showAttorney ? <div className={styles.formGrid}>{field("attorneyName", "Name of attorney", { placeholder: "Attorney full name" })}{field("attorneyContact", "Attorney contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}<div className={styles.wide}>{field("attorneyEmail", "Attorney email address", { type: "email", placeholder: "attorney@example.com" })}</div></div> : <button className={styles.attorneyReveal} type="button" onClick={() => { setShowAttorney(true); requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("#client-attorneyName")?.focus()); }}><UserPlus size={17} aria-hidden="true" />Add Attorney</button>}</section>
+        <section className={styles.formSection} aria-labelledby="attorney-heading"><h3 id="attorney-heading">Legal Counsel Information</h3><label htmlFor="existing-attorney">Existing attorney</label><select id="existing-attorney" value={attorneyId} onChange={(event) => setAttorneyId(event.target.value)}><option value="">Create new attorney</option>{attorneys.map((item) => <option key={item.id} value={item.id}>{item.full_name} — {item.email}</option>)}</select>{!attorneyId && (showAttorney ? <div className={styles.formGrid}>{field("attorneyName", "Name of attorney", { placeholder: "Attorney full name" })}{field("attorneyContact", "Attorney contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}<div className={styles.wide}>{field("attorneyEmail", "Attorney email address", { type: "email", placeholder: "attorney@example.com" })}</div></div> : <button className={styles.attorneyReveal} type="button" onClick={() => { setShowAttorney(true); requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("#client-attorneyName")?.focus()); }}><UserPlus size={17} aria-hidden="true" />Add Attorney</button>)}</section>
       </div>
-      <div className={styles.dialogFooter}><div className={styles.saveMessage}><p id="temporary-save-note">Temporary only: this client disappears when the page reloads. Do not enter real client data.</p>{formError && <p className={styles.formError} role="alert">{formError}</p>}</div><div><button className={styles.cancelButton} type="button" onClick={close}>Cancel</button><button className={styles.saveButton} type="button" onClick={save} aria-describedby="temporary-save-note">Save Client</button></div></div>
+        <div className={styles.dialogFooter}><div className={styles.saveMessage}>{formError && <p className={styles.formError} role="alert">{formError}</p>}</div><div><button className={styles.cancelButton} type="button" onClick={close}>Cancel</button><button className={styles.saveButton} type="button" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Client"}</button></div></div>
     </dialog>
   </>;
 }

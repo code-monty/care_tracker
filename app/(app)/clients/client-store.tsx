@@ -2,30 +2,35 @@
 
 import { createContext, useContext, useState } from "react";
 import type { ClientInput } from "@/lib/validation/client";
+import { createClientRecord, setClientStatus } from "@/lib/actions/records";
 
 export type ClientStatus = "Active" | "Inactive";
 export type ClientRecord = ClientInput & { id: string; status: ClientStatus };
 
 type ClientStore = {
   clients: ClientRecord[];
-  addClient: (input: ClientInput) => void;
-  setStatus: (id: string, status: ClientStatus) => void;
+  attorneys: { id: string; full_name: string; contact_no: string; email: string }[];
+  addClient: (input: ClientInput, attorneyId?: string) => Promise<void>;
+  setStatus: (id: string, status: ClientStatus) => Promise<void>;
 };
 
 const ClientStoreContext = createContext<ClientStore | null>(null);
 
-export function ClientStoreProvider({ children }: { children: React.ReactNode }) {
-  const [clients, setClients] = useState<ClientRecord[]>([]);
+export function ClientStoreProvider({ children, initialClients, attorneys }: { children: React.ReactNode; initialClients: ClientRecord[]; attorneys: { id: string; full_name: string; contact_no: string; email: string }[] }) {
+  const [clients, setClients] = useState<ClientRecord[]>(initialClients);
 
-  function addClient(input: ClientInput) {
-    setClients((current) => [...current, { ...input, id: crypto.randomUUID(), status: "Active" }]);
+  async function addClient(input: ClientInput, attorneyId?: string) {
+    const id = await createClientRecord(input, attorneyId);
+    const attorney = attorneys.find((item) => item.id === attorneyId);
+    setClients((current) => [...current, { ...input, ...(attorney ? { attorneyName: attorney.full_name, attorneyContact: attorney.contact_no, attorneyEmail: attorney.email } : {}), id, status: "Active" }]);
   }
 
-  function setStatus(id: string, status: ClientStatus) {
+  async function setStatus(id: string, status: ClientStatus) {
+    await setClientStatus(id, status.toLowerCase());
     setClients((current) => current.map((client) => client.id === id ? { ...client, status } : client));
   }
 
-  return <ClientStoreContext.Provider value={{ clients, addClient, setStatus }}>{children}</ClientStoreContext.Provider>;
+  return <ClientStoreContext.Provider value={{ clients, attorneys, addClient, setStatus }}>{children}</ClientStoreContext.Provider>;
 }
 
 export function useClientStore() {

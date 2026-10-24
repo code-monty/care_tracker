@@ -1,6 +1,6 @@
 export type AppointmentStatus = "Confirmed" | "Pending" | "Cancelled";
 export type SortKey = "clientName" | "date" | "reason" | "status";
-export interface Appointment { id: string; clientName: string; date: string; time: string; reason: string; status: AppointmentStatus; }
+export interface Appointment { id: string; clientId?: string; clientName: string; clientContact?: string; clientEmail?: string; date: string; time: string; reason: string; status: AppointmentStatus; }
 
 export function filterAppointments(appointments: Appointment[], filters: { search: string; dateFilter: string; statusFilter: AppointmentStatus | "all"; today: string }) {
   const currentMonth = filters.today.slice(0, 7);
