@@ -126,6 +126,30 @@ Moved the appointment count onto the Upcoming Appointments title line and remove
 ### Dashboard top spacing (October 23, 2026)
 Reduced the dashboard's top padding from 3.5rem to 1.5rem on desktop and from 2rem to 1rem on mobile so the heading and cards sit closer to the authenticated header. Other spacing and panel alignment are unchanged.
 
+### Appointments UI milestone (October 23, 2026)
+Replaced the `/appointments` placeholder with a responsive CareTracker-styled workspace containing searchable and sortable list views, date and status filters, accurate pagination, a six-week month calendar, explicit empty states, and mobile appointment cards. Added accessible Add Appointment and details dialogs; the form validates name, non-past date, time, standard or custom reason, then creates a Pending appointment in browser memory for the current page session only. No Supabase schema, persistence, RLS, audit, authorization, or dependency changes were introduced. `pnpm.cmd lint`, `pnpm.cmd typecheck`, the full Vitest suite (44 tests across nine files), and `git diff --check` pass. Authenticated browser checks for light/dark themes, responsive layouts, dialog focus behavior, and keyboard interaction remain unverified.
+
+### Appointment dialog visibility fix (October 23, 2026)
+Corrected the Add Appointment and details dialog styling so closed dialogs stay hidden and open dialogs center above the page. The earlier full-screen dialog CSS could leave a transparent closed dialog over the page and intercept clicks. Browser interaction still needs an authenticated walkthrough.
+
+### Appointment actions and picker icons (October 23, 2026)
+Added a three-dot action menu beside View Details on desktop and mobile. It opens an edit form for temporary appointment details and status (Pending, Confirmed, Cancelled). Date and time picker icons now follow the active light or dark theme. These changes remain in browser memory only; authenticated browser interaction has not yet been verified.
+
+### Clients list UI (October 24, 2026)
+Replaced the `/clients` placeholder with a responsive list shell styled to match the Dashboard and shared light/dark theme. Added search, status selection, sortable name/status headers, table columns, accurate zero-result pagination, and filtered/unfiltered empty states. Client records and the Add Client/View Details flows are not implemented yet; no sample personal data or persistence is used. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. Authenticated browser verification remains pending.
+
+### Add Client form overlay (October 24, 2026)
+Added an Add Clients button and responsive, keyboard-accessible dialog matching the authenticated Dashboard theme. The form covers petitioner/client, legal counsel, and respondent details, with calculated age and field-level validation for required values, Philippine mobile numbers, email, and non-future birthdates. Save Client is visibly disabled with an explanation because secure client persistence, RLS, and audit logging are not implemented; entered details stay only in dialog memory and clear on close. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. Authenticated browser verification remains pending.
+
+### Temporary client saving (October 24, 2026)
+Enabled Save Client after full Zod validation and a duplicate name/birthdate check. New clients live only in page memory and appear in the searchable, sortable, paginated list with a View Details dialog; they disappear on reload. The UI labels this clearly and warns against entering real client data. No Supabase persistence, RLS, or audit logging was added. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. Authenticated browser verification remains pending.
+
+### Client form order and Add Attorney reveal (October 24, 2026)
+Moved Respondent Details above Legal Counsel Information in Add New Client. Legal Counsel now starts with an Add Attorney button that reveals its three required fields in the same dialog; saving with missing attorney details reveals the fields and focuses the first invalid field in form order. Renamed the list's name column and client detail labels to Petitioner. Temporary page-memory saving and the Attorneys placeholder remain as before. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. Authenticated browser verification remains pending.
+
+### Client Information page (October 24, 2026)
+Changed View Details from an overlay to `/clients/[id]`, with Dashboard-style Petitioner, Respondent, Legal Representation, Status, and empty Tasks / Assignments cards. Temporary client records now live in a shared in-memory provider across the Clients list and detail route; direct links and reloads without a matching record show an unavailable state. The Active/Inactive control updates the list badge and filter. No browser storage, Supabase persistence, notes, edit actions, or case-action controls were added. `pnpm.cmd lint`, `pnpm.cmd typecheck`, and `git diff --check` pass. Authenticated browser verification remains pending.
+
 # Issue in SMTP Cloud in Brevo (October 22, 2026)
 It does not send the mail in designated mail, I think there is a problem in domain part
 
@@ -140,4 +164,4 @@ Run authenticated Admin and Staff browser walkthroughs, including mobile navigat
 
 ---
 
-*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 21, 2026 sticky sidebar and border toggle.*
+*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 24, 2026 Client Information page.*
