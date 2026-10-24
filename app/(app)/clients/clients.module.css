@@ -1,0 +1,82 @@
+.clients { padding: 1.5rem 1.5rem 4rem; color: var(--text); }
+.heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
+.heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
+.panel { overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 1px 2px #0000000d; }
+.toolbar { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line); }
+.searchField, .statusField { display: flex; align-items: center; gap: .65rem; min-height: 2.75rem; padding: 0 .85rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--muted); background: var(--surface); }
+.searchField { width: min(100%, 21rem); }
+.searchField input { width: 100%; min-width: 0; outline: 0; color: var(--text); background: transparent; font-size: .875rem; }
+.searchField input::placeholder { color: var(--muted); }
+.statusField { min-width: 10rem; font-size: .875rem; }
+.statusField select { flex: 1; appearance: none; outline: 0; color: var(--text); background: transparent; cursor: pointer; }
+.statusField option { color: #0f172a; }
+.tableScroll { overflow-x: auto; }
+.tableScroll table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; }
+.tableScroll th { padding: .9rem 1.5rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
+.tableScroll th button { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; }
+.tableScroll th button span { color: var(--brand); font-size: 1rem; }
+.clientRow td { padding: .85rem 1.5rem; border-bottom: 1px solid var(--line); font-size: .85rem; }
+.clientRow:last-child td { border-bottom: 0; }
+.activeBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; color: var(--brand); background: var(--hover); font-size: .75rem; font-weight: 650; }
+.inactiveBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; color: var(--muted); background: var(--hover); font-size: .75rem; font-weight: 650; }
+.detailsButton { display: inline-flex; align-items: center; min-height: 2.25rem; padding: .35rem .65rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--brand); font-size: .8rem; font-weight: 650; cursor: pointer; }
+.detailsButton:hover { background: var(--hover); }
+.emptyCell { padding: 0; }
+.emptyState { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 19rem; padding: 2rem; text-align: center; }
+.emptyIcon { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; margin-bottom: .85rem; border-radius: .75rem; color: var(--brand); background: var(--hover); }
+.emptyState strong { font-size: .95rem; }
+.emptyState p { margin-top: .3rem; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 4rem; padding: .75rem 1.5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+.pagination { display: flex; align-items: center; gap: .4rem; }
+.pagination button, .pagination span { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: .5rem; }
+.pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.pagination span { color: var(--text); background: var(--hover); }
+.clients :is(button, input, select):focus-visible, .clients :is(.searchField, .statusField):focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.addButton { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-size: .875rem; font-weight: 650; cursor: pointer; }
+.addButton:hover { background: #00543a; }
+.dialog { position: fixed; inset: 0; width: min(760px, calc(100vw - 2rem)); max-width: none; max-height: min(90dvh, 900px); margin: auto; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: .85rem; color: var(--text); background: var(--surface); box-shadow: 0 24px 70px #0008; }
+.dialog:not([open]) { display: none; }
+.dialog::backdrop { background: #061321b8; }
+.dialogHeader, .dialogFooter { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.5rem; }
+.dialogHeader { border-bottom: 1px solid var(--line); }
+.dialogTitle { display: flex; align-items: center; gap: .65rem; }
+.dialogTitle svg { color: var(--brand); }
+.dialogTitle h2 { font-size: 1.1rem; font-weight: 700; }
+.iconButton { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: .5rem; cursor: pointer; }
+.iconButton:hover { background: var(--hover); }
+.dialogBody { max-height: calc(min(90dvh, 900px) - 146px); padding: .5rem 1.5rem 1.5rem; overflow-y: auto; }
+.formSection { padding: 1.2rem 0 1.5rem; border-bottom: 1px solid var(--line); }
+.formSection:last-child { border-bottom: 0; }
+.formSection h3 { margin-bottom: 1.1rem; padding-left: .7rem; border-left: 3px solid var(--brand); color: var(--brand); font-size: .82rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.attorneyReveal { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; padding: .5rem .85rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--brand); font-size: .82rem; font-weight: 650; cursor: pointer; }
+.attorneyReveal:hover { background: var(--hover); }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+.wide { grid-column: 1 / -1; }
+.formField { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.formField label { font-size: .78rem; font-weight: 650; }
+.formField label span { color: #d04b4b; }
+.formField input, .formField textarea { width: 100%; min-height: 2.65rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .5rem; outline: 0; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
+.formField textarea { resize: vertical; }
+.formField input::placeholder, .formField textarea::placeholder { color: var(--muted); opacity: .85; }
+.formField input[readonly] { color: var(--muted); background: var(--hover); }
+.formField [aria-invalid="true"] { border-color: #d04b4b; }
+.fieldError { color: #e36060; font-size: .75rem; }
+.dialogFooter { border-top: 1px solid var(--line); }
+.dialogFooter p { max-width: 23rem; color: var(--muted); font-size: .75rem; line-height: 1.4; }
+.saveMessage { min-width: 0; }
+.dialogFooter .formError { margin-top: .3rem; color: #e36060; font-weight: 650; }
+.dialogFooter > div:last-child { display: flex; flex: none; gap: .6rem; }
+.cancelButton, .saveButton { min-height: 2.5rem; padding: .5rem .85rem; border-radius: .5rem; font-size: .8rem; font-weight: 650; }
+.cancelButton { border: 1px solid var(--line); cursor: pointer; }
+.cancelButton:hover { background: var(--hover); }
+.saveButton { color: #fff; background: #006948; cursor: pointer; }
+.saveButton:hover { background: #00543a; }
+.temporaryNotice { margin: .75rem 0; color: var(--muted); font-size: .8rem; }
+.detailsGrid { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr); gap: .7rem 1rem; padding: .5rem 0 1rem; font-size: .85rem; }
+.detailsGrid dt { color: var(--muted); }
+.detailsGrid dd { overflow-wrap: anywhere; }
+.dialog :is(button, input, textarea):focus-visible, .addButton:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 760px) { .clients { padding: 1rem 1rem 3rem; } .toolbar { padding: 1rem; } .searchField { flex: 1 1 100%; width: 100%; } .footer { padding: .75rem 1rem; } }
+@media (max-width: 600px) { .dialog { width: calc(100vw - 1rem); max-height: 96dvh; } .dialogBody { max-height: calc(96dvh - 175px); padding: .25rem 1rem 1rem; } .dialogHeader, .dialogFooter { padding: .8rem 1rem; } .formGrid { grid-template-columns: 1fr; } .dialogFooter { align-items: stretch; flex-direction: column; } .dialogFooter > div { justify-content: flex-end; } }
