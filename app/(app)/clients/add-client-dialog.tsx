@@ -13,21 +13,22 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
   const [values, setValues] = useState<Values>(emptyValues);
   const [touched, setTouched] = useState<Partial<Record<ClientField, boolean>>>({});
   const [formError, setFormError] = useState("");
-  const [showAttorney, setShowAttorney] = useState(false);
+  const [attorneyMode, setAttorneyMode] = useState<"new" | "existing">("new");
   const [attorneyId, setAttorneyId] = useState("");
   const [saving, setSaving] = useState(false);
+  const selectedAttorney = attorneys.find((item) => item.id === attorneyId);
 
   function close() { dialogRef.current?.close(); }
-  function reset() { setValues(emptyValues); setTouched({}); setFormError(""); setShowAttorney(false); setAttorneyId(""); }
+  function reset() { setValues(emptyValues); setTouched({}); setFormError(""); setAttorneyMode("new"); setAttorneyId(""); }
 
   async function save() {
-    const chosen = attorneys.find((item) => item.id === attorneyId);
+    const chosen = attorneyMode === "existing" ? attorneys.find((item) => item.id === attorneyId) : undefined;
+    if (attorneyMode === "existing" && !chosen) { setFormError("Select an existing attorney."); dialogRef.current?.querySelector<HTMLElement>("#existing-attorney")?.focus(); return; }
     const result = addClientSchema.safeParse(chosen ? { ...values, attorneyName: chosen.full_name, attorneyContact: chosen.contact_no, attorneyEmail: chosen.email } : values);
     if (!result.success) {
       setTouched(Object.fromEntries(Object.keys(clientFieldSchemas).map((key) => [key, true])));
       setFormError("Check the highlighted fields before saving.");
       const invalidFields = new Set(result.error.issues.map((issue) => issue.path[0]));
-      if (["attorneyName", "attorneyContact", "attorneyEmail"].some((key) => invalidFields.has(key))) setShowAttorney(true);
       const formOrder: ClientField[] = ["petitionerName", "petitionerBirthdate", "petitionerContact", "petitionerEmail", "petitionerAddress", "respondentName", "respondentBirthdate", "respondentContact", "respondentEmail", "respondentAddress", "attorneyName", "attorneyContact", "attorneyEmail"];
       const firstInvalid = formOrder.find((key) => invalidFields.has(key));
       if (typeof firstInvalid === "string") requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>(`#client-${firstInvalid}`)?.focus());
@@ -39,7 +40,7 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
       return;
     }
     setSaving(true);
-    try { await onSave(result.data, attorneyId || undefined); close(); }
+    try { await onSave(result.data, chosen?.id); close(); }
     catch { setFormError("Unable to save client. Check for an existing record and try again."); }
     finally { setSaving(false); }
   }
@@ -84,7 +85,14 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
       <div className={styles.dialogBody}>
         <section className={styles.formSection} aria-labelledby="petitioner-heading"><h3 id="petitioner-heading">Petitioner / Client Details</h3>{person("petitioner")}</section>
         <section className={styles.formSection} aria-labelledby="respondent-heading"><h3 id="respondent-heading">Respondent Details</h3>{person("respondent")}</section>
-        <section className={styles.formSection} aria-labelledby="attorney-heading"><h3 id="attorney-heading">Legal Counsel Information</h3><label htmlFor="existing-attorney">Existing attorney</label><select id="existing-attorney" value={attorneyId} onChange={(event) => setAttorneyId(event.target.value)}><option value="">Create new attorney</option>{attorneys.map((item) => <option key={item.id} value={item.id}>{item.full_name} — {item.email}</option>)}</select>{!attorneyId && (showAttorney ? <div className={styles.formGrid}>{field("attorneyName", "Name of attorney", { placeholder: "Attorney full name" })}{field("attorneyContact", "Attorney contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}<div className={styles.wide}>{field("attorneyEmail", "Attorney email address", { type: "email", placeholder: "attorney@example.com" })}</div></div> : <button className={styles.attorneyReveal} type="button" onClick={() => { setShowAttorney(true); requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("#client-attorneyName")?.focus()); }}><UserPlus size={17} aria-hidden="true" />Add Attorney</button>)}</section>
+        <section className={styles.formSection} aria-labelledby="attorney-heading">
+          <h3 id="attorney-heading">Legal Counsel Information</h3>
+          <div className={styles.attorneyChoices} role="group" aria-label="Attorney choice">
+            <button type="button" className={styles.attorneyChoice} aria-pressed={attorneyMode === "new"} onClick={() => { setAttorneyMode("new"); setFormError(""); }}><UserPlus size={17} aria-hidden="true" />Add Attorney</button>
+            <button type="button" className={styles.attorneyChoice} aria-pressed={attorneyMode === "existing"} onClick={() => { setAttorneyMode("existing"); setFormError(""); }}>Existing Attorney</button>
+          </div>
+          {attorneyMode === "new" ? <div className={styles.formGrid}>{field("attorneyName", "Name of attorney", { placeholder: "Attorney full name" })}{field("attorneyContact", "Attorney contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}<div className={styles.wide}>{field("attorneyEmail", "Attorney email address", { type: "email", placeholder: "attorney@example.com" })}</div></div> : <div className={styles.existingAttorney}><label htmlFor="existing-attorney">Select attorney</label><select id="existing-attorney" value={attorneyId} onChange={(event) => { setAttorneyId(event.target.value); setFormError(""); }}><option value="">Select an attorney</option>{attorneys.map((item) => <option key={item.id} value={item.id}>{item.full_name} — {item.email}</option>)}</select>{attorneys.length === 0 && <p>No existing attorneys are available. Choose Add Attorney to enter one.</p>}{selectedAttorney && <dl className={styles.attorneyDetails}><div><dt>Name</dt><dd>{selectedAttorney.full_name}</dd></div><div><dt>Contact number</dt><dd>{selectedAttorney.contact_no}</dd></div><div><dt>Email address</dt><dd>{selectedAttorney.email}</dd></div></dl>}</div>}
+        </section>
       </div>
         <div className={styles.dialogFooter}><div className={styles.saveMessage}>{formError && <p className={styles.formError} role="alert">{formError}</p>}</div><div><button className={styles.cancelButton} type="button" onClick={close}>Cancel</button><button className={styles.saveButton} type="button" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Client"}</button></div></div>
     </dialog>

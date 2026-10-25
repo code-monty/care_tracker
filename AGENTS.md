@@ -314,4 +314,3 @@ It goes to Vercel Page after Google Sign In
 ---
 
 *Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Updated Oct 7, 2026 (DEV-01: two-project setup, free tier interim). Updated Oct 11, 2026 (DEV-02: email-code step-up verification replaces TOTP MFA, applies to all users). Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
-

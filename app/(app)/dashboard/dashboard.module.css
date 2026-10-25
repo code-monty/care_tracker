@@ -34,6 +34,14 @@
 .headingTitle h2 { font-size: 1.3rem; font-weight: 650; line-height: 1.35; letter-spacing: -.025em; }
 .headingDescription { margin-top: .25rem; color: var(--dash-muted); font-size: .75rem; line-height: 1.4; }
 .badge { flex: none; padding: .25rem .6rem; border-radius: 999px; color: var(--dash-muted); background: var(--dash-soft); font-size: .7rem; white-space: nowrap; }
+.appointmentCount { display: flex; align-items: baseline; gap: .45rem; margin-top: .75rem; color: var(--dash-muted); font-size: .9rem; }
+.appointmentCount strong { color: var(--text); font-size: 2rem; line-height: 1; }
+.appointmentTableWrap { flex: 1; min-height: 15rem; overflow-x: auto; }
+.appointmentTable { width: 100%; border-collapse: collapse; text-align: left; font-size: .82rem; }
+.appointmentTable th { padding: .8rem 1rem; border-bottom: 1px solid var(--dash-line); color: var(--dash-muted); background: var(--dash-soft); font-size: .75rem; font-weight: 650; }
+.appointmentTable td { padding: .85rem 1rem; border-bottom: 1px solid var(--dash-line); vertical-align: top; overflow-wrap: anywhere; }
+.appointmentTable tr:last-child td { border-bottom: 0; }
+.appointmentTable td:nth-child(2) { white-space: nowrap; }
 .summaryIcon { display: grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem; border-radius: .75rem; color: var(--dash-blue); background: color-mix(in srgb, var(--dash-blue) 12%, transparent); }
 .summaryText { display: grid; min-width: 0; gap: .15rem; }
 .summaryLabel { color: var(--dash-muted); font-size: .875rem; }
@@ -55,6 +63,8 @@
 }
 
 @media (max-width: 420px) {
+  .appointmentTable { font-size: .75rem; }
+  .appointmentTable :is(th, td) { padding: .7rem .55rem; }
   .clientCard { gap: .8rem; padding: 1rem; }
   .summaryIcon { width: 3rem; height: 3rem; }
   .summaryArrow { width: 2rem; height: 2rem; }

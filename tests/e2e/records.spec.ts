@@ -54,7 +54,10 @@ test("saved clients and appointments survive reload and appear on dashboard", as
     const secondValue = id === "client-petitionerName" ? secondName : id === "client-petitionerEmail" ? `second-${suffix}@example.test` : value;
     await page.locator(`#${id}`).fill(secondValue);
   }
+  await page.getByRole("button", { name: "Existing Attorney" }).click();
   await page.locator("#existing-attorney").selectOption({ label: `Fake Attorney ${suffix} — attorney-${suffix}@example.test` });
+  await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText(`Fake Attorney ${suffix}`);
+  await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText("0912-345-6789");
   await page.getByRole("button", { name: "Save Client" }).click();
   await page.reload();
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(secondName);
@@ -66,27 +69,42 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await dialog.locator('select[name="clientId"]').selectOption({ label: name });
   const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 86400000));
   await dialog.locator('input[name="date"]').fill(date);
-  await dialog.locator('input[name="time"]').fill("14:00");
+  await dialog.locator('input[name="time"]').fill(`14:${String(parseInt(suffix, 16) % 60).padStart(2, "0")}`);
   page.on("dialog", (prompt) => prompt.accept());
   await dialog.getByRole("button", { name: "Add appointment" }).click();
   await expect(page.getByText("Appointment saved.")).toBeVisible();
   await page.reload();
   await page.getByRole("combobox", { name: "Filter by date" }).selectOption("all");
+  await page.getByRole("textbox", { name: "Search appointments" }).fill(name);
   await expect(page.getByText(name).first()).toBeVisible();
 
   await page.goto("/dashboard");
   await page.getByLabel("Select appointment date").fill(date);
   await expect(page.getByText(name).first()).toBeVisible();
-  const scheduledBefore = Number(await page.locator('[aria-label$=" appointments scheduled"]').innerText());
+  await expect(page.getByRole("table").getByRole("columnheader")).toHaveText(["Client", "Time", "Reason"]);
+  const scheduledBefore = Number((await page.locator('[aria-label$=" appointments scheduled"]').getAttribute("aria-label"))?.split(" ")[0]);
   expect(scheduledBefore).toBeGreaterThan(0);
   await expect(page.getByRole("link", { name: "View current active clients" })).toContainText("active clients");
   await page.getByRole("button", { name: "Next day" }).click();
   await expect(page.getByLabel("0 appointments scheduled")).toBeVisible();
+  await expect(page.getByText("No appointments to show")).toBeVisible();
   await page.getByRole("button", { name: "Previous day" }).click();
   await expect(page.getByLabel(`${scheduledBefore} appointments scheduled`)).toBeVisible();
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(page.locator('[data-theme="light"]').first()).toBeVisible();
+  await expect(page.getByRole("table").getByRole("cell", { name })).toBeVisible();
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(page.locator('[data-theme="dark"]').first()).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("table").getByRole("cell", { name })).toBeVisible();
+  await page.getByRole("button", { name: "Previous day" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Select appointment date")).toBeFocused();
+  await page.setViewportSize({ width: 1280, height: 800 });
 
   await page.goto("/appointments");
   await page.getByRole("combobox", { name: "Filter by date" }).selectOption("all");
+  await page.getByRole("textbox", { name: "Search appointments" }).fill(name);
   await page.getByLabel(`More actions for ${name}`).first().click();
   await page.getByRole("button", { name: "Edit appointment" }).first().click();
   const edit = page.getByRole("dialog", { name: "Edit appointment" });
@@ -97,6 +115,8 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.getByRole("button", { name: "Change status" }).first().click();
   await page.getByRole("dialog", { name: "Edit appointment" }).locator('select[name="status"]').selectOption("Cancelled");
   await page.getByRole("dialog", { name: "Edit appointment" }).getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByText("Appointment updated.")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Edit appointment" })).toBeHidden();
   await page.goto("/dashboard");
   await page.getByLabel("Select appointment date").fill(date);
   await expect(page.getByLabel(`${scheduledBefore - 1} appointments scheduled`)).toBeVisible();

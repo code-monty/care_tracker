@@ -17,6 +17,7 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
   const [loadError, setLoadError] = useState(false);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   async function selectDate(date: string) { setSelectedDate(date); setLoadError(false); try { const result = await dashboardForDate(date); setAppointments(result.appointments); } catch { setLoadError(true); } }
 
   return (
@@ -40,8 +41,9 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
         <section className={styles.panel} aria-labelledby="appointments-heading">
           <div className={styles.panelHeading}>
             <div>
-              <div className={styles.headingTitle}><CalendarClock aria-hidden="true" size={21} /><h2 id="appointments-heading">Upcoming Appointments</h2><span className={styles.badge} aria-label={`${appointments.length} appointments scheduled`}>{appointments.length}</span></div>
+              <div className={styles.headingTitle}><CalendarClock aria-hidden="true" size={21} /><h2 id="appointments-heading">Upcoming Appointments</h2></div>
               <p className={styles.headingDescription}>Appointments scheduled for the selected date.</p>
+              <p className={styles.appointmentCount} aria-label={loadError ? "Appointment count unavailable" : `${appointments.length} appointments scheduled`}><strong>{loadError ? "—" : appointments.length}</strong><span>{selectedDate === today ? "today" : appointments.length === 1 ? "appointment" : "appointments"}</span></p>
             </div>
             <div className={styles.dateNavigator} aria-label="Appointment date">
               <button type="button" aria-label="Previous day" onClick={() => selectDate(shiftDate(selectedDate, -1))}><ChevronLeft aria-hidden="true" size={17} /></button>
@@ -53,7 +55,7 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
               <button type="button" aria-label="Next day" onClick={() => selectDate(shiftDate(selectedDate, 1))}><ChevronRight aria-hidden="true" size={17} /></button>
             </div>
           </div>
-          {loadError ? <div className={styles.emptyState} role="alert"><p>Appointments could not be loaded for this date.</p></div> : appointments.length ? <div className={styles.emptyState}>{appointments.map((appointment) => { const client = Array.isArray(appointment.clients) ? appointment.clients[0] : appointment.clients; return <p key={appointment.id}><strong>{client.full_name}</strong> · {new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" }).format(new Date(appointment.scheduled_at))} · {appointment.reason}</p>; })}</div> : <div className={styles.emptyState}>
+          {loadError ? <div className={styles.emptyState} role="alert"><p>Appointments could not be loaded for this date.</p></div> : appointments.length ? <div className={styles.appointmentTableWrap}><table className={styles.appointmentTable}><thead><tr><th scope="col">Client</th><th scope="col">Time</th><th scope="col">Reason</th></tr></thead><tbody>{appointments.map((appointment) => { const client = Array.isArray(appointment.clients) ? appointment.clients[0] : appointment.clients; return <tr key={appointment.id}><td><strong>{client.full_name}</strong></td><td>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" }).format(new Date(appointment.scheduled_at))}</td><td>{appointment.reason}</td></tr>; })}</tbody></table></div> : <div className={styles.emptyState}>
             <CalendarDays aria-hidden="true" size={30} />
             <p className={styles.emptyTitle}>No appointments to show</p>
             <p>No appointments are scheduled for this date.</p>
