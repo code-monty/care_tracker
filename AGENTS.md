@@ -314,3 +314,13 @@ It goes to Vercel Page after Google Sign In
 ---
 
 *Last aligned with SARD v1.2 (Draft), Oct 2, 2026. Updated Oct 7, 2026 (DEV-01: two-project setup, free tier interim). Updated Oct 11, 2026 (DEV-02: email-code step-up verification replaces TOTP MFA, applies to all users). Re-check vendor limits (Vercel, Supabase plans, Network Restrictions, backup retention) at setup time; they change.*
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

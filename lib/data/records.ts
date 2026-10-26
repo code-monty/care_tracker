@@ -18,6 +18,16 @@ export async function getAttorneys() {
   return data ?? [];
 }
 
+export async function getAttorneyClients(attorneyId?: string) {
+  await requireActiveUser();
+  const db = await createClient();
+  let query = db.from("clients").select("id,full_name,status,attorney_id").eq("is_archived", false);
+  if (attorneyId) query = query.eq("attorney_id", attorneyId);
+  const { data, error } = await query.order("full_name");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getAppointments() {
   await requireActiveUser();
   const db = await createClient();

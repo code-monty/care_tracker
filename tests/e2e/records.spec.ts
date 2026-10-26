@@ -63,6 +63,16 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(secondName);
   await expect(page.getByText(secondName).first()).toBeVisible();
 
+  await page.goto("/attorneys");
+  await page.getByRole("searchbox", { name: "Search attorneys" }).fill(`Fake Attorney ${suffix}`);
+  await page.getByRole("link", { name: `View Fake Attorney ${suffix} and 2 linked clients` }).click();
+  await expect(page).toHaveURL(/\/attorneys\/[0-9a-f-]+$/, { timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Linked Clients (2)" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("table").getByRole("cell", { name })).toBeVisible();
+  await expect(page.getByRole("table").getByRole("cell", { name: secondName })).toBeVisible();
+  await page.getByRole("row", { name: new RegExp(secondName) }).getByRole("link", { name: "View Client" }).click();
+  await expect(page.getByRole("heading", { name: "Client Information" })).toBeVisible({ timeout: 20_000 });
+
   await page.goto("/appointments");
   await page.getByRole("button", { name: "Add Appointment" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Add appointment" });
