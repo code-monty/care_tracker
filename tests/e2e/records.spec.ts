@@ -11,7 +11,7 @@ function localEnvironment() {
 }
 
 test("saved clients and appointments survive reload and appear on dashboard", async ({ page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   const env = localEnvironment();
   const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const suffix = randomUUID().slice(0, 8);
@@ -48,6 +48,9 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.reload();
   await expect(page.getByText(name).first()).toBeVisible();
 
+  await page.setViewportSize({ width: 390, height: 600 });
+  await page.getByRole("button", { name: "Open profile menu" }).click();
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
   await page.getByRole("button", { name: "Add Clients" }).click();
   const secondName = `Fake Second Client ${suffix}`;
   for (const [id, value] of Object.entries(fields)) {
@@ -55,10 +58,58 @@ test("saved clients and appointments survive reload and appear on dashboard", as
     await page.locator(`#${id}`).fill(secondValue);
   }
   await page.getByRole("button", { name: "Existing Attorney" }).click();
-  await page.locator("#existing-attorney").selectOption({ label: `Fake Attorney ${suffix} — attorney-${suffix}@example.test` });
+  const attorneySearch = page.getByRole("combobox", { name: "Select attorney" });
+  await attorneySearch.fill(`No Attorney ${suffix}`);
+  await expect(page.getByText("No matching attorneys.")).toBeVisible();
+  await attorneySearch.fill("Fake Attorney");
+  const attorneyList = page.getByRole("listbox", { name: "Select attorney matches" });
+  await expect(attorneyList).toBeVisible();
+  await expect(attorneyList.getByRole("option").first()).toBeVisible();
+  await attorneyList.hover();
+  const formScroll = page.locator("[data-client-dialog-body]");
+  const formScrollBefore = await formScroll.evaluate((element) => element.scrollTop);
+  await page.mouse.wheel(0, -300);
+  expect(await formScroll.evaluate((element) => element.scrollTop)).toBe(formScrollBefore);
+  const listCanScroll = await attorneyList.evaluate((element) => element.scrollHeight > element.clientHeight);
+  if (!listCanScroll) await attorneyList.evaluate((element) => {
+    const option = element.querySelector('[role="option"]');
+    if (!option) throw new Error("Expected an attorney result");
+    for (let index = 0; index < 12; index++) element.appendChild(option.cloneNode(true));
+  });
+  await page.mouse.wheel(0, 300);
+  expect(await attorneyList.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  expect(await formScroll.evaluate((element) => element.scrollTop)).toBe(formScrollBefore);
+  if (listCanScroll) await attorneyList.getByRole("option").last().click();
+  await attorneySearch.fill(`Fake Attorney ${suffix}`);
+  const attorneyOption = page.getByRole("option", { name: new RegExp(`Fake Attorney ${suffix}`) });
+  await expect(attorneyOption).toBeVisible();
+  const attorneyInputBox = await attorneySearch.boundingBox();
+  const attorneyOptionBox = await attorneyOption.boundingBox();
+  expect(attorneyInputBox && attorneyOptionBox && attorneyOptionBox.y + attorneyOptionBox.height <= attorneyInputBox.y).toBeTruthy();
+  const clientDialogBox = await page.getByRole("dialog", { name: "Add New Client" }).boundingBox();
+  expect(clientDialogBox && attorneyOptionBox && attorneyOptionBox.y >= clientDialogBox.y).toBeTruthy();
+  await expect(attorneySearch).toHaveCSS("outline-style", "none");
+  await expect(attorneySearch.locator("..")).toHaveCSS("outline-style", "solid");
+  await attorneySearch.press("ArrowDown");
+  await attorneySearch.press("Enter");
   await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText(`Fake Attorney ${suffix}`);
   await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText("0912-345-6789");
   await page.getByRole("button", { name: "Save Client" }).click();
+  await expect(page.getByText(secondName).first()).toBeVisible({ timeout: 20_000 });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.getByRole("button", { name: "Add Clients" }).click();
+  await page.getByRole("button", { name: "Existing Attorney" }).click();
+  const desktopAttorneySearch = page.getByRole("combobox", { name: "Select attorney" });
+  await desktopAttorneySearch.fill(`Fake Attorney ${suffix}`);
+  const desktopAttorneyOption = page.getByRole("option", { name: new RegExp(`Fake Attorney ${suffix}`) });
+  await expect(desktopAttorneyOption).toBeVisible();
+  const desktopInputBox = await desktopAttorneySearch.boundingBox();
+  const desktopOptionBox = await desktopAttorneyOption.boundingBox();
+  expect(desktopInputBox && desktopOptionBox && desktopOptionBox.y + desktopOptionBox.height <= desktopInputBox.y).toBeTruthy();
+  await page.getByRole("button", { name: "Close Add New Client" }).click();
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.reload();
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(secondName);
   await expect(page.getByText(secondName).first()).toBeVisible();
@@ -76,13 +127,35 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.goto("/appointments");
   await page.getByRole("button", { name: "Add Appointment" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Add appointment" });
-  await dialog.locator('select[name="clientId"]').selectOption({ label: name });
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 86400000));
+  const clientSearch = dialog.getByRole("combobox", { name: "Client *" });
+  await clientSearch.fill(name);
+  await expect(clientSearch).toHaveCSS("outline-style", "none");
+  await expect(clientSearch.locator("..")).toHaveCSS("outline-style", "solid");
+  await dialog.getByRole("option", { name: new RegExp(name) }).click();
+  await clientSearch.fill(`No Client ${suffix}`);
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + (2 + parseInt(suffix, 16) % 300) * 86400000));
   await dialog.locator('input[name="date"]').fill(date);
   await dialog.locator('input[name="time"]').fill(`14:${String(parseInt(suffix, 16) % 60).padStart(2, "0")}`);
+  await dialog.getByRole("button", { name: "Add appointment" }).click();
+  await expect(dialog.getByText("Select a client from the search results.")).toBeVisible();
+  await clientSearch.fill(name);
+  await dialog.getByRole("option", { name: new RegExp(name) }).click();
   page.on("dialog", (prompt) => prompt.accept());
   await dialog.getByRole("button", { name: "Add appointment" }).click();
   await expect(page.getByText("Appointment saved.")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Open profile menu" }).click();
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await page.getByRole("button", { name: "Add Appointment" }).first().click();
+  const mobileSearch = page.getByRole("dialog", { name: "Add appointment" }).getByRole("combobox", { name: "Client *" });
+  await mobileSearch.fill(name);
+  await expect(page.getByRole("option", { name: new RegExp(name) })).toBeVisible();
+  await expect(mobileSearch).toHaveCSS("outline-style", "none");
+  await expect(mobileSearch.locator("..")).toHaveCSS("outline-style", "solid");
+  await page.getByRole("dialog", { name: "Add appointment" }).getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Open profile menu" }).click();
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.reload();
   await page.getByRole("combobox", { name: "Filter by date" }).selectOption("all");
   await page.getByRole("textbox", { name: "Search appointments" }).fill(name);
@@ -118,9 +191,10 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.getByLabel(`More actions for ${name}`).first().click();
   await page.getByRole("button", { name: "Edit appointment" }).first().click();
   const edit = page.getByRole("dialog", { name: "Edit appointment" });
+  await expect(edit.getByRole("combobox", { name: "Client *" })).toHaveValue(name);
   await edit.locator('select[name="status"]').selectOption("Confirmed");
   await edit.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByText("Appointment updated.")).toBeVisible();
+  await expect(page.getByText("Appointment updated.")).toBeVisible({ timeout: 20_000 });
   await page.getByLabel(`More actions for ${name}`).first().click();
   await page.getByRole("button", { name: "Change status" }).first().click();
   await page.getByRole("dialog", { name: "Edit appointment" }).locator('select[name="status"]').selectOption("Cancelled");

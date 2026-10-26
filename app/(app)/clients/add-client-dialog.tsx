@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { addClientSchema, ageFromBirthdate, clientFieldSchemas, type ClientField, type ClientInput } from "@/lib/validation/client";
+import RecordNameSearch from "@/components/record-name-search";
+import type { NameMatch } from "@/lib/actions/records";
 import styles from "./clients.module.css";
 
 type Values = Record<ClientField, string>;
@@ -14,17 +16,16 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
   const [touched, setTouched] = useState<Partial<Record<ClientField, boolean>>>({});
   const [formError, setFormError] = useState("");
   const [attorneyMode, setAttorneyMode] = useState<"new" | "existing">("new");
-  const [attorneyId, setAttorneyId] = useState("");
+  const [selectedAttorney, setSelectedAttorney] = useState<NameMatch | null>(null);
   const [saving, setSaving] = useState(false);
-  const selectedAttorney = attorneys.find((item) => item.id === attorneyId);
 
   function close() { dialogRef.current?.close(); }
-  function reset() { setValues(emptyValues); setTouched({}); setFormError(""); setAttorneyMode("new"); setAttorneyId(""); }
+  function reset() { setValues(emptyValues); setTouched({}); setFormError(""); setAttorneyMode("new"); setSelectedAttorney(null); }
 
   async function save() {
-    const chosen = attorneyMode === "existing" ? attorneys.find((item) => item.id === attorneyId) : undefined;
-    if (attorneyMode === "existing" && !chosen) { setFormError("Select an existing attorney."); dialogRef.current?.querySelector<HTMLElement>("#existing-attorney")?.focus(); return; }
-    const result = addClientSchema.safeParse(chosen ? { ...values, attorneyName: chosen.full_name, attorneyContact: chosen.contact_no, attorneyEmail: chosen.email } : values);
+    const chosen = attorneyMode === "existing" ? selectedAttorney : null;
+    if (attorneyMode === "existing" && !chosen) { setFormError("Select an existing attorney from the search results."); dialogRef.current?.querySelector<HTMLElement>("[role=combobox]")?.focus(); return; }
+    const result = addClientSchema.safeParse(chosen ? { ...values, attorneyName: chosen.name, attorneyContact: chosen.contact, attorneyEmail: chosen.detail } : values);
     if (!result.success) {
       setTouched(Object.fromEntries(Object.keys(clientFieldSchemas).map((key) => [key, true])));
       setFormError("Check the highlighted fields before saving.");
@@ -82,7 +83,7 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
     <button className={styles.addButton} type="button" onClick={() => dialogRef.current?.showModal()}><UserPlus size={18} aria-hidden="true" />Add Clients</button>
     <dialog ref={dialogRef} className={styles.dialog} aria-labelledby="add-client-title" onClose={reset}>
       <div className={styles.dialogHeader}><div className={styles.dialogTitle}><UserPlus size={20} aria-hidden="true" /><h2 id="add-client-title">Add New Client</h2></div><button className={styles.iconButton} type="button" aria-label="Close Add New Client" onClick={close}><X size={20} aria-hidden="true" /></button></div>
-      <div className={styles.dialogBody}>
+      <div className={styles.dialogBody} data-client-dialog-body>
         <section className={styles.formSection} aria-labelledby="petitioner-heading"><h3 id="petitioner-heading">Petitioner / Client Details</h3>{person("petitioner")}</section>
         <section className={styles.formSection} aria-labelledby="respondent-heading"><h3 id="respondent-heading">Respondent Details</h3>{person("respondent")}</section>
         <section className={styles.formSection} aria-labelledby="attorney-heading">
@@ -91,7 +92,7 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
             <button type="button" className={styles.attorneyChoice} aria-pressed={attorneyMode === "new"} onClick={() => { setAttorneyMode("new"); setFormError(""); }}><UserPlus size={17} aria-hidden="true" />Add Attorney</button>
             <button type="button" className={styles.attorneyChoice} aria-pressed={attorneyMode === "existing"} onClick={() => { setAttorneyMode("existing"); setFormError(""); }}>Existing Attorney</button>
           </div>
-          {attorneyMode === "new" ? <div className={styles.formGrid}>{field("attorneyName", "Name of attorney", { placeholder: "Attorney full name" })}{field("attorneyContact", "Attorney contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}<div className={styles.wide}>{field("attorneyEmail", "Attorney email address", { type: "email", placeholder: "attorney@example.com" })}</div></div> : <div className={styles.existingAttorney}><label htmlFor="existing-attorney">Select attorney</label><select id="existing-attorney" value={attorneyId} onChange={(event) => { setAttorneyId(event.target.value); setFormError(""); }}><option value="">Select an attorney</option>{attorneys.map((item) => <option key={item.id} value={item.id}>{item.full_name} — {item.email}</option>)}</select>{attorneys.length === 0 && <p>No existing attorneys are available. Choose Add Attorney to enter one.</p>}{selectedAttorney && <dl className={styles.attorneyDetails}><div><dt>Name</dt><dd>{selectedAttorney.full_name}</dd></div><div><dt>Contact number</dt><dd>{selectedAttorney.contact_no}</dd></div><div><dt>Email address</dt><dd>{selectedAttorney.email}</dd></div></dl>}</div>}
+          {attorneyMode === "new" ? <div className={styles.formGrid}>{field("attorneyName", "Name of attorney", { placeholder: "Attorney full name" })}{field("attorneyContact", "Attorney contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}<div className={styles.wide}>{field("attorneyEmail", "Attorney email address", { type: "email", placeholder: "attorney@example.com" })}</div></div> : <div className={styles.existingAttorney}><RecordNameSearch kind="attorney" label="Select attorney" value={selectedAttorney} onChange={(item) => { setSelectedAttorney(item); setFormError(""); }} />{attorneys.length === 0 && <p>No existing attorneys are available. Choose Add Attorney to enter one.</p>}{selectedAttorney && <dl className={styles.attorneyDetails}><div><dt>Name</dt><dd>{selectedAttorney.name}</dd></div><div><dt>Contact number</dt><dd>{selectedAttorney.contact}</dd></div><div><dt>Email address</dt><dd>{selectedAttorney.detail}</dd></div></dl>}</div>}
         </section>
       </div>
         <div className={styles.dialogFooter}><div className={styles.saveMessage}>{formError && <p className={styles.formError} role="alert">{formError}</p>}</div><div><button className={styles.cancelButton} type="button" onClick={close}>Cancel</button><button className={styles.saveButton} type="button" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Client"}</button></div></div>

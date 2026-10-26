@@ -16,7 +16,7 @@ This file is a running log of PRs, milestones, and significant follow-up work. U
 | PR5 | Per-account lockout (5 attempts / 15 min), sign-in moved to Server Action | ✅ Pushed, CI green, manually tested |
 | PR6 | Email-code step-up verification (DEV-02), replacing TOTP MFA | ✅ Closed out — functionally complete |
 | PR7 | App shell / navigation | Implemented locally, including Appointments and Deadlines links; not merged or browser-verified |
-| Client and appointment persistence | Local Supabase migrations, server actions, and dashboard queries | Implemented locally; browser verification pending |
+| Client and appointment persistence | Local Supabase migrations, server actions, dashboard queries, and searchable form names | Implemented locally; authenticated Chromium records flow passed; hosted deployment unverified |
 
 Recent auth UI, Google sign-in, and loading work is recorded below as dated follow-up work; no new PR number or merge status is assigned. PR7 navigation now includes Appointments and Deadlines; authenticated browser verification and merge remain outstanding.
 
@@ -165,7 +165,7 @@ Run authenticated Admin and Staff browser walkthroughs, including mobile navigat
 
 ---
 
-*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 24, 2026 Persistent clients, appointments, and dashboard records.*
+*Log format: add a new `###` entry per PR/milestone or dated follow-up, and keep the status table at the top current. Last entry: October 26, 2026 Attorney search overlay scroll correction.*
 
 ### Persistent clients, appointments, and dashboard records (October 24, 2026)
 Added local Supabase migrations for attorneys, clients, respondents, and appointments with active-user RLS, Admin-only client archive guard, actor checks, and metadata-only activity-log triggers. Client creation now uses one database transaction. Replaced temporary client and appointment storage with server reads and validated actions, enabled attorney reuse and linked appointments, and connected the dashboard's active-client count and selected-day appointments to the database. The deadline panel remains a placeholder. Three local migrations applied; 41 pgTAP tests pass, including anonymous, pending, disabled, Staff, and Admin access. Lint and typecheck pass; 44 Vitest tests pass. A local authenticated Chromium flow passed for client creation and reload, attorney reuse, appointment creation and reload, dashboard date navigation and count, edit, and cancellation. Hosted deployment remains unverified. No cloud migration or deployment was run.
@@ -175,3 +175,12 @@ Replaced the dashboard's centered appointment text with a responsive Client/Time
 
 ### Attorneys directory and linked clients (October 25, 2026)
 Replaced the Attorneys placeholder with a searchable, responsive directory of persisted attorney records and linked client counts. Selecting an attorney opens `/attorneys/[id]` with their contact information and non-archived linked clients, including status and links to each existing Client Information page. The next-deadline column explicitly says "Not tracked yet" until deadline records exist. Added loading, error, and empty states. No schema, permission, or attorney editing changes were made. Lint, typecheck, and `git diff --check` pass; the local authenticated Chromium persisted-records flow passes with attorney selection, two linked clients, and View Client navigation. Hosted deployment and separate manual visual review remain unverified.
+
+### Searchable attorney and client form fields (October 26, 2026)
+Replaced Existing Attorney and Add/Edit Appointment client dropdowns with a shared searchable name field. Authenticated server actions search all matching attorney or non-archived client records through RLS, return up to ten results, and preserve record IDs for saves. The field shows a distinguishing email, handles keyboard and pointer selection, and requires a selected result after text changes. Existing attorney details and the current client in Edit Appointment remain visible. Lint, typecheck, and an authenticated Chromium records flow passed locally, including no-match, keyboard selection, clearing a client choice, reload, mobile form search, and light/dark theme checks. No migration or hosted deployment was run.
+
+### Form search list placement and focus styling (October 26, 2026)
+Moved Existing Attorney search results into the Add Client dialog's scrollable layout above the search input, with a bounded scroll area for many matches. Removed the inner input border and focus outline so attorney and appointment client searches show one focus outline around the whole field. Lint, typecheck, and the authenticated Chromium records flow pass locally. Browser assertions cover visible attorney results above the input at short mobile and desktop heights, single focus outlines in light and dark themes, keyboard selection, and saved-record flows. Hosted deployment and a separate manual visual review remain unverified.
+
+### Attorney search overlay scroll correction (October 26, 2026)
+Corrected the earlier attorney-result placement: the list is now a floating overlay inside the Add Client dialog but outside its scrollable form body. It stays above the input, sizes to the available dialog space, and contains wheel/touch scrolling so reaching the list's edge does not move the form. The prior in-flow list could scroll out of view. Lint, typecheck, and an authenticated Chromium records flow pass locally; the browser check forces list overflow, confirms the list scrolls while the form stays still, and verifies result selection. No schema change or hosted deployment was made.

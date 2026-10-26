@@ -1,0 +1,13 @@
+.field { position: relative; display: grid; gap: .4rem; min-width: 0; font-size: .78rem; font-weight: 600; }
+.searchBox { display: flex; align-items: center; gap: .5rem; width: 100%; min-height: 46px; padding: 0 .75rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--muted); background: var(--surface); }
+.searchBox:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.field .searchBox input { flex: 1; width: 100%; min-width: 0; min-height: 44px; padding: 0; border: 0; border-radius: 0; outline: 0; box-shadow: none; color: var(--text); background: transparent; font: inherit; font-size: .85rem; font-weight: 400; }
+.field .searchBox input:focus-visible { outline: 0; box-shadow: none; }
+.popup { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; max-height: 15rem; overflow-y: auto; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); box-shadow: 0 12px 24px #0003; }
+.popupOverlay { position: fixed; top: auto; right: auto; z-index: 20; overscroll-behavior: contain; touch-action: pan-y; }
+.popup p { padding: .8rem; color: var(--muted); font-size: .8rem; font-weight: 400; }
+.option { display: grid; width: 100%; gap: .15rem; padding: .65rem .8rem; text-align: left; cursor: pointer; }
+.option:hover, .option[aria-selected="true"] { background: var(--hover); }
+.option strong { color: var(--text); font-size: .85rem; font-weight: 600; }
+.option small { color: var(--muted); font-size: .75rem; font-weight: 400; overflow-wrap: anywhere; }
+.error { color: #e36060; font-size: .75rem; font-weight: 500; }

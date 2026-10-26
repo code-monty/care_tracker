@@ -5,6 +5,8 @@ import { ArrowDown, ArrowUp, CalendarDays, ChevronLeft, ChevronRight, Clock3, Ey
 import { Appointment, AppointmentStatus, SortKey, filterAppointments, getCalendarDays, sortAppointments } from "@/lib/rules/appointments";
 import styles from "./appointments.module.css";
 import { appointmentWarnings, saveAppointment } from "@/lib/actions/records";
+import type { NameMatch } from "@/lib/actions/records";
+import RecordNameSearch from "@/components/record-name-search";
 
 const PAGE_SIZE = 6;
 const manilaTodayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -43,7 +45,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
-export default function AppointmentsWorkspace({ initialAppointments, clients }: { initialAppointments: Appointment[]; clients: { id: string; name: string; contact: string; email: string }[] }) {
+export default function AppointmentsWorkspace({ initialAppointments }: { initialAppointments: Appointment[] }) {
   const [today] = useState(() => todayInManila());
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -58,6 +60,9 @@ export default function AppointmentsWorkspace({ initialAppointments, clients }: 
   const [notice, setNotice] = useState("");
   const [reasonChoice, setReasonChoice] = useState("Follow-up");
   const [editing, setEditing] = useState<Appointment | null>(null);
+  const [addClient, setAddClient] = useState<NameMatch | null>(null);
+  const [editClient, setEditClient] = useState<NameMatch | null>(null);
+  const [clientError, setClientError] = useState("");
   const filtered = useMemo(() => sortAppointments(filterAppointments(appointments, { search, dateFilter, statusFilter, today }), sort), [appointments, search, dateFilter, statusFilter, sort, today]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -80,11 +85,11 @@ export default function AppointmentsWorkspace({ initialAppointments, clients }: 
     const data = new FormData(form);
     const reason = reasonChoice === "Other" ? String(data.get("customReason") ?? "").trim() : reasonChoice;
     if (!form.reportValidity() || !reason) return;
-    const client = clients.find((item) => item.id === String(data.get("clientId")));
-    if (!client) return;
+    const client = addClient;
+    if (!client) { setClientError("Select a client from the search results."); return; }
     const appointment: Appointment = {
       id: crypto.randomUUID(),
-      clientId: client.id, clientName: client.name, clientContact: client.contact, clientEmail: client.email,
+      clientId: client.id, clientName: client.name, clientContact: client.contact ?? "", clientEmail: client.detail,
       date: String(data.get("date")),
       time: String(data.get("time")),
       reason,
@@ -100,6 +105,7 @@ export default function AppointmentsWorkspace({ initialAppointments, clients }: 
     setCalendarMonth(appointment.date.slice(0, 7));
     setNotice("Appointment saved.");
     setAdding(false);
+    setAddClient(null);
     setReasonChoice("Follow-up");
   }
 
@@ -109,24 +115,26 @@ export default function AppointmentsWorkspace({ initialAppointments, clients }: 
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
     const data = new FormData(form);
-    const client = clients.find((item) => item.id === String(data.get("clientId")));
+    const client = editClient;
     const clientName = client?.name ?? "";
     const reason = String(data.get("reason") ?? "").trim();
     const date = String(data.get("date") ?? "");
     const time = String(data.get("time") ?? "");
-    if (!client || !reason || !date || !time) return;
+    if (!client) { setClientError("Select a client from the search results."); return; }
+    if (!reason || !date || !time) return;
     const status = String(data.get("status")) as AppointmentStatus;
     const warning = await appointmentWarnings(date, time, editing.id);
     if ((warning.past || warning.occupied) && !window.confirm("Appointment is in the past or overlaps another appointment. Save anyway?")) return;
     try { await saveAppointment({ clientId: client.id, date, time, reason, status: status.toLowerCase() as "pending" | "confirmed" | "cancelled" }, editing.id); }
     catch { setNotice("Unable to update appointment."); return; }
-    setAppointments((current) => current.map((item) => item.id === editing.id ? { ...item, clientName, clientId: client.id, clientContact: client.contact, clientEmail: client.email, reason, date, time, status } : item));
+    setAppointments((current) => current.map((item) => item.id === editing.id ? { ...item, clientName, clientId: client.id, clientContact: client.contact ?? "", clientEmail: client.detail, reason, date, time, status } : item));
     setNotice("Appointment updated.");
     setEditing(null);
+    setEditClient(null);
   }
 
   function actions(appointment: Appointment) {
-    return <div className={styles.rowActions}><button type="button" className={styles.detailsButton} onClick={() => setSelected(appointment)}><Eye aria-hidden="true" size={17} /> View details</button><details className={styles.actionMenu}><summary aria-label={`More actions for ${appointment.clientName}`}><MoreVertical aria-hidden="true" size={20} /></summary><div><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setEditing(appointment); }}>Edit appointment</button><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setEditing(appointment); }}>Change status</button></div></details></div>;
+    return <div className={styles.rowActions}><button type="button" className={styles.detailsButton} onClick={() => setSelected(appointment)}><Eye aria-hidden="true" size={17} /> View details</button><details className={styles.actionMenu}><summary aria-label={`More actions for ${appointment.clientName}`}><MoreVertical aria-hidden="true" size={20} /></summary><div><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setEditClient({ id: appointment.clientId ?? "", name: appointment.clientName, detail: appointment.clientEmail ?? "", contact: appointment.clientContact }); setEditing(appointment); }}>Edit appointment</button><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setEditClient({ id: appointment.clientId ?? "", name: appointment.clientName, detail: appointment.clientEmail ?? "", contact: appointment.clientContact }); setEditing(appointment); }}>Change status</button></div></details></div>;
   }
 
   const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
@@ -176,7 +184,7 @@ export default function AppointmentsWorkspace({ initialAppointments, clients }: 
       {adding && <Modal title="Add appointment" onClose={() => { setAdding(false); setReasonChoice("Follow-up"); }}>
         <form className={styles.form} onSubmit={addAppointment}>
           <p className={styles.formIntro}>Select a saved client to schedule an appointment.</p>
-          <label><span>Client <b aria-hidden="true">*</b></span><select name="clientId" autoFocus required><option value="">Select client</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select></label>
+          <RecordNameSearch kind="client" label="Client *" value={addClient} onChange={(item) => { setAddClient(item); setClientError(""); }} errorMessage={clientError} autoFocus />
           <div className={styles.formRow}><label><span>Appointment date <b aria-hidden="true">*</b></span><input name="date" type="date" defaultValue={today} required /></label><label><span>Appointment time <b aria-hidden="true">*</b></span><input name="time" type="time" required /></label></div>
           <label><span>Reason <b aria-hidden="true">*</b></span><select name="reason" value={reasonChoice} onChange={(event) => setReasonChoice(event.target.value)}><option>Follow-up</option><option>Assessment</option><option>Consultation</option><option>Other</option></select></label>
           {reasonChoice === "Other" && <label><span>Custom reason <b aria-hidden="true">*</b></span><input name="customReason" required maxLength={100} placeholder="Enter appointment reason" /></label>}
@@ -186,7 +194,7 @@ export default function AppointmentsWorkspace({ initialAppointments, clients }: 
 
       {editing && <Modal title="Edit appointment" onClose={() => setEditing(null)}><form className={styles.form} onSubmit={updateAppointment}>
         <p className={styles.formIntro}>Update appointment details and status.</p>
-        <label><span>Client</span><select name="clientId" defaultValue={editing.clientId} required>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select></label>
+        <RecordNameSearch kind="client" label="Client *" value={editClient} onChange={(item) => { setEditClient(item); setClientError(""); }} errorMessage={clientError} />
         <div className={styles.formRow}><label><span>Appointment date</span><input name="date" type="date" defaultValue={editing.date} required /></label><label><span>Appointment time</span><input name="time" type="time" defaultValue={editing.time} required /></label></div>
         <label><span>Reason</span><input name="reason" defaultValue={editing.reason} required maxLength={100} /></label>
         <label><span>Status</span><select name="status" defaultValue={editing.status}><option>Pending</option><option>Confirmed</option><option>Cancelled</option></select></label>

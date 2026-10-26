@@ -60,3 +60,20 @@ export async function appointmentWarnings(date: string, time: string, exceptId?:
 export async function dashboardForDate(date: string) {
   return getDashboardRecords(z.iso.date().parse(date));
 }
+
+export type NameMatch = { id: string; name: string; detail: string; contact?: string };
+
+export async function searchRecordNames(kind: "client" | "attorney", term: string): Promise<NameMatch[]> {
+  await requireActiveUser();
+  const value = z.string().trim().min(1).max(100).parse(term);
+  const pattern = `%${value.replace(/[\\%_]/g, "\\$&")}%`;
+  const db = await createClient();
+  if (kind === "client") {
+    const { data, error } = await db.from("clients").select("id,full_name,email,contact_no").eq("is_archived", false).ilike("full_name", pattern).order("full_name").limit(10);
+    if (error) fail(error);
+    return (data ?? []).map((row) => ({ id: row.id, name: row.full_name, detail: row.email, contact: row.contact_no }));
+  }
+  const { data, error } = await db.from("attorneys").select("id,full_name,email,contact_no").ilike("full_name", pattern).order("full_name").limit(10);
+  if (error) fail(error);
+  return (data ?? []).map((row) => ({ id: row.id, name: row.full_name, detail: row.email, contact: row.contact_no }));
+}
