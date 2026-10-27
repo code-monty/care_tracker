@@ -23,6 +23,14 @@
 .statusControl select { width: 100%; min-height: 2.6rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; cursor: pointer; }
 .statusControl option { color: #0f172a; }
 .statusHint, .emptyTasks { margin-top: .75rem; color: var(--muted); font-size: .78rem; line-height: 1.5; }
+.taskList { display: grid; gap: .7rem; margin-top: 1rem; }
+.taskList li { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line); font-size: .8rem; }
+.taskList li div { display: grid; gap: .2rem; min-width: 0; }
+.taskList li strong { overflow-wrap: anywhere; }
+.taskList li div span { color: var(--muted); font-size: .74rem; }
+.taskStatus { flex: none; color: var(--brand); font-size: .73rem; font-weight: 650; }
+.taskLink { display: inline-flex; margin-top: 1rem; color: var(--brand); font-size: .8rem; font-weight: 650; }
+.taskLink:hover { text-decoration: underline; }
 .unavailable { display: grid; justify-items: center; max-width: 34rem; margin: 3rem auto; padding: 3rem 2rem; text-align: center; }
 .unavailable svg { margin-bottom: .7rem; color: var(--brand); }
 .unavailable h1 { font-size: 1.2rem; font-weight: 700; }

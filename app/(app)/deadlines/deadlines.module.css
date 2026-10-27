@@ -1,0 +1,62 @@
+.page { padding: 1.5rem 1.5rem 4rem; color: var(--text); }
+.heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
+.heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
+.primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-size: .875rem; font-weight: 650; cursor: pointer; }
+.primaryButton:hover { background: #00543a; }
+.primaryButton:disabled { opacity: .55; cursor: not-allowed; }
+.context, .notice { margin: -.5rem 0 1rem; color: var(--muted); font-size: .83rem; }
+.context a { color: var(--brand); text-decoration: underline; }
+.notice { margin-top: 0; }
+.panel { overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 1px 2px #0000000d; }
+.toolbar { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line); }
+.search, .filter { display: flex; align-items: center; gap: .55rem; min-height: 2.75rem; padding: 0 .8rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--muted); background: var(--surface); font-size: .8rem; }
+.search { width: min(100%, 19rem); }
+.search input { width: 100%; min-width: 0; color: var(--text); background: transparent; outline: 0; font-size: .85rem; }
+.filter select { max-width: 12rem; color: var(--text); background: var(--surface); color-scheme: dark; outline: 0; cursor: pointer; font-size: .85rem; }
+.filter option { color: var(--text); background: var(--surface); }
+:global([data-theme="light"]) .filter select { color-scheme: light; }
+.tableScroll { overflow-x: auto; }
+.tableScroll table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
+.tableScroll th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
+.tableScroll td { padding: .85rem 1.2rem; border-bottom: 1px solid var(--line); font-size: .85rem; vertical-align: middle; overflow-wrap: anywhere; }
+.tableScroll tr:last-child td { border-bottom: 0; }
+.clientLink, .taskButton { color: var(--brand); font-weight: 650; text-align: left; }
+.clientLink:hover, .taskButton:hover { text-decoration: underline; }
+.dateCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.statusCell { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
+.statusBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; font-size: .73rem; font-weight: 700; white-space: nowrap; }
+.overdue { color: #9f1b1b; background: #fee2e2; }
+.duesoon { color: #854d0e; background: #fef3c7; }
+.upcoming { color: #065f46; background: #d1fae5; }
+.done { color: #334155; background: #e2e8f0; }
+.doneButton { min-height: 2rem; padding: .25rem .5rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--brand); font-size: .75rem; font-weight: 650; white-space: nowrap; }
+.doneButton:hover { background: var(--hover); }
+.doneButton:disabled { opacity: .5; }
+.empty { display: flex; min-height: 17rem; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; color: var(--muted); text-align: center; font-size: .8rem; }
+.empty svg { margin-bottom: .5rem; color: var(--brand); }
+.empty strong { color: var(--text); font-size: .95rem; }
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 4rem; padding: .75rem 1.5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+.pagination { display: flex; align-items: center; gap: .4rem; }
+.pagination button, .pagination span { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: .5rem; }
+.pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.pagination span { color: var(--text); background: var(--hover); }
+.dialog { width: min(32rem, calc(100vw - 1rem)); max-width: none; max-height: 90dvh; margin: auto; padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: .85rem; color: var(--text); background: var(--surface); box-shadow: 0 24px 70px #0008; }
+.dialog:not([open]) { display: none; }
+.dialog::backdrop { background: #061321b8; }
+.dialogHeading { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
+.dialogHeading h2 { font-size: 1.1rem; font-weight: 700; }
+.dialogHeading button { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: .4rem; }
+.dialogHeading button:hover { background: var(--hover); }
+.form { display: grid; gap: 1rem; padding: 1.25rem; }
+.form label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 650; }
+.form :is(input, select) { width: 100%; min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
+.form select { color-scheme: dark; }
+.form select option { color: var(--text); background: var(--surface); }
+:global([data-theme="light"]) .form select { color-scheme: light; }
+.formError { color: #b91c1c; font-size: .8rem; }
+.formActions { display: flex; justify-content: flex-end; gap: .6rem; padding-top: .4rem; }
+.formActions > button:first-child { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .85rem; }
+.page :is(button, input, select, a):focus-visible, .dialog :is(button, input, select):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 760px) { .page { padding: 1rem 1rem 3rem; } .toolbar { padding: 1rem; } .search { flex: 1 1 100%; width: 100%; } .footer { padding: .75rem 1rem; } }

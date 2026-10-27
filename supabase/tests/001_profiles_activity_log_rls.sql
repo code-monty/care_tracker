@@ -177,7 +177,7 @@ select lives_ok(
 );
 
 select is(
-  (select count(*) from public.activity_log)::int, 1,
+  (select count(*) from public.activity_log where actor_id = '00000000-0000-0000-0000-000000000001' and action = 'login')::int, 1,
   'admin can read activity_log rows'
 );
 

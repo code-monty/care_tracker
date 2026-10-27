@@ -25,13 +25,13 @@ select is((select count(*) from public.appointments)::int,0,'pending cannot read
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000004","role":"authenticated"}',true);
 select is((select count(*) from public.clients)::int,0,'disabled cannot read clients');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
-select is((select count(*) from public.clients)::int,1,'active staff can read clients');
-select is((select count(*) from public.appointments)::int,1,'active staff can read appointments');
+select is((select count(*) from public.clients where id='30000000-0000-0000-0000-000000000001')::int,1,'active staff can read clients');
+select is((select count(*) from public.appointments where client_id='30000000-0000-0000-0000-000000000001')::int,1,'active staff can read appointments');
 select lives_ok($$select public.create_client_record('{"petitionerName":"Fake Added","petitionerBirthdate":"1990-02-01","petitionerContact":"0912-345-6789","petitionerEmail":"added@example.test","petitionerAddress":"Fake address","respondentName":"Fake Respondent Two","respondentBirthdate":"1991-02-01","respondentContact":"0912-345-6789","respondentEmail":"respondent-two@example.test","respondentAddress":"Fake address"}'::jsonb,'20000000-0000-0000-0000-000000000001')$$,'staff can create client with existing attorney');
-select is((select count(*) from public.clients)::int,2,'created client is visible to staff');
+select is((select count(*) from public.clients where full_name in ('Fake Client','Fake Added'))::int,2,'created client is visible to staff');
 select throws_ok($$update public.clients set is_archived=true where id='30000000-0000-0000-0000-000000000001'$$,'Only Admin may archive or restore clients','staff cannot archive');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
-select is((select count(*) from public.clients)::int,2,'admin can read clients');
+select is((select count(*) from public.clients where full_name in ('Fake Client','Fake Added'))::int,2,'admin can read clients');
 select lives_ok($$update public.clients set is_archived=true where id='30000000-0000-0000-0000-000000000001'$$,'admin can archive');
 
 select * from finish();

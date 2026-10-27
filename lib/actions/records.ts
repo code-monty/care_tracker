@@ -5,12 +5,13 @@ import { z } from "zod";
 import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { addClientSchema } from "@/lib/validation/client";
-import { getDashboardRecords } from "@/lib/data/records";
+import { getDashboardRecords, getDeadlineRecords } from "@/lib/data/records";
 
 const uuid = z.uuid();
 const statusSchema = z.enum(["active", "inactive"]);
 const appointmentSchema = z.object({ clientId: uuid, date: z.iso.date(), time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/), reason: z.string().trim().min(1).max(100), status: z.enum(["pending", "confirmed", "cancelled"]) });
-function refresh() { for (const path of ["/clients", "/appointments", "/dashboard"]) revalidatePath(path); }
+const taskSchema = z.object({ clientId: uuid, title: z.string().trim().min(1).max(120), assignedTo: uuid, dueDate: z.iso.date() });
+function refresh() { for (const path of ["/clients", "/appointments", "/dashboard", "/deadlines"]) revalidatePath(path); }
 function fail(error: unknown): never { throw new Error(error instanceof Error ? error.message : "Unable to save record"); }
 
 export async function createClientRecord(input: z.infer<typeof addClientSchema>, existingAttorneyId?: string) {
@@ -59,6 +60,43 @@ export async function appointmentWarnings(date: string, time: string, exceptId?:
 
 export async function dashboardForDate(date: string) {
   return getDashboardRecords(z.iso.date().parse(date));
+}
+
+export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
+  const { user } = await requireActiveUser();
+  const value = taskSchema.parse(input);
+  const db = await createClient();
+  const [client, staff] = await Promise.all([
+    db.from("clients").select("id").eq("id", value.clientId).eq("is_archived", false).single(),
+    db.rpc("active_staff_directory"),
+  ]);
+  if (!client.data) throw new Error("Select an available client.");
+  if (staff.error || !(staff.data as { id: string }[] | null)?.some((person) => person.id === value.assignedTo)) throw new Error("Select an active staff member.");
+  const payload = { client_id: value.clientId, title: value.title, assigned_to: value.assignedTo, due_date: value.dueDate };
+  const { data, error } = id
+    ? await db.from("tasks").update(payload).eq("id", uuid.parse(id)).select("id").single()
+    : await db.from("tasks").insert({ ...payload, created_by: user.id }).select("id").single();
+  if (error || !data) fail(error);
+  refresh();
+  revalidatePath(`/clients/${value.clientId}`);
+  return data.id as string;
+}
+
+export async function completeTask(id: string) {
+  await requireActiveUser();
+  const db = await createClient();
+  const { data, error } = await db.from("tasks").update({ status: "done" }).eq("id", uuid.parse(id)).eq("status", "open").select("client_id").single();
+  if (error || !data) fail(error);
+  refresh();
+  revalidatePath(`/clients/${data.client_id}`);
+}
+
+export async function clientTasksForClient(id: string) {
+  return getDeadlineRecords(uuid.parse(id));
+}
+
+export async function deadlinesForPage() {
+  return getDeadlineRecords();
 }
 
 export type NameMatch = { id: string; name: string; detail: string; contact?: string };

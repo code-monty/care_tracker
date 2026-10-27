@@ -44,8 +44,10 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.locator("#client-attorneyContact").fill("0912-345-6789");
   await page.locator("#client-attorneyEmail").fill(`attorney-${suffix}@example.test`);
   await page.getByRole("button", { name: "Save Client" }).click();
+  await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(name);
   await expect(page.getByText(name).first()).toBeVisible();
   await page.reload();
+  await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(name);
   await expect(page.getByText(name).first()).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 600 });
@@ -80,6 +82,7 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   expect(await attorneyList.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   expect(await formScroll.evaluate((element) => element.scrollTop)).toBe(formScrollBefore);
   if (listCanScroll) await attorneyList.getByRole("option").last().click();
+  await attorneySearch.fill("");
   await attorneySearch.fill(`Fake Attorney ${suffix}`);
   const attorneyOption = page.getByRole("option", { name: new RegExp(`Fake Attorney ${suffix}`) });
   await expect(attorneyOption).toBeVisible();
@@ -95,6 +98,7 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText(`Fake Attorney ${suffix}`);
   await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText("0912-345-6789");
   await page.getByRole("button", { name: "Save Client" }).click();
+  await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(secondName);
   await expect(page.getByText(secondName).first()).toBeVisible({ timeout: 20_000 });
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
@@ -164,7 +168,8 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.goto("/dashboard");
   await page.getByLabel("Select appointment date").fill(date);
   await expect(page.getByText(name).first()).toBeVisible();
-  await expect(page.getByRole("table").getByRole("columnheader")).toHaveText(["Client", "Time", "Reason"]);
+  const appointmentPanel = page.getByRole("region", { name: "Upcoming Appointments" });
+  await expect(appointmentPanel.getByRole("table").getByRole("columnheader")).toHaveText(["Client", "Time", "Reason"]);
   const scheduledBefore = Number((await page.locator('[aria-label$=" appointments scheduled"]').getAttribute("aria-label"))?.split(" ")[0]);
   expect(scheduledBefore).toBeGreaterThan(0);
   await expect(page.getByRole("link", { name: "View current active clients" })).toContainText("active clients");
@@ -175,11 +180,11 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await expect(page.getByLabel(`${scheduledBefore} appointments scheduled`)).toBeVisible();
   await page.getByRole("button", { name: "Switch to light theme" }).click();
   await expect(page.locator('[data-theme="light"]').first()).toBeVisible();
-  await expect(page.getByRole("table").getByRole("cell", { name })).toBeVisible();
+  await expect(appointmentPanel.getByRole("table").getByRole("cell", { name })).toBeVisible();
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
   await expect(page.locator('[data-theme="dark"]').first()).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole("table").getByRole("cell", { name })).toBeVisible();
+  await expect(appointmentPanel.getByRole("table").getByRole("cell", { name })).toBeVisible();
   await page.getByRole("button", { name: "Previous day" }).focus();
   await page.keyboard.press("Tab");
   await expect(page.getByLabel("Select appointment date")).toBeFocused();

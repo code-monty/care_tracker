@@ -5,6 +5,7 @@ import { dashboardForDate } from "@/lib/actions/records";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, CalendarClock, ChevronLeft, ChevronRight, Gavel, Users } from "lucide-react";
 import styles from "./dashboard.module.css";
+import type { DeadlineRecord } from "@/lib/rules/deadlines";
 
 function shiftDate(value: string, days: number) {
   const date = new Date(`${value}T12:00:00Z`);
@@ -12,13 +13,15 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] }[] }) {
+export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount }: { initialDate: string; initialCount: number; initialAppointments: { id: string; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number }) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
+  const [deadlines, setDeadlines] = useState(initialDeadlines);
+  const [deadlineCount, setDeadlineCount] = useState(initialDeadlineCount);
   const [loadError, setLoadError] = useState(false);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  async function selectDate(date: string) { setSelectedDate(date); setLoadError(false); try { const result = await dashboardForDate(date); setAppointments(result.appointments); } catch { setLoadError(true); } }
+  async function selectDate(date: string) { setSelectedDate(date); setLoadError(false); try { const result = await dashboardForDate(date); setAppointments(result.appointments); setDeadlines(result.deadlines); setDeadlineCount(result.deadlineCount); } catch { setLoadError(true); } }
 
   return (
     <main className={styles.dashboard}>
@@ -69,13 +72,13 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
               <div className={styles.headingTitle}><Gavel aria-hidden="true" size={21} /><h2 id="deadlines-heading">Deadlines</h2></div>
               <p className={styles.headingDescription}>Court dates, filings, and other case deadlines.</p>
             </div>
-            <span className={styles.badge}>0 tracked</span>
+            <span className={styles.badge}>{deadlineCount} tracked</span>
           </div>
-          <div className={styles.emptyState}>
+          {deadlines.length ? <div className={styles.appointmentTableWrap}><table className={`${styles.appointmentTable} ${styles.deadlineTable}`}><thead><tr><th scope="col">Client</th><th scope="col">Attorney</th><th scope="col">Task</th><th scope="col">Date</th><th scope="col">Status</th></tr></thead><tbody>{deadlines.map((task) => <tr key={task.id}><td><Link href={`/clients/${task.clientId}`}>{task.clientName}</Link></td><td>{task.attorneyName}</td><td>{task.title}</td><td>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" }).format(new Date(`${task.dueDate}T12:00:00+08:00`))}</td><td><span className={`${styles.deadlineStatus} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span></td></tr>)}</tbody></table></div> : <div className={styles.emptyState}>
             <CalendarClock aria-hidden="true" size={30} />
             <p className={styles.emptyTitle}>No deadlines to show</p>
-            <p>Deadlines will appear here when records become available.</p>
-          </div>
+            <p>Open tasks for active clients will appear here.</p>
+          </div>}
           <Link href="/deadlines" className={styles.panelLink}>View all deadlines <ArrowRight aria-hidden="true" size={18} /></Link>
         </section>
       </div>
