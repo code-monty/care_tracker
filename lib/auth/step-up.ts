@@ -66,6 +66,7 @@ export function signStepUpCookie(userId: string): string {
 export function verifyStepUpCookie(
   cookieValue: string | undefined,
   userId: string,
+  notBefore?: string | null,
 ): boolean {
   if (!cookieValue) return false;
 
@@ -92,6 +93,7 @@ export function verifyStepUpCookie(
   if (payload.userId !== userId) return false;
   if (typeof payload.verifiedAt !== "number") return false;
   if (Date.now() - payload.verifiedAt > STEP_UP_MAX_AGE_MS) return false;
+  if (notBefore && payload.verifiedAt < Date.parse(notBefore)) return false;
 
   return true;
 }

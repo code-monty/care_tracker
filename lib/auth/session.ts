@@ -29,7 +29,7 @@ export async function requireActiveUser() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, status")
+    .select("id, full_name, role, status, must_change_password, credential_reset_at")
     .eq("id", user.id)
     .single();
 
@@ -43,9 +43,11 @@ export async function requireActiveUser() {
   // by any other path that bypasses the routing-layer check.
   const cookieStore = await cookies();
   const stepUpCookie = cookieStore.get(STEP_UP_COOKIE_NAME)?.value;
-  if (!verifyStepUpCookie(stepUpCookie, user.id)) {
+  if (!verifyStepUpCookie(stepUpCookie, user.id, profile.credential_reset_at)) {
     redirect("/mfa");
   }
+
+  if (profile.must_change_password) redirect("/change-password");
 
   return { user, profile };
 }

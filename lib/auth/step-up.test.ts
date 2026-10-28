@@ -73,6 +73,13 @@ describe("signStepUpCookie / verifyStepUpCookie", () => {
     expect(verifyStepUpCookie(stillFresh, USER_ID)).toBe(true);
   });
 
+  it("rejects a verification made before an Admin password reset", () => {
+    const verifiedAt = Date.now() - 5_000;
+    const cookie = buildRawCookie({ userId: USER_ID, verifiedAt });
+    expect(verifyStepUpCookie(cookie, USER_ID, new Date(verifiedAt + 1_000).toISOString())).toBe(false);
+    expect(verifyStepUpCookie(cookie, USER_ID, new Date(verifiedAt - 1_000).toISOString())).toBe(true);
+  });
+
   it("fails when verifiedAt is not a number", () => {
     const malformed = buildRawCookie({ userId: USER_ID, verifiedAt: "not-a-number" });
     expect(verifyStepUpCookie(malformed, USER_ID)).toBe(false);

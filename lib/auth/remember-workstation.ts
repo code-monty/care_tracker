@@ -46,6 +46,6 @@ export function signRememberWorkstationCookie(userId: string, existingValue?: st
   return `${payload}.${signature(payload)}`;
 }
 
-export function verifyRememberWorkstationCookie(value: string | undefined, userId: string): boolean {
-  return readAccounts(value).some((account) => account.userId === userId);
+export function verifyRememberWorkstationCookie(value: string | undefined, userId: string, notBefore?: string | null): boolean {
+  return readAccounts(value).some((account) => account.userId === userId && (!notBefore || account.rememberedAt >= Date.parse(notBefore)));
 }

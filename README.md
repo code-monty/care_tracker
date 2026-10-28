@@ -64,6 +64,10 @@ On either sign-in method, selecting **Remember this workstation for 1 day** and 
 
 Google sign-in automatically remembers that approved account for 24 hours after its first successful email-code verification, even if the checkbox was not selected. Password sign-in still requires the checkbox to issue a new remembered entry. A remembered account continues to require its normal password or Google sign-in before access.
 
+## Admin user management
+
+Active Admins manage other accounts at `/admin/users`. New accounts become active immediately. Creation and password reset generate a temporary password shown once to the Admin; share it securely before closing the dialog. Existing passwords cannot be retrieved. After sign-in and email-code verification, the user must set a new password before accessing app records. A reset invalidates earlier step-up verification for that account. Admins can also approve pending accounts, edit names and email addresses, change roles, and deactivate or reactivate users. Accounts are never deleted from this page, and the last active Admin is protected. Changing an email stops Google sign-in with the old Google address; password sign-in uses the new email.
+
 ## Common commands
 
 ```bash

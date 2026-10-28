@@ -44,6 +44,14 @@ describe("password sign-in with remembered workstation", () => {
     expect(mocks.deleteCookie).toHaveBeenCalledWith("step_up");
   });
 
+  it("requires email-code verification when a password reset is newer than remembered trust", async () => {
+    mocks.getCookie.mockReturnValue({ value: signRememberWorkstationCookie("user-1") });
+    mocks.lookup.mockResolvedValue({ data: { id: "user-1", failed_login_attempts: 0, locked_until: null, must_change_password: false, credential_reset_at: new Date(Date.now() + 1_000).toISOString() } });
+    await signIn(input);
+    expect(mocks.setCookie).not.toHaveBeenCalledWith("step_up", expect.any(String), expect.any(Object));
+    expect(mocks.deleteCookie).toHaveBeenCalledWith("step_up");
+  });
+
   it("does not use the remembered cookie when the password is wrong", async () => {
     mocks.getCookie.mockReturnValue({ value: signRememberWorkstationCookie("user-1") });
     mocks.signIn.mockResolvedValue({ data: { user: null }, error: { status: 400 } });

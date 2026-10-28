@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isApprovedGoogleUser, isDisposableGoogleSignup, normalizeEmail } from "./google-eligibility";
 
-const user = { id: "account-1", email: " Staff@Example.com ", identities: [{ provider: "google" }] };
+const user = { id: "account-1", email: " Staff@Example.com ", identities: [{ provider: "google", identity_data: { email: "staff@example.com" } }] };
 const profile = { id: "account-1", email: "staff@example.com", status: "active" };
 
 describe("Google account eligibility", () => {
@@ -17,6 +17,7 @@ describe("Google account eligibility", () => {
     expect(isApprovedGoogleUser(user as never, { ...profile, locked_until: new Date(Date.now() + 60_000).toISOString() })).toBe(false);
     expect(isApprovedGoogleUser(user as never, { ...profile, id: "another-account" })).toBe(false);
     expect(isApprovedGoogleUser(user as never, { ...profile, email: "other@example.com" })).toBe(false);
+    expect(isApprovedGoogleUser({ ...user, identities: [{ provider: "google", identity_data: { email: "old@example.com" } }] } as never, profile)).toBe(false);
     expect(isApprovedGoogleUser({ ...user, identities: [{ provider: "email" }] } as never, profile)).toBe(false);
   });
 

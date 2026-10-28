@@ -16,7 +16,7 @@ import { signRememberWorkstationCookie } from "@/lib/auth/remember-workstation";
 
 const user = {
   id: "account-1", email: "staff@example.com", created_at: new Date().toISOString(),
-  identities: [{ provider: "google" }],
+  identities: [{ provider: "google", identity_data: { email: "staff@example.com" } }],
 };
 
 function request(query: string) {

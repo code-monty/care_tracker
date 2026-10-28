@@ -26,14 +26,14 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const { data: profile, error: lookupError } = await admin
     .from("profiles")
-    .select("id, email, status, locked_until")
+    .select("id, email, status, locked_until, must_change_password, credential_reset_at")
     .eq("id", user.id)
     .maybeSingle();
 
   if (!lookupError && isApprovedGoogleUser(user, profile)) {
     const cookieStore = await cookies();
     cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
-    if (verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, user.id)) {
+    if (!profile?.must_change_password && verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, user.id, profile?.credential_reset_at)) {
       cookieStore.set(STEP_UP_COOKIE_NAME, signStepUpCookie(user.id), {
         httpOnly: true, secure: true, sameSite: "lax", maxAge: STEP_UP_MAX_AGE_MS / 1000, path: "/",
       });

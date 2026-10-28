@@ -12,7 +12,7 @@ export function isApprovedGoogleUser(
   const email = normalizeEmail(user.email);
   return Boolean(
     email &&
-      user.identities?.some((identity) => identity.provider === "google") &&
+      user.identities?.some((identity) => identity.provider === "google" && normalizeEmail(identity.identity_data?.email as string | undefined) === email) &&
       profile?.id === user.id &&
       profile.status === "active" &&
       (!profile.locked_until || Date.parse(profile.locked_until) <= Date.now()) &&

@@ -18,6 +18,13 @@ describe("remembered workstation", () => {
     expect(verifyRememberWorkstationCookie(signStepUpCookie("user-1"), "user-1")).toBe(false);
   });
 
+  it("does not trust a remembered entry created before a password reset", () => {
+    const rememberedAt = Date.now();
+    const cookie = signRememberWorkstationCookie("user-1");
+    expect(verifyRememberWorkstationCookie(cookie, "user-1", new Date(rememberedAt + 1_000).toISOString())).toBe(false);
+    expect(verifyRememberWorkstationCookie(cookie, "user-1", new Date(rememberedAt - 1_000).toISOString())).toBe(true);
+  });
+
   it("expires after 24 hours without extending its original issue time", () => {
     vi.useFakeTimers();
     try {

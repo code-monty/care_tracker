@@ -43,7 +43,7 @@ export async function signIn(input: { email: string; password: string }) {
   // anonymous read of profiles entirely, as it should.
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, failed_login_attempts, locked_until")
+    .select("id, failed_login_attempts, locked_until, must_change_password, credential_reset_at")
     .eq("email", email)
     .maybeSingle();
 
@@ -95,7 +95,7 @@ export async function signIn(input: { email: string; password: string }) {
   const cookieStore = await cookies();
   cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
   const userId = signInData.user?.id;
-  if (userId && verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, userId)) {
+  if (userId && !profile?.must_change_password && verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, userId, profile?.credential_reset_at)) {
     cookieStore.set(STEP_UP_COOKIE_NAME, signStepUpCookie(userId), {
       httpOnly: true, secure: true, sameSite: "lax", maxAge: STEP_UP_MAX_AGE_MS / 1000, path: "/",
     });

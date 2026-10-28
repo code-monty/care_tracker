@@ -12,7 +12,7 @@ import { STEP_UP_COOKIE_NAME, verifyStepUpCookie } from "@/lib/auth/step-up";
 // sense that a signed-in-but-not-Active user must be able to reach it
 // without being redirected back to itself in a loop. /mfa is public in the
 // same sense for a signed-in-but-not-step-up-verified user (DEV-02).
-const PUBLIC_PATHS = ["/login", "/mfa", "/pending", "/privacy-policy", "/terms-of-service", "/auth"];
+const PUBLIC_PATHS = ["/login", "/mfa", "/pending", "/change-password", "/privacy-policy", "/terms-of-service", "/auth"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -57,7 +57,7 @@ export async function proxy(request: NextRequest) {
   if (user && !isPublicPath) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("status")
+      .select("status, must_change_password, credential_reset_at")
       .eq("id", user.id)
       .single();
 
@@ -73,9 +73,14 @@ export async function proxy(request: NextRequest) {
     // lib/auth/verify-step-up.ts sets on a correct code; lib/auth/session.ts's
     // requireActiveUser() repeats this check server-side (Rule 2 above).
     const stepUpCookie = request.cookies.get(STEP_UP_COOKIE_NAME)?.value;
-    if (!verifyStepUpCookie(stepUpCookie, user.id)) {
+    if (!verifyStepUpCookie(stepUpCookie, user.id, profile.credential_reset_at)) {
       const url = request.nextUrl.clone();
       url.pathname = "/mfa";
+      return NextResponse.redirect(url);
+    }
+    if (profile.must_change_password) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/change-password";
       return NextResponse.redirect(url);
     }
   }
