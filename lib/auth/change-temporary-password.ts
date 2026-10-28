@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { STEP_UP_COOKIE_NAME, verifyStepUpCookie } from "@/lib/auth/step-up";
 import { passwordChangeSchema } from "@/lib/validation/admin-user";
 
-export async function changeTemporaryPassword(input: unknown): Promise<{ error?: string }> {
+export async function changeTemporaryPassword(input: unknown): Promise<{ error?: string; success?: boolean }> {
   const parsed = passwordChangeSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the new password" };
   const supabase = await createClient();
@@ -23,5 +23,5 @@ export async function changeTemporaryPassword(input: unknown): Promise<{ error?:
   if (error) return { error: "Unable to change password. Choose a different password and try again." };
   const { error: clearError } = await createAdminClient().rpc("complete_temporary_password", { p_user: user.id });
   if (clearError) return { error: "Password changed, but account setup could not finish. Please try again." };
-  redirect("/dashboard");
+  return { success: true };
 }

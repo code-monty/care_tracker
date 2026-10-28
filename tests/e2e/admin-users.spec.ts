@@ -53,7 +53,7 @@ test("Admin manages users and temporary passwords require a change", async ({ pa
     const secretDialog = page.getByRole("dialog", { name: "Temporary password" });
     await expect(secretDialog).toBeVisible({ timeout: 30_000 });
     const temporaryPassword = await secretDialog.locator("output").innerText();
-    expect(temporaryPassword.length).toBeGreaterThanOrEqual(10);
+    expect(temporaryPassword).toBe("123456");
     await secretDialog.getByRole("button", { name: "Done" }).click();
     await expect(secretDialog).toBeHidden();
     const { data: rows } = await admin.from("profiles").select("id, status, must_change_password").eq("email", targetEmail).single();
@@ -99,6 +99,7 @@ test("Admin manages users and temporary passwords require a change", async ({ pa
     await revisedRow.getByRole("button", { name: "Reset password" }).click();
     const resetDialog = page.getByRole("dialog", { name: "Temporary password" });
     await expect(resetDialog).toBeVisible({ timeout: 30_000 });
+    await expect(resetDialog.locator("output")).toHaveText("123456");
     await resetDialog.getByRole("button", { name: "Done" }).click();
     await revisedRow.getByRole("button", { name: "Deactivate" }).click();
     await expect(revisedRow.getByText("Disabled")).toBeVisible({ timeout: 30_000 });

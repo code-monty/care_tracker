@@ -66,7 +66,7 @@ Google sign-in automatically remembers that approved account for 24 hours after 
 
 ## Admin user management
 
-Active Admins manage other accounts at `/admin/users`. New accounts become active immediately. Creation and password reset generate a temporary password shown once to the Admin; share it securely before closing the dialog. Existing passwords cannot be retrieved. After sign-in and email-code verification, the user must set a new password before accessing app records. A reset invalidates earlier step-up verification for that account. Admins can also approve pending accounts, edit names and email addresses, change roles, and deactivate or reactivate users. Accounts are never deleted from this page, and the last active Admin is protected. Changing an email stops Google sign-in with the old Google address; password sign-in uses the new email.
+Active Admins manage other accounts at `/admin/users`. New accounts become active immediately. Creation and password reset use the shared temporary password `123456`; share it securely. Existing passwords cannot be retrieved. After sign-in and email-code verification, the user must set a new password of at least 10 characters before accessing app records. A reset invalidates earlier step-up verification for that account. Admins can also approve pending accounts, edit names and email addresses, change roles, and deactivate or reactivate users. Accounts are never deleted from this page, and the last active Admin is protected. Changing an email stops Google sign-in with the old Google address; password sign-in uses the new email. The hosted Supabase Auth minimum password length must also be set to 6 before using this flow there.
 
 ## Common commands
 

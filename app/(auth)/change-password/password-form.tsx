@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { changeTemporaryPassword } from "@/lib/auth/change-temporary-password";
 import styles from "./password.module.css";
 
 export function ChangePasswordForm() {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [visible, setVisible] = useState(false);
@@ -15,14 +17,17 @@ export function ChangePasswordForm() {
     if (busy) return;
     setBusy(true);
     setError("");
+    let succeeded = false;
     try {
       const result = await changeTemporaryPassword({ password, confirmation });
-      if (result?.error) setError(result.error);
+      succeeded = result.success === true;
+      if (result.error) setError(result.error);
     } catch {
       setError("Unable to finish account setup. Please try again.");
     } finally {
-      setBusy(false);
+      if (!succeeded) setBusy(false);
     }
+    if (succeeded) router.replace("/dashboard");
   }
   return <form onSubmit={submit} className={styles.form}>
     <label htmlFor="new-password">New password</label>
