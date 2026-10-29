@@ -30,10 +30,10 @@ describe("password sign-in with remembered workstation", () => {
     mocks.getCookie.mockReturnValue(undefined);
   });
 
-  it("issues a fresh 10-minute step-up cookie after successful sign-in for the remembered user", async () => {
+  it("issues a fresh 24-hour step-up cookie after successful sign-in for the remembered user", async () => {
     mocks.getCookie.mockReturnValue({ value: signRememberWorkstationCookie("user-1") });
     await signIn(input);
-    expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 600 }));
+    expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 86400 }));
     expect(mocks.deleteCookie).toHaveBeenCalledWith("google_remember_intent");
     expect(mocks.redirect).toHaveBeenCalledWith("/dashboard");
     expect(mocks.audit).toHaveBeenCalledWith("user-1", "login");

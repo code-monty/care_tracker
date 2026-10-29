@@ -48,7 +48,7 @@ describe("Google OAuth callback", () => {
     mocks.getCookie.mockReturnValue({ value: signRememberWorkstationCookie(user.id) });
     const response = await GET(request("?code=valid"));
     expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
-    expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 600 }));
+    expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 86400 }));
     expect(mocks.setCookie).not.toHaveBeenCalledWith("google_remember_intent", expect.any(String), expect.any(Object));
   });
 

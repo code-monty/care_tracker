@@ -65,6 +65,14 @@ describe("signStepUpCookie / verifyStepUpCookie", () => {
     expect(verifyStepUpCookie(expired, USER_ID)).toBe(false);
   });
 
+  it("remains valid after 10 minutes without activity", () => {
+    const cookie = buildRawCookie({
+      userId: USER_ID,
+      verifiedAt: Date.now() - 11 * 60 * 1000,
+    });
+    expect(verifyStepUpCookie(cookie, USER_ID)).toBe(true);
+  });
+
   it("succeeds just under the STEP_UP_MAX_AGE_MS boundary", () => {
     const stillFresh = buildRawCookie({
       userId: USER_ID,

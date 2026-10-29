@@ -52,9 +52,8 @@ export async function verifyStepUp(input: { code: string; rememberWorkstation?: 
     httpOnly: true,
     secure: true,
     sameSite: "lax",
-    // Matches STEP_UP_MAX_AGE_MS (AGENTS.md Section 8's 10-minute idle
-    // timeout) so the browser never holds onto a cookie the server-side
-    // verifyStepUpCookie() check would already consider expired.
+    // Match the server-side verification limit so the browser never keeps
+    // a step-up cookie past its 24-hour validity window.
     maxAge: STEP_UP_MAX_AGE_MS / 1000,
     path: "/",
   });

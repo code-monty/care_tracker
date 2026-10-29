@@ -25,9 +25,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const STEP_UP_COOKIE_NAME = "step_up";
 
-// Mirrors AGENTS.md Section 8's 10-minute idle session timeout: a step-up
-// verification should not outlive the session it was performed for.
-export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000;
+// A verified sign-in remains elevated for one day, with no idle-based expiry.
+// The separate remembered-workstation entry only skips a code on a later sign-in.
+export const STEP_UP_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 interface StepUpPayload {
   userId: string;

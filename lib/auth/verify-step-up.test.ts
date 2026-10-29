@@ -21,7 +21,7 @@ describe("email-code verification and workstation preference", () => {
   it("remembers the workstation only when requested after a valid code", async () => {
     await verifyStepUp({ code: "123456", rememberWorkstation: true });
     expect(mocks.setCookie).toHaveBeenCalledWith("remember_workstation", expect.any(String), expect.objectContaining({ maxAge: 86400, httpOnly: true }));
-    expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 600 }));
+    expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 86400 }));
   });
 
   it("does not remember an unchecked workstation", async () => {
