@@ -9,7 +9,7 @@ Source of truth: *CareTracker System Architecture and Requirements Document (SAR
 
 **CareTracker** is a browser-based client and attorney monitoring system for **HLT Psychological Services** (Mandaluyong City, Philippines). It replaces index cards and a logbook with digital records of clients, attorneys, appointments and deadlines.
 
-- **Users:** `Admin` (owner and chief members) and `Staff` (psychometricians and related roles). A third non-person actor, the **queue display device**, is read-only and uses a rotatable token instead of a login.
+- **Users:** `Admin` (owner and chief members), `Secretary` (daily operations and task assignee), and `Staff` (psychometricians and related roles). A separate non-person actor, the **queue display device**, is read-only and uses a rotatable token instead of a login.
 - **Scale:** under 10 concurrent users, about 5,000 client records as the design limit.
 - **Locale:** English UI, time zone `Asia/Manila`, Philippine mobile format `09XX-XXX-XXXX`.
 - **Data sensitivity:** personal and legal-case information (RA 10173, Data Privacy Act). Security and privacy outrank every other quality attribute.
@@ -97,7 +97,7 @@ Only variables prefixed `NEXT_PUBLIC_` may reach the browser. Everything else st
   /(app)/clients, /clients/[id]
   /(app)/attorneys
   /(app)/deadlines
-  /(app)/admin/users, /logs, /settings, /backup   # Admin only
+  /(app)/admin/users, /logs, /settings, /backup   # Admin only; Secretary has no access
   /queue/display                 # token-gated, read-only
   /api/export/...                # route handlers: client .txt, log .csv
 /components                      # UI components
@@ -138,18 +138,21 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 
 ## 6. Roles and permissions
 
-| Capability | Admin | Staff |
-|---|---|---|
-| Log in/out, change own password, complete step-up verification | ✅ | ✅ |
-| View dashboard, appointments, clients, attorneys | ✅ | ✅ |
-| Add/edit clients, attorneys, notes | ✅ | ✅ |
-| Add/edit/cancel appointments; tasks, deadlines, priority | ✅ | ✅ |
-| Export client info to text (always logged) | ✅ | ✅ |
-| Operate queue (check-in, call next, done) | ✅ | ✅ |
-| Archive and restore clients | ✅ | ❌ |
-| View/export Activity Logs; security alerts | ✅ | ❌ |
-| Manage users (create, approve, reset, deactivate, change role) | ✅ | ❌ |
-| Settings, backup status, rotate queue token | ✅ | ❌ |
+| Capability | Admin | Secretary | Staff |
+|---|---|---|---|
+| Log in/out, change own password, complete step-up verification | ✅ | ✅ | ✅ |
+| View dashboard, appointments, clients, attorneys | ✅ | ✅ | ✅ |
+| Add/edit clients, attorneys, notes | ✅ | ✅ | ✅ |
+| Add/edit/cancel appointments; manage tasks and deadlines | ✅ | ✅ | ✅ |
+| Be assigned tasks and deadlines | ❌ | ✅ | ✅ |
+| Export client info to text (always logged) | ✅ | ✅ | ✅ |
+| Operate queue (check-in, call next, done) | ✅ | ✅ | ✅ |
+| Archive and restore clients | ✅ | ❌ | ❌ |
+| View/export Activity Logs; security alerts | ✅ | ❌ | ❌ |
+| Manage users (create, approve, reset, deactivate, change role) | ✅ | ❌ | ❌ |
+| Settings, backup status/restore, rotate queue token | ✅ | ❌ | ❌ |
+
+The Secretary role and its permissions were approved October 29, 2026. Only Admin can assign or change a user's role. The SARD v1.2 addendum records this approved change to its original two-role assumption and FR-AUTH-02.
 
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 
@@ -184,7 +187,7 @@ Activity-log entries reference the record (`entity_type`, `entity_id`) and **nev
 - Login errors are **generic** ("Invalid email or password") and never reveal whether an account exists.
 - Passwords: Admin-issued temporary passwords are `123456` (6 characters); users must replace them with a password of at least 10 characters after email-code verification. Lock out or back off after 5 failed attempts. Rate-limit login at Vercel and in Supabase.
 - Sessions expire after **10 minutes** idle (configurable): a Supabase session setting plus an app-level idle timer.
-- **Step-up verification is mandatory for all users (Admin and Staff).** DEV-02: this is email-based, not TOTP — see Section 15. After password sign-in, a 6-digit code is emailed to the user's address on file; the session is not elevated to full access until the code is verified. Codes expire after a short window (target: 10 minutes) and are single-use. Rate-limit verify attempts the same way login attempts are rate-limited (lockout rule, above) to prevent brute-forcing a 6-digit code.
+- **Step-up verification is mandatory for all users (Admin, Secretary, and Staff).** DEV-02: this is email-based, not TOTP — see Section 15. After password sign-in, a 6-digit code is emailed to the user's address on file; the session is not elevated to full access until the code is verified. Codes expire after a short window (target: 10 minutes) and are single-use. Rate-limit verify attempts the same way login attempts are rate-limited (lockout rule, above) to prevent brute-forcing a 6-digit code.
 - If a user selects **Remember this workstation for 1 day** and successfully verifies the email code, a separate signed, HttpOnly cookie may skip the email-code step after a later successful password or Google sign-in for up to 24 hours. Each remembered account on the browser retains its own original expiry, including across account switches and sign-out. It does not grant a session or extend the existing 10-minute step-up cookie. The documented 10-minute idle timer remains to be fully implemented.
 - Approved Google sign-in automatically remembers that account on the browser for 24 hours after a successful email-code check, even if the checkbox is unchecked. Password sign-in requires the checkbox to create a new remembered entry. The Google callback marks this intent with a short-lived, signed, user-bound cookie; a valid email code is still required before the remembered entry is issued.
 - Security headers: CSP, HSTS, `noindex`; secure, HttpOnly, SameSite cookies; CSRF-safe Server Actions.

@@ -25,4 +25,15 @@ describe("Admin user action authorization", () => {
     expect(mocks.createAdminClient).not.toHaveBeenCalled();
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
+
+  it("rejects direct Secretary calls before any privileged client is created", async () => {
+    mocks.requireActiveUser.mockResolvedValue({ user: { id }, profile: { role: "secretary", status: "active" } });
+    await expect(listUserAccounts()).rejects.toThrow("Admin access required");
+    await expect(createUserAccount({ fullName: "Fake User", email: "fake@example.test", role: "secretary" })).rejects.toThrow("Admin access required");
+    await expect(updateUserAccount({ id, fullName: "Fake User", email: "fake@example.test", role: "admin" })).rejects.toThrow("Admin access required");
+    await expect(setUserStatus({ id, status: "active" })).rejects.toThrow("Admin access required");
+    await expect(resetUserPassword(id)).rejects.toThrow("Admin access required");
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
 });

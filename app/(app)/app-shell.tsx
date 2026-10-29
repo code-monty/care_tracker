@@ -8,12 +8,14 @@ import { useAuthTheme } from "../(auth)/auth-theme";
 import { AdminMenuLinks, AppNavigation } from "./navigation";
 import styles from "./app-shell.module.css";
 
-export function AppShell({ children, fullName, isAdmin, signOut }: {
+export function AppShell({ children, fullName, role, signOut }: {
   children: ReactNode;
   fullName: string;
-  isAdmin: boolean;
+  role: "admin" | "staff" | "secretary";
   signOut: () => Promise<void>;
 }) {
+  const isAdmin = role === "admin";
+  const roleLabel = role === "admin" ? "Admin" : role === "secretary" ? "Secretary" : "Staff";
   const { theme, toggleTheme } = useAuthTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -56,7 +58,7 @@ export function AppShell({ children, fullName, isAdmin, signOut }: {
         </div>
         <div className={styles.headerActions}>
           <div className={styles.profile}>
-            <span className={styles.profileText}><strong title={fullName}>{fullName}</strong><small>{isAdmin ? "Admin" : "Staff"}</small></span>
+            <span className={styles.profileText}><strong title={fullName}>{fullName}</strong><small>{roleLabel}</small></span>
             <Image className={styles.avatar} src="/auth/shell-avatar.svg" alt="" width={42} height={42} />
           </div>
           <span className={styles.headerDivider} aria-hidden="true"><Image src="/auth/shell-divider.svg" alt="" width={59} height={1} /></span>
@@ -69,7 +71,7 @@ export function AppShell({ children, fullName, isAdmin, signOut }: {
             </button>
             {menuOpen && (
               <div id="profile-menu" className={styles.profileMenu}>
-                <p className={styles.menuHeading}>{fullName}<span>{isAdmin ? "Admin" : "Staff"}</span></p>
+                <p className={styles.menuHeading}>{fullName}<span>{roleLabel}</span></p>
                 <button type="button" className={styles.menuItem} onClick={() => { toggleTheme(); setMenuOpen(false); }}>
                   {theme === "dark" ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
                   Switch to {theme === "dark" ? "light" : "dark"} theme

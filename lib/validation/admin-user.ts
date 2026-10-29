@@ -4,7 +4,7 @@ export const accountIdSchema = z.uuid();
 export const accountDetailsSchema = z.object({
   fullName: z.string().trim().min(1, "Enter a name").max(120),
   email: z.email("Enter a valid email address").transform((value) => value.trim().toLowerCase()),
-  role: z.enum(["admin", "staff"]),
+  role: z.enum(["admin", "staff", "secretary"]),
 });
 export const createAccountSchema = accountDetailsSchema;
 export const updateAccountSchema = accountDetailsSchema.extend({ id: accountIdSchema });

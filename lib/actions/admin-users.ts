@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireActiveUser } from "@/lib/auth/session";
 import { accountIdSchema, createAccountSchema, statusActionSchema, updateAccountSchema } from "@/lib/validation/admin-user";
 
-export type AccountRow = { id: string; full_name: string | null; email: string | null; role: "admin" | "staff"; status: "pending" | "active" | "disabled"; created_at: string; must_change_password: boolean };
+export type AccountRow = { id: string; full_name: string | null; email: string | null; role: "admin" | "staff" | "secretary"; status: "pending" | "active" | "disabled"; created_at: string; must_change_password: boolean };
 type ActionResult = { error?: string; password?: string };
 
 const TEMPORARY_PASSWORD = "123456";

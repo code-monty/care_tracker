@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className={`${bodyFont.variable} ${headingFont.variable}`}>
-      <AppShell fullName={profile.full_name} isAdmin={profile.role === "admin"} signOut={signOut}>
+      <AppShell fullName={profile.full_name} role={profile.role as "admin" | "staff" | "secretary"} signOut={signOut}>
         {children}
       </AppShell>
     </div>

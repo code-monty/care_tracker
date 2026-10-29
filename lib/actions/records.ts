@@ -66,12 +66,12 @@ export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
   const { user } = await requireActiveUser();
   const value = taskSchema.parse(input);
   const db = await createClient();
-  const [client, staff] = await Promise.all([
+  const [client, personnel] = await Promise.all([
     db.from("clients").select("id").eq("id", value.clientId).eq("is_archived", false).single(),
-    db.rpc("active_staff_directory"),
+    db.rpc("active_personnel_directory"),
   ]);
   if (!client.data) throw new Error("Select an available client.");
-  if (staff.error || !(staff.data as { id: string }[] | null)?.some((person) => person.id === value.assignedTo)) throw new Error("Select an active staff member.");
+  if (personnel.error || !(personnel.data as { id: string }[] | null)?.some((person) => person.id === value.assignedTo)) throw new Error("Select an active personnel member.");
   const payload = { client_id: value.clientId, title: value.title, assigned_to: value.assignedTo, due_date: value.dueDate };
   const { data, error } = id
     ? await db.from("tasks").update(payload).eq("id", uuid.parse(id)).select("id").single()

@@ -54,10 +54,10 @@ export async function getDashboardRecords(date: string) {
   return { activeClients: clients.count ?? 0, appointments: appointments.data ?? [], deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length };
 }
 
-export async function getActiveStaff() {
+export async function getActivePersonnel() {
   await requireActiveUser();
   const db = await createClient();
-  const { data, error } = await db.rpc("active_staff_directory");
+  const { data, error } = await db.rpc("active_personnel_directory");
   if (error) throw error;
   return (data ?? []) as { id: string; full_name: string }[];
 }
@@ -70,7 +70,7 @@ export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRec
   const [tasks, clients, staff] = await Promise.all([
     query.order("due_date"),
     db.from("clients").select("id,full_name,status,attorney_id,is_archived,attorneys(full_name)").eq("is_archived", false),
-    db.rpc("active_staff_directory"),
+    db.rpc("active_personnel_directory"),
   ]);
   if (tasks.error) throw tasks.error;
   if (clients.error) throw clients.error;

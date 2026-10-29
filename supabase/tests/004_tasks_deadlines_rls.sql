@@ -27,7 +27,7 @@ select is((select count(*) from public.active_staff_directory() where id='410000
 select is((select count(*) from public.tasks where id='44000000-0000-0000-0000-000000000001')::int,1,'active staff can read shared tasks');
 select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Due Soon','three days ahead is Due Soon');
 select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Fake hearing','41000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Manila')::date + 4,'41000000-0000-0000-0000-000000000002')$$,'staff can create task');
-select throws_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Invalid assignment','41000000-0000-0000-0000-000000000004',current_date,'41000000-0000-0000-0000-000000000002')$$,'Select an active staff member','disabled assignee rejected');
+select throws_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Invalid assignment','41000000-0000-0000-0000-000000000004',current_date,'41000000-0000-0000-0000-000000000002')$$,'Select an active personnel member','disabled assignee rejected');
 select lives_ok($$update public.tasks set status='done' where id='44000000-0000-0000-0000-000000000001'$$,'staff can complete task');
 select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Done','done task remains in history');
 select set_config('request.jwt.claims','{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated"}',true);

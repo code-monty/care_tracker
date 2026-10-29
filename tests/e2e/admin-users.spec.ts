@@ -49,6 +49,7 @@ test("Admin manages users and temporary passwords require a change", async ({ pa
     await expect(form.getByRole("button", { name: "Create user" })).toBeFocused();
     await form.getByLabel("Full name").fill(`Fake Staff ${suffix}`);
     await form.getByLabel("Email address").fill(targetEmail);
+    await expect(form.getByLabel("Role").locator("option")).toHaveText(["Staff", "Secretary", "Admin"]);
     await form.getByRole("button", { name: "Create user" }).click();
     const secretDialog = page.getByRole("dialog", { name: "Temporary password" });
     await expect(secretDialog).toBeVisible({ timeout: 30_000 });
