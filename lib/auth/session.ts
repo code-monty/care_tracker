@@ -29,7 +29,7 @@ export async function requireActiveUser() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role, status, must_change_password, credential_reset_at")
+    .select("id, full_name, role, status, must_change_password, credential_reset_at, avatar_updated_at")
     .eq("id", user.id)
     .single();
 

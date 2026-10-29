@@ -1,7 +1,7 @@
 import type { LogRow } from "@/lib/data/activity-logs";
 
 const nouns: Record<string, string> = { clients: "client", attorneys: "attorney", respondents: "respondent", appointments: "appointment", tasks: "task", profiles: "user" };
-const verbs: Record<string, string> = { create: "Added", update: "Updated", archive: "Archived", restore: "Restored", approve: "Approved", role_change: "Changed role for", deactivate: "Deactivated", reactivate: "Reactivated", email_change: "Changed email for", password_reset: "Reset password for", password_change: "Changed password for", export: "Exported" };
+const verbs: Record<string, string> = { create: "Added", update: "Updated", profile_picture_update: "Updated picture for", archive: "Archived", restore: "Restored", approve: "Approved", role_change: "Changed role for", deactivate: "Deactivated", reactivate: "Reactivated", email_change: "Changed email for", password_reset: "Reset password for", password_change: "Changed password for", export: "Exported" };
 
 export function activityDescription(row: Pick<LogRow, "action" | "entity_type" | "entity_id">) {
   if (row.action === "login") return "Signed in";

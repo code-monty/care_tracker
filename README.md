@@ -64,6 +64,10 @@ On either sign-in method, selecting **Remember this workstation for 1 day** and 
 
 Google sign-in automatically remembers that approved account for 24 hours after its first successful email-code verification, even if the checkbox was not selected. Password sign-in still requires the checkbox to issue a new remembered entry. A remembered account continues to require its normal password or Google sign-in before access.
 
+## Personal settings
+
+Active Admin, Secretary, and Staff accounts can change their own name and password or upload a profile picture in Settings. Admins use `/admin/settings`; Secretary and Staff use `/settings`. Admins visiting `/settings` are redirected to their Settings page, which also remains the place for future Admin-only system controls. Password changes require the current password and a new password of at least 10 characters. JPEG, PNG, and WebP source pictures may be up to 2 MB; the browser resizes and compresses them to WebP before storing them in a private, per-user Supabase Storage bucket. The authenticated header shows the saved picture or its default avatar. Profile pictures are the only approved Storage upload; case documents are out of scope.
+
 ## Staff record access
 
 Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can mark an open task done only when assigned to them. Other Staff access, including client information export and queue operations, is unchanged.

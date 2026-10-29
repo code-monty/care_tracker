@@ -2,15 +2,17 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, Settings, Moon, Sun, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuthTheme } from "../(auth)/auth-theme";
 import { AdminMenuLinks, AppNavigation } from "./navigation";
 import styles from "./app-shell.module.css";
 
-export function AppShell({ children, fullName, role, signOut }: {
+export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
   children: ReactNode;
   fullName: string;
+  avatarVersion: string | null;
   role: "admin" | "staff" | "secretary";
   signOut: () => Promise<void>;
 }) {
@@ -58,7 +60,7 @@ export function AppShell({ children, fullName, role, signOut }: {
         <div className={styles.headerActions}>
           <div className={styles.profile}>
             <span className={styles.profileText}><strong title={fullName}>{fullName}</strong><small>{roleLabel}</small></span>
-            <Image className={styles.avatar} src="/auth/shell-avatar.svg" alt="" width={42} height={42} />
+            <Image className={styles.avatar} src={avatarVersion ? `/api/profile-picture?v=${encodeURIComponent(avatarVersion)}` : "/auth/shell-avatar.svg"} alt="" width={42} height={42} unoptimized={Boolean(avatarVersion)} />
           </div>
           <span className={styles.headerDivider} aria-hidden="true"><Image src="/auth/shell-divider.svg" alt="" width={59} height={1} /></span>
           <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
@@ -75,6 +77,7 @@ export function AppShell({ children, fullName, role, signOut }: {
                   {theme === "dark" ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
                   Switch to {theme === "dark" ? "light" : "dark"} theme
                 </button>
+                {!isAdmin && <Link href="/settings" className={styles.menuItem} onClick={() => setMenuOpen(false)}><Settings aria-hidden="true" size={18} />Settings</Link>}
                 {isAdmin && <><p className={styles.menuSection}>Admin</p><AdminMenuLinks onNavigate={() => setMenuOpen(false)} /></>}
                 <form action={signOut}><button type="submit" className={styles.menuItem}><LogOut aria-hidden="true" size={18} />Sign out</button></form>
               </div>

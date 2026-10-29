@@ -97,7 +97,8 @@ Only variables prefixed `NEXT_PUBLIC_` may reach the browser. Everything else st
   /(app)/clients, /clients/[id]
   /(app)/attorneys
   /(app)/deadlines
-  /(app)/admin/users, /logs, /settings, /backup   # Admin only; Secretary has no access
+  /(app)/settings                                 # Personal settings for Secretary/Staff; Admin redirects to /admin/settings
+  /(app)/admin/users, /logs, /settings, /backup   # Admin only; /admin/settings also shows the shared personal controls
   /queue/display                 # token-gated, read-only
   /api/export/...                # route handlers: client .txt, log .csv
 /components                      # UI components
@@ -141,6 +142,7 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 | Capability | Admin | Secretary | Staff |
 |---|---|---|---|
 | Log in/out, change own password, complete step-up verification | ✅ | ✅ | ✅ |
+| Personal settings: change own name and profile picture | ✅ | ✅ | ✅ |
 | View dashboard, appointments, clients, attorneys | ✅ | ✅ | ✅ |
 | Add/edit clients and attorneys; change client status | ✅ | ✅ | ❌ |
 | Add/edit/cancel appointments; add/edit tasks and deadlines | ✅ | ✅ | ❌ |
@@ -152,7 +154,7 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 | Archive and restore clients | ✅ | ❌ | ❌ |
 | View/export Activity Logs; security alerts | ✅ | ❌ | ❌ |
 | Manage users (create, approve, reset, deactivate, change role) | ✅ | ❌ | ❌ |
-| Settings, backup status/restore, rotate queue token | ✅ | ❌ | ❌ |
+| System settings, backup status/restore, rotate queue token | ✅ | ❌ | ❌ |
 
 The Secretary role and its permissions were approved October 29, 2026. Only Admin can assign or change a user's role. The SARD v1.2 addendum records this approved change to its original two-role assumption and FR-AUTH-02.
 
@@ -251,7 +253,7 @@ A task is **done** only when:
 ## 12. Out of scope for v1
 
 Do not build these, even if they seem helpful:
-- Digital document or case-file scanning/storage (so no Supabase Storage uploads)
+- Digital document or case-file scanning/storage. Small personal profile pictures are the sole approved Supabase Storage exception; they use a private bucket and are unrelated to case files.
 - Clinical content: test results, session notes, diagnoses (the Add Note dialog must warn users not to type clinical details)
 - Billing, payments, payroll, inventory
 - Patient portal, SMS/email notifications, native mobile apps, court-system integration

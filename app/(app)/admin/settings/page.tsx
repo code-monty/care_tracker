@@ -1,8 +1,8 @@
-export default function AdminSettingsPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold">Settings</h1>
-      <p>Coming soon.</p>
-    </main>
-  );
+import { requireActiveUser } from "@/lib/auth/session";
+import { PersonalSettings } from "../../settings/personal-settings";
+
+export default async function AdminSettingsPage() {
+  const { user, profile } = await requireActiveUser();
+  return <PersonalSettings title="Settings" name={profile.full_name ?? ""} email={user.email ?? ""}
+    hasPicture={Boolean(profile.avatar_updated_at)} pictureVersion={profile.avatar_updated_at ?? ""} />;
 }
