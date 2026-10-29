@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  exchange: vi.fn(), signOut: vi.fn(), deleteUser: vi.fn(), lookup: vi.fn(), deleteCookie: vi.fn(), getCookie: vi.fn(), setCookie: vi.fn(),
+  exchange: vi.fn(), signOut: vi.fn(), deleteUser: vi.fn(), lookup: vi.fn(), deleteCookie: vi.fn(), getCookie: vi.fn(), setCookie: vi.fn(), audit: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ delete: mocks.deleteCookie, get: mocks.getCookie, set: mocks.setCookie }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ auth: { exchangeCodeForSession: mocks.exchange, signOut: mocks.signOut } }) }));
+vi.mock("@/lib/auth/audit-event", () => ({ recordAuthEvent: mocks.audit }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({
   from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.lookup }) }) }),
   auth: { admin: { deleteUser: mocks.deleteUser } },
@@ -38,6 +39,7 @@ describe("Google OAuth callback", () => {
     const response = await GET(request("?code=valid"));
     expect(response.headers.get("location")).toBe("http://localhost:3000/mfa");
     expect(mocks.deleteUser).not.toHaveBeenCalled();
+    expect(mocks.audit).toHaveBeenCalledWith(user.id, "login");
     expect(mocks.deleteCookie).toHaveBeenCalled();
     expect(mocks.setCookie).toHaveBeenCalledWith("google_remember_intent", expect.any(String), expect.objectContaining({ maxAge: 600 }));
   });
@@ -78,6 +80,7 @@ describe("Google OAuth callback", () => {
     const response = await GET(request("?code=valid"));
     expect(response.headers.get("location")).toContain("/login?error=google");
     expect(mocks.deleteUser).not.toHaveBeenCalled();
+    expect(mocks.audit).toHaveBeenCalledWith(user.id, "failed_login");
     expect(mocks.signOut).toHaveBeenCalledOnce();
   });
 });

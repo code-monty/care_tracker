@@ -1,0 +1,25 @@
+.page { padding: 1.5rem 1.5rem 5rem; color: var(--text); }
+.heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); font-weight: 700; letter-spacing: -.035em; }
+.heading p { margin-top: .3rem; color: var(--muted); font-size: .875rem; }
+.export, .filters button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.7rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-weight: 650; }
+.export:hover, .filters button:hover { background: #00543a; }
+.panel { overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 1px 2px #0000000d; }
+.filters { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--line); }
+.filters label { display: grid; gap: .3rem; min-width: 9rem; color: var(--muted); font-size: .78rem; font-weight: 650; }
+.filters input, .filters select { min-height: 2.7rem; padding: .55rem .75rem; border: 1px solid var(--line); border-radius: .55rem; color: var(--text); background: var(--surface); color-scheme: light dark; font: inherit; font-size: .85rem; }
+:global([data-theme="dark"]) .filters input, :global([data-theme="dark"]) .filters select { color-scheme: dark; }
+:global([data-theme="light"]) .filters input, :global([data-theme="light"]) .filters select { color-scheme: light; }
+.filters a { padding: .65rem .5rem; color: var(--brand); font-weight: 650; }
+.tableScroll { overflow-x: auto; }
+.tableScroll table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
+.tableScroll th { padding: .85rem 1rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
+.tableScroll td { padding: .85rem 1rem; border-bottom: 1px solid var(--line); font-size: .83rem; vertical-align: top; }
+.tableScroll td:last-child { overflow-wrap: anywhere; }
+.tableScroll tr:last-child td { border-bottom: 0; }
+.empty { height: 11rem; text-align: center; color: var(--muted); }
+.footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; min-height: 4rem; padding: .75rem 1.5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+.footer nav { display: flex; align-items: center; gap: 1rem; }
+.footer nav a { color: var(--brand); font-weight: 650; }
+.page :is(a, button, input, select):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 640px) { .page { padding: 1rem 1rem 5.5rem; } .filters { padding: 1rem; } .filters label { flex: 1; min-width: 8rem; } .filters input, .filters select { width: 100%; } .footer { padding: .75rem 1rem; } }

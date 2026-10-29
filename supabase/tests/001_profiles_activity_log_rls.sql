@@ -169,12 +169,14 @@ select lives_ok(
   'admin can clear a locked-out user''s lockout fields (PR5)'
 );
 
+select set_config('role','service_role',true);
 select lives_ok(
   $$ select public.log_activity(
        '00000000-0000-0000-0000-000000000001', 'login', null, null
      ) $$,
-  'log_activity() succeeds for admin-triggered events'
+  'trusted server can append auth events'
 );
+select set_config('role','authenticated',true);
 
 select is(
   (select count(*) from public.activity_log where actor_id = '00000000-0000-0000-0000-000000000001' and action = 'login')::int, 1,

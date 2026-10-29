@@ -7,6 +7,7 @@ import { isApprovedGoogleUser, isDisposableGoogleSignup } from "@/lib/auth/googl
 import { REMEMBER_WORKSTATION_COOKIE_NAME, verifyRememberWorkstationCookie } from "@/lib/auth/remember-workstation";
 import { STEP_UP_MAX_AGE_MS, signStepUpCookie } from "@/lib/auth/step-up";
 import { GOOGLE_REMEMBER_INTENT_COOKIE_NAME, GOOGLE_REMEMBER_INTENT_MAX_AGE_MS, signGoogleRememberIntent } from "@/lib/auth/google-remember-intent";
+import { recordAuthEvent } from "@/lib/auth/audit-event";
 
 export async function GET(request: NextRequest) {
   const loginUrl = new URL("/login?error=google", request.url);
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!lookupError && isApprovedGoogleUser(user, profile)) {
+    await recordAuthEvent(user.id, "login");
     const cookieStore = await cookies();
     cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);
     if (!profile?.must_change_password && verifyRememberWorkstationCookie(cookieStore.get(REMEMBER_WORKSTATION_COOKIE_NAME)?.value, user.id, profile?.credential_reset_at)) {
@@ -45,6 +47,8 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.redirect(new URL("/mfa", request.url));
   }
+
+  if (!lookupError && profile && !isDisposableGoogleSignup(user, profile)) await recordAuthEvent(user.id, "failed_login");
 
   // Supabase may create a pending Google-only Auth user during OAuth. Never
   // delete an existing password or linked account; only the fresh OAuth-only

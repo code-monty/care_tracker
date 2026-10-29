@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { REMEMBER_WORKSTATION_COOKIE_NAME, verifyRememberWorkstationCookie } from "@/lib/auth/remember-workstation";
 import { STEP_UP_COOKIE_NAME, STEP_UP_MAX_AGE_MS, signStepUpCookie } from "@/lib/auth/step-up";
 import { GOOGLE_REMEMBER_INTENT_COOKIE_NAME } from "@/lib/auth/google-remember-intent";
+import { recordAuthEvent } from "@/lib/auth/audit-event";
 
 const GENERIC_ERROR = "Invalid email or password.";
 const LOCKOUT_ERROR = "Too many failed attempts. Please try again in 15 minutes.";
@@ -53,6 +54,7 @@ export async function signIn(input: { email: string; password: string }) {
       lockedUntil: profile.locked_until ? new Date(profile.locked_until) : null,
     });
     if (blocked) {
+      await recordAuthEvent(profile.id, "failed_login");
       return { error: LOCKOUT_ERROR };
     }
   }
@@ -75,6 +77,8 @@ export async function signIn(input: { email: string; password: string }) {
         .eq("id", profile.id);
     }
 
+    await recordAuthEvent(profile?.id ?? null, "failed_login");
+
     if (signInError.status === 429) {
       return { error: RATE_LIMIT_ERROR };
     }
@@ -91,6 +95,8 @@ export async function signIn(input: { email: string; password: string }) {
       })
       .eq("id", profile.id);
   }
+
+  await recordAuthEvent(signInData.user?.id ?? null, "login");
 
   const cookieStore = await cookies();
   cookieStore.delete(GOOGLE_REMEMBER_INTENT_COOKIE_NAME);

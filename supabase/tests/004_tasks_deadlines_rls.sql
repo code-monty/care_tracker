@@ -32,7 +32,7 @@ select lives_ok($$update public.tasks set status='done' where id='44000000-0000-
 select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Done','done task remains in history');
 select set_config('request.jwt.claims','{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select is((select count(*) from public.tasks where client_id='43000000-0000-0000-0000-000000000001')::int,2,'admin can read all tasks');
-select ok((select count(*) from public.activity_log where entity_type='tasks' and entity_id='44000000-0000-0000-0000-000000000001' and action='status_change') = 1,'completion writes a status audit row');
+select ok((select count(*) from public.activity_log where entity_type='tasks' and entity_id='44000000-0000-0000-0000-000000000001' and action='complete') = 1,'completion writes a specific audit row');
 
 select * from finish();
 rollback;

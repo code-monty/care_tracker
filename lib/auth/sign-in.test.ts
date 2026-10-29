@@ -2,12 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   signIn: vi.fn(), getCookie: vi.fn(), setCookie: vi.fn(), deleteCookie: vi.fn(),
-  redirect: vi.fn(), lookup: vi.fn(), update: vi.fn(),
+  redirect: vi.fn(), lookup: vi.fn(), update: vi.fn(), audit: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: mocks.getCookie, set: mocks.setCookie, delete: mocks.deleteCookie }) }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ auth: { signInWithPassword: mocks.signIn } }) }));
+vi.mock("@/lib/auth/audit-event", () => ({ recordAuthEvent: mocks.audit }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({
   from: () => ({
     select: () => ({ eq: () => ({ maybeSingle: mocks.lookup }) }),
@@ -35,6 +36,7 @@ describe("password sign-in with remembered workstation", () => {
     expect(mocks.setCookie).toHaveBeenCalledWith("step_up", expect.any(String), expect.objectContaining({ maxAge: 600 }));
     expect(mocks.deleteCookie).toHaveBeenCalledWith("google_remember_intent");
     expect(mocks.redirect).toHaveBeenCalledWith("/dashboard");
+    expect(mocks.audit).toHaveBeenCalledWith("user-1", "login");
   });
 
   it("requires email-code verification when the remembered cookie belongs to another user", async () => {
@@ -56,6 +58,7 @@ describe("password sign-in with remembered workstation", () => {
     mocks.getCookie.mockReturnValue({ value: signRememberWorkstationCookie("user-1") });
     mocks.signIn.mockResolvedValue({ data: { user: null }, error: { status: 400 } });
     expect(await signIn(input)).toEqual({ error: "Invalid email or password." });
+    expect(mocks.audit).toHaveBeenCalledWith(null, "failed_login");
     expect(mocks.setCookie).not.toHaveBeenCalled();
   });
 });
