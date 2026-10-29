@@ -13,9 +13,13 @@ const appointmentSchema = z.object({ clientId: uuid, date: z.iso.date(), time: z
 const taskSchema = z.object({ clientId: uuid, title: z.string().trim().min(1).max(120), assignedTo: uuid, dueDate: z.iso.date() });
 function refresh() { for (const path of ["/clients", "/appointments", "/dashboard", "/deadlines"]) revalidatePath(path); }
 function fail(error: unknown): never { throw new Error(error instanceof Error ? error.message : "Unable to save record"); }
+function requireRecordManager(role: string) {
+  if (role !== "admin" && role !== "secretary") throw new Error("Access denied");
+}
 
 export async function createClientRecord(input: z.infer<typeof addClientSchema>, existingAttorneyId?: string) {
-  await requireActiveUser();
+  const { profile } = await requireActiveUser();
+  requireRecordManager(profile.role);
   const value = addClientSchema.parse(input);
   const db = await createClient();
   const { data, error } = await db.rpc("create_client_record", { p_client: value, p_attorney_id: existingAttorneyId ? uuid.parse(existingAttorneyId) : null });
@@ -25,7 +29,8 @@ export async function createClientRecord(input: z.infer<typeof addClientSchema>,
 }
 
 export async function setClientStatus(id: string, status: string) {
-  await requireActiveUser();
+  const { profile } = await requireActiveUser();
+  requireRecordManager(profile.role);
   const db = await createClient();
   const { error } = await db.from("clients").update({ status: statusSchema.parse(status) }).eq("id", uuid.parse(id)).eq("is_archived", false);
   if (error) fail(error);
@@ -33,7 +38,8 @@ export async function setClientStatus(id: string, status: string) {
 }
 
 export async function saveAppointment(input: z.infer<typeof appointmentSchema>, id?: string) {
-  const { user } = await requireActiveUser();
+  const { user, profile } = await requireActiveUser();
+  requireRecordManager(profile.role);
   const value = appointmentSchema.parse(input);
   const db = await createClient();
   const { data: client } = await db.from("clients").select("id").eq("id", value.clientId).eq("is_archived", false).single();
@@ -63,7 +69,8 @@ export async function dashboardForDate(date: string) {
 }
 
 export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
-  const { user } = await requireActiveUser();
+  const { user, profile } = await requireActiveUser();
+  requireRecordManager(profile.role);
   const value = taskSchema.parse(input);
   const db = await createClient();
   const [client, personnel] = await Promise.all([
@@ -83,9 +90,11 @@ export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
 }
 
 export async function completeTask(id: string) {
-  await requireActiveUser();
+  const { user, profile } = await requireActiveUser();
   const db = await createClient();
-  const { data, error } = await db.from("tasks").update({ status: "done" }).eq("id", uuid.parse(id)).eq("status", "open").select("client_id").single();
+  let query = db.from("tasks").update({ status: "done" }).eq("id", uuid.parse(id)).eq("status", "open");
+  if (profile.role === "staff") query = query.eq("assigned_to", user.id);
+  const { data, error } = await query.select("client_id").single();
   if (error || !data) fail(error);
   refresh();
   revalidatePath(`/clients/${data.client_id}`);

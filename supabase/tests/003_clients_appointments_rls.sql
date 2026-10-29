@@ -1,5 +1,5 @@
 begin;
-select plan(12);
+select plan(23);
 
 insert into auth.users(id,email) values
 ('10000000-0000-0000-0000-000000000001','records-admin@example.test'),
@@ -27,11 +27,22 @@ select is((select count(*) from public.clients)::int,0,'disabled cannot read cli
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
 select is((select count(*) from public.clients where id='30000000-0000-0000-0000-000000000001')::int,1,'active staff can read clients');
 select is((select count(*) from public.appointments where client_id='30000000-0000-0000-0000-000000000001')::int,1,'active staff can read appointments');
-select lives_ok($$select public.create_client_record('{"petitionerName":"Fake Added","petitionerBirthdate":"1990-02-01","petitionerContact":"0912-345-6789","petitionerEmail":"added@example.test","petitionerAddress":"Fake address","respondentName":"Fake Respondent Two","respondentBirthdate":"1991-02-01","respondentContact":"0912-345-6789","respondentEmail":"respondent-two@example.test","respondentAddress":"Fake address"}'::jsonb,'20000000-0000-0000-0000-000000000001')$$,'staff can create client with existing attorney');
-select is((select count(*) from public.clients where full_name in ('Fake Client','Fake Added'))::int,2,'created client is visible to staff');
-select throws_ok($$update public.clients set is_archived=true where id='30000000-0000-0000-0000-000000000001'$$,'Only Admin may archive or restore clients','staff cannot archive');
+select throws_ok($$select public.create_client_record('{}'::jsonb,'20000000-0000-0000-0000-000000000001')$$,'Access denied','staff cannot call client creation RPC');
+select throws_ok($$insert into public.attorneys(full_name,contact_no,email) values ('Fake Added Lawyer','0912-345-6789','new-lawyer@example.test')$$,'new row violates row-level security policy for table "attorneys"','staff cannot insert attorney');
+select throws_ok($$insert into public.clients(full_name,birthdate,contact_no,email,address,attorney_id,created_by) values ('Fake Added','1990-01-01','0912-345-6789','added@example.test','Fake address','20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002')$$,'new row violates row-level security policy for table "clients"','staff cannot insert client');
+select throws_ok($$insert into public.respondents(client_id,full_name,birthdate) values ('30000000-0000-0000-0000-000000000001','Fake Added Respondent','1991-01-01')$$,'new row violates row-level security policy for table "respondents"','staff cannot insert respondent');
+select throws_ok($$insert into public.appointments(client_id,scheduled_at,reason,created_by) values ('30000000-0000-0000-0000-000000000001',now(),'Fake booking','10000000-0000-0000-0000-000000000002')$$,'new row violates row-level security policy for table "appointments"','staff cannot insert appointment');
+select lives_ok($$update public.clients set status='inactive' where id='30000000-0000-0000-0000-000000000001'$$,'staff client update has no writable row');
+select is((select status from public.clients where id='30000000-0000-0000-0000-000000000001'),'active','staff cannot change client status');
+select lives_ok($$update public.attorneys set full_name='Changed' where id='20000000-0000-0000-0000-000000000001'$$,'staff attorney update has no writable row');
+select is((select full_name from public.attorneys where id='20000000-0000-0000-0000-000000000001'),'Fake Lawyer','staff cannot edit attorney');
+select lives_ok($$update public.respondents set full_name='Changed' where client_id='30000000-0000-0000-0000-000000000001'$$,'staff respondent update has no writable row');
+select is((select full_name from public.respondents where client_id='30000000-0000-0000-0000-000000000001'),'Fake Respondent','staff cannot edit respondent');
+select lives_ok($$update public.appointments set status='cancelled' where client_id='30000000-0000-0000-0000-000000000001'$$,'staff appointment update has no writable row');
+select is((select status from public.appointments where client_id='30000000-0000-0000-0000-000000000001'),'pending','staff cannot change appointment');
 select set_config('request.jwt.claims','{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
-select is((select count(*) from public.clients where full_name in ('Fake Client','Fake Added'))::int,2,'admin can read clients');
+select is((select count(*) from public.clients where full_name = 'Fake Client')::int,1,'admin can read clients');
+select lives_ok($$select public.create_client_record('{"petitionerName":"Fake Added","petitionerBirthdate":"1990-02-01","petitionerContact":"0912-345-6789","petitionerEmail":"added@example.test","petitionerAddress":"Fake address","respondentName":"Fake Respondent Two","respondentBirthdate":"1991-02-01","respondentContact":"0912-345-6789","respondentEmail":"respondent-two@example.test","respondentAddress":"Fake address"}'::jsonb,'20000000-0000-0000-0000-000000000001')$$,'admin can create client');
 select lives_ok($$update public.clients set is_archived=true where id='30000000-0000-0000-0000-000000000001'$$,'admin can archive');
 
 select * from finish();

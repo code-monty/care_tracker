@@ -1,17 +1,20 @@
 begin;
-select plan(14);
+select plan(20);
 
 insert into auth.users(id,email) values
 ('41000000-0000-0000-0000-000000000001','tasks-admin@example.test'),
 ('41000000-0000-0000-0000-000000000002','tasks-staff@example.test'),
 ('41000000-0000-0000-0000-000000000003','tasks-pending@example.test'),
-('41000000-0000-0000-0000-000000000004','tasks-disabled@example.test');
+('41000000-0000-0000-0000-000000000004','tasks-disabled@example.test'),
+('41000000-0000-0000-0000-000000000005','tasks-other-staff@example.test');
 update public.profiles set role='admin', status='active', full_name='Fake Admin' where id='41000000-0000-0000-0000-000000000001';
 update public.profiles set role='staff', status='active', full_name='Fake Staff' where id='41000000-0000-0000-0000-000000000002';
 update public.profiles set role='staff', status='disabled', full_name='Fake Disabled' where id='41000000-0000-0000-0000-000000000004';
+update public.profiles set role='staff', status='active', full_name='Fake Other Staff' where id='41000000-0000-0000-0000-000000000005';
 insert into public.attorneys(id,full_name,contact_no,email) values ('42000000-0000-0000-0000-000000000001','Fake Lawyer','0912-345-6789','task-lawyer@example.test');
 insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values ('43000000-0000-0000-0000-000000000001','Fake Task Client','1990-01-01','0912-345-6789','task-client@example.test','Fake address','42000000-0000-0000-0000-000000000001','41000000-0000-0000-0000-000000000001');
 insert into public.tasks(id,client_id,title,assigned_to,due_date,created_by) values ('44000000-0000-0000-0000-000000000001','43000000-0000-0000-0000-000000000001','Fake report','41000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Manila')::date + 3,'41000000-0000-0000-0000-000000000001');
+insert into public.tasks(id,client_id,title,assigned_to,due_date,created_by) values ('44000000-0000-0000-0000-000000000002','43000000-0000-0000-0000-000000000001','Fake other report','41000000-0000-0000-0000-000000000005',(now() at time zone 'Asia/Manila')::date + 4,'41000000-0000-0000-0000-000000000001');
 
 select set_config('role','anon',true);
 select is((select count(*) from public.tasks)::int,0,'anonymous cannot read tasks');
@@ -26,12 +29,18 @@ select set_config('request.jwt.claims','{"sub":"41000000-0000-0000-0000-00000000
 select is((select count(*) from public.active_staff_directory() where id='41000000-0000-0000-0000-000000000002')::int,1,'staff picker lists active staff');
 select is((select count(*) from public.tasks where id='44000000-0000-0000-0000-000000000001')::int,1,'active staff can read shared tasks');
 select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Due Soon','three days ahead is Due Soon');
-select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Fake hearing','41000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Manila')::date + 4,'41000000-0000-0000-0000-000000000002')$$,'staff can create task');
-select throws_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Invalid assignment','41000000-0000-0000-0000-000000000004',current_date,'41000000-0000-0000-0000-000000000002')$$,'Select an active personnel member','disabled assignee rejected');
+select throws_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Fake hearing','41000000-0000-0000-0000-000000000002',current_date + 4,'41000000-0000-0000-0000-000000000002')$$,'new row violates row-level security policy for table "tasks"','staff cannot create task');
+select throws_ok($$update public.tasks set title='Changed' where id='44000000-0000-0000-0000-000000000001'$$,'Staff may only complete their own assigned task','staff cannot edit task details');
+select is((select title from public.tasks where id='44000000-0000-0000-0000-000000000001'),'Fake report','rejected edit leaves task unchanged');
+select lives_ok($$update public.tasks set status='done' where id='44000000-0000-0000-0000-000000000002'$$,'staff cannot reach another assignee task for update');
+select is((select status from public.tasks where id='44000000-0000-0000-0000-000000000002'),'open','staff cannot complete another assignee task');
 select lives_ok($$update public.tasks set status='done' where id='44000000-0000-0000-0000-000000000001'$$,'staff can complete task');
 select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Done','done task remains in history');
+select lives_ok($$update public.tasks set status='open' where id='44000000-0000-0000-0000-000000000001'$$,'staff cannot reach completed task for update');
+select is((select status from public.tasks where id='44000000-0000-0000-0000-000000000001'),'done','staff cannot reopen task');
 select set_config('request.jwt.claims','{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select is((select count(*) from public.tasks where client_id='43000000-0000-0000-0000-000000000001')::int,2,'admin can read all tasks');
+select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Fake admin task','41000000-0000-0000-0000-000000000002',current_date + 4,'41000000-0000-0000-0000-000000000001')$$,'admin can create task');
 select ok((select count(*) from public.activity_log where entity_type='tasks' and entity_id='44000000-0000-0000-0000-000000000001' and action='complete') = 1,'completion writes a specific audit row');
 
 select * from finish();

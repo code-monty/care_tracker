@@ -19,7 +19,7 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   const password = `Test-${randomUUID()}-aA1!`;
   const { data: created, error: createError } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (createError || !created.user) throw createError ?? new Error("Unable to create test user");
-  const { error: activateError } = await admin.from("profiles").update({ status: "active" }).eq("id", created.user.id);
+  const { error: activateError } = await admin.from("profiles").update({ role: "secretary", status: "active" }).eq("id", created.user.id);
   if (activateError) throw activateError;
 
   await page.goto("/login");
@@ -44,6 +44,7 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.locator("#client-attorneyContact").fill("0912-345-6789");
   await page.locator("#client-attorneyEmail").fill(`attorney-${suffix}@example.test`);
   await page.getByRole("button", { name: "Save Client" }).click();
+  await expect(page.getByRole("dialog", { name: "Add New Client" })).toBeHidden();
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(name);
   await expect(page.getByText(name).first()).toBeVisible();
   await page.reload();
@@ -98,6 +99,7 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText(`Fake Attorney ${suffix}`);
   await expect(page.getByRole("dialog", { name: "Add New Client" }).locator("dl")).toContainText("0912-345-6789");
   await page.getByRole("button", { name: "Save Client" }).click();
+  await expect(page.getByRole("dialog", { name: "Add New Client" })).toBeHidden();
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(secondName);
   await expect(page.getByText(secondName).first()).toBeVisible({ timeout: 20_000 });
   await page.setViewportSize({ width: 1280, height: 800 });

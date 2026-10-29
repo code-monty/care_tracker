@@ -16,7 +16,7 @@ export default function ClientsPage() {
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState<SortKey>("name");
   const [descending, setDescending] = useState(false);
-  const { clients, attorneys, addClient: storeAddClient } = useClientStore();
+  const { clients, attorneys, addClient: storeAddClient, role } = useClientStore();
   const [page, setPage] = useState(1);
 
   function toggleSort(key: SortKey) {
@@ -43,7 +43,7 @@ export default function ClientsPage() {
 
   return (
     <main className={styles.clients}>
-      <div className={styles.heading}><div><h1>Clients</h1><p>Review active and inactive client records.</p></div><AddClientDialog onSave={addClient} existingClients={clients} attorneys={attorneys} /></div>
+      <div className={styles.heading}><div><h1>Clients</h1><p>Review active and inactive client records.</p></div>{role !== "staff" && <AddClientDialog onSave={addClient} existingClients={clients} attorneys={attorneys} />}</div>
       <section className={styles.panel} aria-label="Client list">
         <div className={styles.toolbar}>
           <label className={styles.searchField}><Search size={18} aria-hidden="true" /><span className={styles.srOnly}>Search clients or attorneys</span><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search clients or attorneys" type="search" /></label>
@@ -55,7 +55,7 @@ export default function ClientsPage() {
             <th scope="col">Contact no.</th><th scope="col">Email address</th>
             <th scope="col"><button type="button" onClick={() => toggleSort("status")} aria-label={`Sort by status, ${sort === "status" && !descending ? "descending" : "ascending"}`}>Status <span aria-hidden="true">{sort === "status" ? (descending ? "↓" : "↑") : "↕"}</span></button></th>
             <th scope="col">Actions</th>
-          </tr></thead><tbody>{visibleClients.length ? visibleClients.map((client) => <tr className={styles.clientRow} key={client.id}><td>{client.petitionerName}</td><td>{client.petitionerContact}</td><td>{client.petitionerEmail}</td><td><span className={client.status === "Active" ? styles.activeBadge : styles.inactiveBadge}>{client.status}</span></td><td><Link className={styles.detailsButton} href={`/clients/${client.id}`}>View Details</Link></td></tr>) : <tr><td className={styles.emptyCell} colSpan={5}><div className={styles.emptyState}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><strong>{hasFilter ? "No matching clients" : "No client records available"}</strong><p>{hasFilter ? "Try another search or status filter." : "Add a client to begin."}</p></div></td></tr>}</tbody></table>
+          </tr></thead><tbody>{visibleClients.length ? visibleClients.map((client) => <tr className={styles.clientRow} key={client.id}><td>{client.petitionerName}</td><td>{client.petitionerContact}</td><td>{client.petitionerEmail}</td><td><span className={client.status === "Active" ? styles.activeBadge : styles.inactiveBadge}>{client.status}</span></td><td><Link className={styles.detailsButton} href={`/clients/${client.id}`}>View Details</Link></td></tr>) : <tr><td className={styles.emptyCell} colSpan={5}><div className={styles.emptyState}><span className={styles.emptyIcon}><Users size={27} aria-hidden="true" /></span><strong>{hasFilter ? "No matching clients" : "No client records available"}</strong><p>{hasFilter ? "Try another search or status filter." : role === "staff" ? "Client records will appear here when added." : "Add a client to begin."}</p></div></td></tr>}</tbody></table>
         </div>
         <div className={styles.footer}><span>{filtered.length ? `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} of ${filtered.length} clients` : "Showing 0 of 0 clients"}</span><nav className={styles.pagination} aria-label="Client pages"><button type="button" aria-label="Previous page" disabled={currentPage === 1} onClick={() => setPage((value) => value - 1)}><ChevronLeft size={17} aria-hidden="true" /></button><span aria-current="page">{currentPage}</span><button type="button" aria-label="Next page" disabled={currentPage === pageCount} onClick={() => setPage((value) => value + 1)}><ChevronRight size={17} aria-hidden="true" /></button></nav></div>
       </section>

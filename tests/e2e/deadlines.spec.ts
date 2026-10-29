@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("staff task flows persist across deadlines, client detail, and dashboard", async ({ page }) => {
+test("secretary task flows persist across deadlines, client detail, and dashboard", async ({ page }) => {
   test.setTimeout(180_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const index = line.indexOf("="); return [line.slice(0, index), line.slice(index + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Deadlines E2E requires local Supabase");
@@ -19,7 +19,7 @@ test("staff task flows persist across deadlines, client detail, and dashboard", 
   const userId = created.user.id;
   let clientId: string | undefined;
   try {
-    const { error: activateError } = await admin.from("profiles").update({ full_name: `Fake Staff ${suffix}`, role: "staff", status: "active" }).eq("id", userId);
+    const { error: activateError } = await admin.from("profiles").update({ full_name: `Fake Secretary ${suffix}`, role: "secretary", status: "active" }).eq("id", userId);
     if (activateError) throw activateError;
     const { data: attorney, error: attorneyError } = await admin.from("attorneys").insert({ full_name: `Fake Lawyer ${suffix}`, contact_no: "0912-345-6789", email: `lawyer-${suffix}@example.test` }).select("id").single();
     if (attorneyError || !attorney) throw attorneyError ?? new Error("Unable to create attorney");

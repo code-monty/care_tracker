@@ -142,8 +142,10 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 |---|---|---|---|
 | Log in/out, change own password, complete step-up verification | ✅ | ✅ | ✅ |
 | View dashboard, appointments, clients, attorneys | ✅ | ✅ | ✅ |
-| Add/edit clients, attorneys, notes | ✅ | ✅ | ✅ |
-| Add/edit/cancel appointments; manage tasks and deadlines | ✅ | ✅ | ✅ |
+| Add/edit clients and attorneys; change client status | ✅ | ✅ | ❌ |
+| Add/edit/cancel appointments; add/edit tasks and deadlines | ✅ | ✅ | ❌ |
+| Mark an assigned open task done | ✅ | ✅ | ✅ (own assigned task only) |
+| Add notes | ✅ | ✅ | ✅ |
 | Be assigned tasks and deadlines | ❌ | ✅ | ✅ |
 | Export client info to text (always logged) | ✅ | ✅ | ✅ |
 | Operate queue (check-in, call next, done) | ✅ | ✅ | ✅ |
@@ -153,6 +155,8 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 | Settings, backup status/restore, rotate queue token | ✅ | ❌ | ❌ |
 
 The Secretary role and its permissions were approved October 29, 2026. Only Admin can assign or change a user's role. The SARD v1.2 addendum records this approved change to its original two-role assumption and FR-AUTH-02.
+
+The owner subsequently restricted Staff record access on October 29, 2026. Staff can view shared clients, attorneys, appointments, and tasks, but cannot create or edit those records or change client or appointment status. Staff can mark only their own assigned open tasks done. Admin and Secretary retain their existing daily record access; other Staff capabilities in this table are unchanged.
 
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 

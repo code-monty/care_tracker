@@ -8,6 +8,7 @@ export type ClientStatus = "Active" | "Inactive";
 export type ClientRecord = ClientInput & { id: string; status: ClientStatus };
 
 type ClientStore = {
+  role: string;
   clients: ClientRecord[];
   attorneys: { id: string; full_name: string; contact_no: string; email: string }[];
   addClient: (input: ClientInput, attorneyId?: string) => Promise<void>;
@@ -16,7 +17,7 @@ type ClientStore = {
 
 const ClientStoreContext = createContext<ClientStore | null>(null);
 
-export function ClientStoreProvider({ children, initialClients, attorneys }: { children: React.ReactNode; initialClients: ClientRecord[]; attorneys: { id: string; full_name: string; contact_no: string; email: string }[] }) {
+export function ClientStoreProvider({ children, initialClients, attorneys, role }: { children: React.ReactNode; initialClients: ClientRecord[]; attorneys: { id: string; full_name: string; contact_no: string; email: string }[]; role: string }) {
   const [clients, setClients] = useState<ClientRecord[]>(initialClients);
 
   async function addClient(input: ClientInput, attorneyId?: string) {
@@ -30,7 +31,7 @@ export function ClientStoreProvider({ children, initialClients, attorneys }: { c
     setClients((current) => current.map((client) => client.id === id ? { ...client, status } : client));
   }
 
-  return <ClientStoreContext.Provider value={{ clients, attorneys, addClient, setStatus }}>{children}</ClientStoreContext.Provider>;
+  return <ClientStoreContext.Provider value={{ role, clients, attorneys, addClient, setStatus }}>{children}</ClientStoreContext.Provider>;
 }
 
 export function useClientStore() {
