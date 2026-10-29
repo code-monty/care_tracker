@@ -9,8 +9,9 @@
 .searchField input { width: 100%; min-width: 0; outline: 0; color: var(--text); background: transparent; font-size: .875rem; }
 .searchField input::placeholder { color: var(--muted); }
 .statusField { min-width: 10rem; font-size: .875rem; }
-.statusField select { flex: 1; appearance: none; outline: 0; color: var(--text); background: transparent; cursor: pointer; }
-.statusField option { color: #0f172a; }
+.statusField select { flex: 1; appearance: none; outline: 0; color: var(--text); background: transparent; color-scheme: dark; cursor: pointer; }
+.statusField option { color: var(--text); background: var(--surface); }
+:global([data-theme="light"]) .statusField select { color-scheme: light; }
 .tableScroll { overflow-x: auto; }
 .tableScroll table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; }
 .tableScroll th { padding: .9rem 1.5rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }

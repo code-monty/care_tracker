@@ -122,7 +122,7 @@ export function LoginForm({ googleError }: { googleError: boolean }) {
           <button type="submit" autoFocus className={styles.dialogButton}>Okay</button>
         </form>
       </dialog>
-      {busy && <div className={styles.loadingOverlay}><LoadingIndicator tone="dark" message={googlePending ? "Connecting to Google…" : "Signing in securely…"} /></div>}
+      {busy && <div className={styles.loadingOverlay}><LoadingIndicator message={googlePending ? "Connecting to Google…" : "Signing in securely…"} /></div>}
     </>
   );
 }

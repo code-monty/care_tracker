@@ -51,7 +51,6 @@ export function AppShell({ children, fullName, role, signOut }: {
       <header className={styles.header}>
         <div className={styles.identity}>
           <span className={styles.logoWrap}>
-            <Image className={styles.logoRing} src="/auth/shell-logo-ring.svg" alt="" width={44} height={44} />
             <Image className={styles.logo} src="/auth/hlt-logo.png" alt="" width={34} height={34} />
           </span>
           <span className={styles.brand}>HLT<br />CareTracker</span>

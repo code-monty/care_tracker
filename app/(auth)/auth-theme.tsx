@@ -27,6 +27,7 @@ export function useAuthTheme() {
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
+    document.documentElement.dataset.theme = next;
     try {
       window.localStorage.setItem(THEME_KEY, next);
     } catch {

@@ -33,9 +33,7 @@
 .header { position: sticky; top: 0; z-index: 30; display: flex; flex: none; align-items: center; justify-content: space-between; gap: 1rem; height: 68px; padding: 0 1.15rem .1rem .4rem; border-bottom: 1px solid var(--line); background: var(--surface); box-shadow: 0 2px 1px #0000000d; }
 .identity { display: flex; flex: none; align-items: center; gap: .35rem; min-width: 0; }
 .logoWrap { position: relative; display: grid; place-items: center; width: 58px; height: 58px; flex: none; }
-.logoRing { position: absolute; width: 44px; height: 44px; }
 .logo { position: relative; width: 34px; height: 34px; object-fit: contain; }
-.shell[data-theme="light"] .logoRing { display: none; }
 .shell[data-theme="light"] .logo { opacity: 0; }
 .shell[data-theme="light"] .logoWrap::after { position: absolute; width: 34px; height: 34px; background: #306fa5; -webkit-mask: url("/auth/hlt-logo.png") center / contain no-repeat; mask: url("/auth/hlt-logo.png") center / contain no-repeat; content: ""; pointer-events: none; }
 .brand { font-family: var(--font-app-heading), Arial, Helvetica, sans-serif; font-size: 1.125rem; line-height: 1.12; font-weight: 700; letter-spacing: -.02em; }
@@ -90,7 +88,6 @@
 @media (max-width: 767px) {
   .header { height: 60px; padding: 0 .65rem 0 .15rem; }
   .logoWrap { width: 46px; height: 46px; }
-  .logoRing { width: 38px; height: 38px; }
   .logo { width: 30px; height: 30px; }
   .shell[data-theme="light"] .logoWrap::after { width: 30px; height: 30px; }
   .brand { font-size: .94rem; }

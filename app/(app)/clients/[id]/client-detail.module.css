@@ -20,8 +20,9 @@
 .detail dt { margin-bottom: .3rem; color: var(--muted); font-size: .72rem; font-weight: 650; letter-spacing: .025em; text-transform: uppercase; }
 .detail dd { overflow-wrap: anywhere; font-size: .88rem; line-height: 1.45; }
 .statusControl { display: grid; gap: .45rem; padding-top: 1.25rem; color: var(--muted); font-size: .75rem; font-weight: 650; }
-.statusControl select { width: 100%; min-height: 2.6rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; cursor: pointer; }
-.statusControl option { color: #0f172a; }
+.statusControl select { width: 100%; min-height: 2.6rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); color-scheme: dark; font: inherit; font-size: .85rem; cursor: pointer; }
+.statusControl option { color: var(--text); background: var(--surface); }
+:global([data-theme="light"]) .statusControl select { color-scheme: light; }
 .statusHint, .emptyTasks { margin-top: .75rem; color: var(--muted); font-size: .78rem; line-height: 1.5; }
 .taskList { display: grid; gap: .7rem; margin-top: 1rem; }
 .taskList li { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line); font-size: .8rem; }

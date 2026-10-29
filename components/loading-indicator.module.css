@@ -7,12 +7,12 @@
   min-height: 240px;
   padding: 32px;
   text-align: center;
-  color: #0f172a;
+  color: #f8fafc;
 }
 
-.dark { color: #f8fafc; }
-.fullScreen { min-height: 100dvh; background: #f8fafc; }
-.fullScreen.dark { background: #0f172a; }
+.light, :global(html[data-theme="light"]) .auto { color: #0f172a; }
+.fullScreen { min-height: 100dvh; background: #121827; }
+.fullScreen.light, :global(html[data-theme="light"]) .fullScreen.auto { background: #faf8ff; }
 
 .spinner {
   width: 36px;

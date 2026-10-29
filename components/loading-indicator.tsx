@@ -2,11 +2,11 @@ import styles from "./loading-indicator.module.css";
 
 export function LoadingIndicator({
   message = "Loading CareTracker…",
-  tone = "light",
+  tone = "auto",
   fullScreen = false,
 }: {
   message?: string;
-  tone?: "light" | "dark";
+  tone?: "auto" | "light" | "dark";
   fullScreen?: boolean;
 }) {
   return (
