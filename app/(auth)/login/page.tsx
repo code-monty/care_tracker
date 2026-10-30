@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
-import packageInfo from "../../../package.json";
 import { LoginExperience } from "./login-experience";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-login-body" });
@@ -22,5 +21,5 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   }
 
   const { error } = await searchParams;
-  return <div className={`${inter.variable} ${jakarta.variable}`}><LoginExperience version={packageInfo.version} googleError={error === "google"} /></div>;
+  return <div className={`${inter.variable} ${jakarta.variable}`}><LoginExperience googleError={error === "google"} /></div>;
 }

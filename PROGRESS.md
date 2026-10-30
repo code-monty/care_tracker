@@ -235,3 +235,6 @@ Restyled the client and attorney edit dialogs to follow the Add Client form: nat
 
 ### Guest appointments (October 30, 2026)
 Added manual name entry to Add and Edit Appointment for people absent from the saved client list. Guest appointments store a name on the appointment itself without creating a client record; they appear in the list, calendar, details, and dashboard. The migration enforces exactly one of a saved client or guest name, and the existing Admin/Secretary write and Staff read boundaries remain in place. The migration was applied only to local Supabase. Local lint, typecheck, `git diff --check`, all 54 Vitest tests, all 165 pgTAP assertions, and a focused authenticated Chromium guest flow pass. The browser flow covered save, reload, dashboard display, name edit, and cancellation. The broader existing records Chromium flow timed out while locating an attorney selector before reaching its appointment checks. No hosted migration or deployment was performed.
+
+### Login page copy update (October 30, 2026)
+Removed the version and Secure sign-in labels from the login page, changed the heading to Sign In, and updated the footer to “© 2026 Code2Care · All rights reserved.” The HLT branding panel and other authentication screens were not changed.

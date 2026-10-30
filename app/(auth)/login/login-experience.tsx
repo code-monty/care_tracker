@@ -6,7 +6,7 @@ import { AuthThemeToggle, useAuthTheme } from "../auth-theme";
 import { LoginForm } from "./login-form";
 import styles from "./login.module.css";
 
-export function LoginExperience({ version, googleError }: { version: string; googleError: boolean }) {
+export function LoginExperience({ googleError }: { googleError: boolean }) {
   const { theme, toggleTheme } = useAuthTheme();
 
   return (
@@ -28,17 +28,12 @@ export function LoginExperience({ version, googleError }: { version: string; goo
 
       <section className={styles.panel} aria-label="Sign in">
         <header className={styles.panelTop}>
-          <div className={styles.statusLine}>
-            <span className={styles.version}>v{version}</span>
-            <span className={styles.statusDivider} aria-hidden="true">|</span>
-            <span className={styles.secureStatus}><Image src="/auth/secure.svg" alt="" width={12} height={12} /> Secure sign-in</span>
-          </div>
           <AuthThemeToggle theme={theme} onToggle={toggleTheme} />
         </header>
 
         <div className={styles.formArea}>
           <div className={styles.formInner}>
-            <h1 className={styles.heading} aria-label="Sign in to CareTracker">Welcome back</h1>
+            <h1 className={styles.heading}>Sign In</h1>
             <p className={styles.intro}>Sign in with your verified email address to access your monitoring dashboard.</p>
             <LoginForm googleError={googleError} />
           </div>
@@ -50,7 +45,7 @@ export function LoginExperience({ version, googleError }: { version: string; goo
             <span aria-hidden="true">•</span>
             <Link href="/terms-of-service">Terms of Service</Link>
           </nav>
-          <p>© 2026 HLT Psychological Services.</p>
+          <p>© 2026 Code2Care · All rights reserved.</p>
         </footer>
       </section>
     </main>
