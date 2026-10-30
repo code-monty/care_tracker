@@ -14,6 +14,8 @@
 :global([data-theme="light"]) .statusField select { color-scheme: light; }
 .tableScroll { overflow-x: auto; }
 .tableScroll table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; }
+.tableScroll table[data-archived-table] { min-width: 0; table-layout: fixed; }
+.tableScroll table[data-archived-table] :is(th, td):last-child { width: 8.5rem; }
 .tableScroll th { padding: .9rem 1.5rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
 .tableScroll th button { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; }
 .tableScroll th button span { color: var(--brand); font-size: 1rem; }
@@ -70,7 +72,10 @@
 .formField { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
 .formField label { font-size: .78rem; font-weight: 650; }
 .formField label span { color: #d04b4b; }
-.formField input, .formField textarea { width: 100%; min-height: 2.65rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .5rem; outline: 0; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
+.formField input, .formField textarea, .formField select { width: 100%; min-height: 2.65rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .5rem; outline: 0; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
+.formField select { color-scheme: dark; }
+.formField select option { color: var(--text); background: var(--surface); }
+:global([data-theme="light"]) .formField select { color-scheme: light; }
 .formField textarea { resize: vertical; }
 .formField input::placeholder, .formField textarea::placeholder { color: var(--muted); opacity: .85; }
 .formField input[readonly] { color: var(--muted); background: var(--hover); }
@@ -86,6 +91,7 @@
 .cancelButton:hover { background: var(--hover); }
 .saveButton { color: #fff; background: #006948; cursor: pointer; }
 .saveButton:hover { background: #00543a; }
+.cancelButton:disabled, .saveButton:disabled { opacity: .55; cursor: not-allowed; }
 .temporaryNotice { margin: .75rem 0; color: var(--muted); font-size: .8rem; }
 .detailsGrid { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr); gap: .7rem 1rem; padding: .5rem 0 1rem; font-size: .85rem; }
 .detailsGrid dt { color: var(--muted); }
