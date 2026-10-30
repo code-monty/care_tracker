@@ -43,7 +43,7 @@ export default function ClientsPage() {
 
   return (
     <main className={styles.clients}>
-      <div className={styles.heading}><div><h1>Clients</h1><p>Review active and inactive client records.</p></div>{role !== "staff" && <AddClientDialog onSave={addClient} existingClients={clients} attorneys={attorneys} />}</div>
+      <div className={styles.heading}><div><h1>Clients</h1><p>Review active and inactive client records.</p>{role === "admin" && <Link href="/clients/archived">View archived clients</Link>}</div>{role !== "staff" && <AddClientDialog onSave={addClient} existingClients={clients} attorneys={attorneys} />}</div>
       <section className={styles.panel} aria-label="Client list">
         <div className={styles.toolbar}>
           <label className={styles.searchField}><Search size={18} aria-hidden="true" /><span className={styles.srOnly}>Search clients or attorneys</span><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search clients or attorneys" type="search" /></label>

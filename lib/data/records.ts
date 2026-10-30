@@ -15,7 +15,25 @@ export async function getClients() {
 export async function getAttorneys() {
   await requireActiveUser();
   const db = await createClient();
-  const { data, error } = await db.from("attorneys").select("id,full_name,contact_no,email").order("full_name");
+  const { data, error } = await db.from("attorneys").select("id,full_name,contact_no,email").eq("is_archived", false).order("full_name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getArchivedAttorneys() {
+  const { profile } = await requireActiveUser();
+  if (profile.role !== "admin") throw new Error("Access denied");
+  const db = await createClient();
+  const { data, error } = await db.from("attorneys").select("id,full_name,contact_no,email").eq("is_archived", true).order("full_name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getArchivedClients() {
+  const { profile } = await requireActiveUser();
+  if (profile.role !== "admin") throw new Error("Access denied");
+  const db = await createClient();
+  const { data, error } = await db.from("clients").select("id,full_name").eq("is_archived", true).order("full_name");
   if (error) throw error;
   return data ?? [];
 }
@@ -28,6 +46,14 @@ export async function getAttorneyClients(attorneyId?: string) {
   const { data, error } = await query.order("full_name");
   if (error) throw error;
   return data ?? [];
+}
+
+export async function getAttorneyLinkCount(attorneyId: string) {
+  await requireActiveUser();
+  const db = await createClient();
+  const { count, error } = await db.from("clients").select("id", { count: "exact", head: true }).eq("attorney_id", attorneyId);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function getAppointments() {

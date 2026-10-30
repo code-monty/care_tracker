@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BriefcaseBusiness, CalendarDays, ClipboardList, UserRound, Users } from "lucide-react";
 import { ageFromBirthdate } from "@/lib/validation/client";
 import { useClientStore, type ClientStatus } from "../client-store";
 import { clientTasksForClient } from "@/lib/actions/records";
 import type { DeadlineRecord } from "@/lib/rules/deadlines";
 import styles from "./client-detail.module.css";
+import actionStyles from "./record-actions.module.css";
+import EditClientDialog from "./edit-client-dialog";
 
 function displayDate(value: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Manila", year: "numeric", month: "long", day: "numeric" }).format(new Date(`${value}T12:00:00Z`));
@@ -20,7 +22,11 @@ function Detail({ label, value }: { label: string; value: string | number | null
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { clients, setStatus, role } = useClientStore();
+  const { clients, attorneys, setStatus, editClient, archiveClient, role } = useClientStore();
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [archiving, setArchiving] = useState(false);
   const client = clients.find((record) => record.id === id);
   const [tasks, setTasks] = useState<DeadlineRecord[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -36,7 +42,9 @@ export default function ClientDetailPage() {
 
   return <main className={styles.page}>
     <Link className={styles.backLink} href="/clients"><ArrowLeft size={17} aria-hidden="true" />Back to Clients</Link>
-    <div className={styles.heading}><div><h1>Client Information</h1><p>{client.petitionerName}</p></div></div>
+    <div className={styles.heading}><div><h1>Client Information</h1><p>{client.petitionerName}</p></div><div className={actionStyles.toolbar}>{role !== "staff" && <button className={actionStyles.recordButton} type="button" onClick={() => setEditing(true)}>Edit client</button>}{role === "admin" && <button className={actionStyles.recordButton} type="button" disabled={archiving} onClick={async () => { if (!window.confirm("Delete this client? The record will be archived, hidden from active lists, and can be restored by an Admin.")) return; setArchiving(true); setActionError(""); try { await archiveClient(id); router.push("/clients"); } catch (error) { setActionError(error instanceof Error ? error.message : "Unable to archive client."); } finally { setArchiving(false); } }}>Delete client</button>}</div></div>
+    {actionError && <p role="alert" className={actionStyles.error}>{actionError}</p>}
+    {editing && <EditClientDialog client={client} attorneys={attorneys} onSave={(input, attorneyId) => editClient(id, input, attorneyId)} onClose={() => setEditing(false)} />}
     <div className={styles.columns}>
       <div className={styles.mainColumn}>
         <section className={styles.card} aria-labelledby="petitioner-details-heading"><div className={styles.cardHeader}><span className={styles.icon}><UserRound size={21} aria-hidden="true" /></span><div><h2 id="petitioner-details-heading">Petitioner Details</h2><p>Primary contact information</p></div><span className={client.status === "Active" ? styles.activeBadge : styles.inactiveBadge}>{client.status}</span></div><dl className={styles.detailGrid}><Detail label="Name" value={client.petitionerName} /><Detail label="Age" value={ageFromBirthdate(client.petitionerBirthdate)} /><Detail label="Birthdate" value={displayDate(client.petitionerBirthdate)} /><Detail label="Full residential address" value={client.petitionerAddress} /><Detail label="Contact number" value={client.petitionerContact} /><Detail label="Email address" value={client.petitionerEmail} /></dl></section>
