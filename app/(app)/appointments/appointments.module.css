@@ -92,6 +92,9 @@
 .dialogHeader h2 { font-family: var(--font-app-heading), Arial, sans-serif; font-size: 1.15rem; font-weight: 650; }
 .form { display: grid; gap: 1rem; padding: 1.25rem; }
 .formIntro { padding: .8rem; border-radius: .5rem; color: var(--muted); background: var(--soft); font-size: .75rem; line-height: 1.5; }
+.entryMode { display: flex; gap: .5rem; }
+.entryMode button { flex: 1; min-height: 42px; padding: .5rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font-size: .78rem; cursor: pointer; }
+.entryMode button[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); background: var(--soft); font-weight: 700; }
 .form label { display: grid; gap: .4rem; font-size: .78rem; font-weight: 600; }
 .form label b { color: #ef4444; }
 .form input, .form select { width: 100%; min-height: 46px; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font-size: .82rem; font-weight: 400; }

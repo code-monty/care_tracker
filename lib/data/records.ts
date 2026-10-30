@@ -59,9 +59,9 @@ export async function getAttorneyLinkCount(attorneyId: string) {
 export async function getAppointments() {
   await requireActiveUser();
   const db = await createClient();
-  const { data, error } = await db.from("appointments").select("id,client_id,scheduled_at,reason,status,clients!inner(id,full_name,contact_no,email,is_archived)").eq("clients.is_archived", false).order("scheduled_at");
+  const { data, error } = await db.from("appointments").select("id,client_id,guest_name,scheduled_at,reason,status,clients(id,full_name,contact_no,email,is_archived)").order("scheduled_at");
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived);
 }
 
 export async function getDashboardRecords(date: string) {
@@ -71,13 +71,13 @@ export async function getDashboardRecords(date: string) {
   const end = new Date(start.getTime() + 86400000);
   const [clients, appointments] = await Promise.all([
     db.from("clients").select("id", { count: "exact", head: true }).eq("status", "active").eq("is_archived", false),
-    db.from("appointments").select("id,scheduled_at,reason,clients!inner(full_name,is_archived)").gte("scheduled_at", start.toISOString()).lt("scheduled_at", end.toISOString()).neq("status", "cancelled").eq("clients.is_archived", false).order("scheduled_at"),
+    db.from("appointments").select("id,guest_name,scheduled_at,reason,clients(full_name,is_archived)").gte("scheduled_at", start.toISOString()).lt("scheduled_at", end.toISOString()).neq("status", "cancelled").order("scheduled_at"),
   ]);
   if (clients.error) throw clients.error;
   if (appointments.error) throw appointments.error;
   const deadlines = await getDeadlineRecords();
   const openDeadlines = deadlines.filter((task) => task.status === "open" && task.clientStatus === "active");
-  return { activeClients: clients.count ?? 0, appointments: appointments.data ?? [], deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length };
+  return { activeClients: clients.count ?? 0, appointments: (appointments.data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived), deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length };
 }
 
 export async function getActivePersonnel() {

@@ -13,7 +13,7 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount }: { initialDate: string; initialCount: number; initialAppointments: { id: string; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number }) {
+export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number }) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
@@ -58,7 +58,7 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
               <button type="button" aria-label="Next day" onClick={() => selectDate(shiftDate(selectedDate, 1))}><ChevronRight aria-hidden="true" size={17} /></button>
             </div>
           </div>
-          {loadError ? <div className={styles.emptyState} role="alert"><p>Appointments could not be loaded for this date.</p></div> : appointments.length ? <div className={styles.appointmentTableWrap}><table className={styles.appointmentTable}><thead><tr><th scope="col">Client</th><th scope="col">Time</th><th scope="col">Reason</th></tr></thead><tbody>{appointments.map((appointment) => { const client = Array.isArray(appointment.clients) ? appointment.clients[0] : appointment.clients; return <tr key={appointment.id}><td><strong>{client.full_name}</strong></td><td>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" }).format(new Date(appointment.scheduled_at))}</td><td>{appointment.reason}</td></tr>; })}</tbody></table></div> : <div className={styles.emptyState}>
+          {loadError ? <div className={styles.emptyState} role="alert"><p>Appointments could not be loaded for this date.</p></div> : appointments.length ? <div className={styles.appointmentTableWrap}><table className={styles.appointmentTable}><thead><tr><th scope="col">Client</th><th scope="col">Time</th><th scope="col">Reason</th></tr></thead><tbody>{appointments.map((appointment) => { const client = Array.isArray(appointment.clients) ? appointment.clients[0] : appointment.clients; return <tr key={appointment.id}><td><strong>{client?.full_name ?? appointment.guest_name}</strong></td><td>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" }).format(new Date(appointment.scheduled_at))}</td><td>{appointment.reason}</td></tr>; })}</tbody></table></div> : <div className={styles.emptyState}>
             <CalendarDays aria-hidden="true" size={30} />
             <p className={styles.emptyTitle}>No appointments to show</p>
             <p>No appointments are scheduled for this date.</p>
