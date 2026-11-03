@@ -1,0 +1,26 @@
+.section { margin-top: 1.25rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); color: var(--text); overflow: hidden; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--line); }
+.header h2 { font-size: 1rem; font-weight: 700; }
+.header button, .actions button:last-child { padding: .55rem .9rem; border-radius: .5rem; background: var(--brand); color: white; font-weight: 650; }
+.header button:disabled, .actions button:disabled { opacity: .55; cursor: not-allowed; }
+.form { display: grid; gap: .7rem; padding: 1.5rem; border-bottom: 1px solid var(--line); }
+.meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: .4rem; }
+.meta > div { display: grid; align-content: start; gap: .15rem; }
+.meta span { color: var(--muted); font-size: .78rem; }
+.meta strong { font-size: .9rem; font-weight: 600; }
+.meta strong + span { margin-top: .45rem; }
+.form label { font-size: .9rem; font-weight: 600; }
+.form textarea { width: 100%; padding: .7rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); color: var(--text); resize: vertical; }
+.warning { color: var(--muted); font-size: .82rem; }
+.actions { display: flex; justify-content: flex-end; gap: .65rem; }
+.actions button:first-child { padding: .55rem .9rem; border: 1px solid var(--line); border-radius: .5rem; }
+.error { margin: .9rem 1.5rem; color: #b42318; font-size: .85rem; }
+.empty { padding: 1.5rem; color: var(--muted); font-size: .875rem; }
+.list { list-style: none; }
+.list li { padding: 1.25rem 1.5rem; }
+.list li + li { border-top: 1px solid var(--line); }
+.noteHeader { display: flex; justify-content: space-between; gap: 1rem; font-size: .875rem; }
+.noteHeader time { display: grid; gap: .1rem; color: var(--muted); text-align: right; font-size: .8rem; }
+.list p { margin-top: .65rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; line-height: 1.55; }
+.section :is(button, textarea):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 600px) { .header, .form, .list li, .empty { padding: 1rem; } .noteHeader { flex-direction: column; } .noteHeader time { text-align: left; } }

@@ -11,6 +11,7 @@ import type { DeadlineRecord } from "@/lib/rules/deadlines";
 import styles from "./client-detail.module.css";
 import actionStyles from "./record-actions.module.css";
 import EditClientDialog from "./edit-client-dialog";
+import RecordNotes from "@/components/record-notes";
 
 function displayDate(value: string) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Manila", year: "numeric", month: "long", day: "numeric" }).format(new Date(`${value}T12:00:00Z`));
@@ -56,5 +57,6 @@ export default function ClientDetailPage() {
         <section className={styles.card} aria-labelledby="tasks-heading"><div className={styles.cardHeader}><span className={styles.icon}><ClipboardList size={20} aria-hidden="true" /></span><div><h2 id="tasks-heading">Tasks / Assignments</h2></div></div>{tasksLoading ? <p className={styles.emptyTasks}>Loading tasks…</p> : tasksError ? <p className={styles.emptyTasks} role="alert">Tasks could not be loaded. Reload to try again.</p> : tasks.length ? <ul className={styles.taskList}>{tasks.map((task) => <li key={task.id}><div><strong>{task.title}</strong><span>{task.assignedName} · {displayDate(task.dueDate)}</span></div><span className={styles.taskStatus}>{task.deadlineStatus}</span></li>)}</ul> : <p className={styles.emptyTasks}>No tasks are tracked for this client yet.</p>}<Link className={styles.taskLink} href={`/deadlines?client=${id}`}>{role === "staff" ? "View Deadlines" : "Add Task / View Deadlines"}</Link></section>
       </div>
     </div>
+    <RecordNotes target={{ kind: "client", id }} />
   </main>;
 }

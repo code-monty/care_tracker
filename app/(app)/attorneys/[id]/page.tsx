@@ -5,6 +5,7 @@ import { getAttorneyClients, getAttorneyLinkCount, getAttorneys, getDeadlineReco
 import styles from "../attorneys.module.css";
 import { requireActiveUser } from "@/lib/auth/session";
 import AttorneyActions from "./attorney-actions";
+import RecordNotes from "@/components/record-notes";
 
 export default async function AttorneyDetailPage({ params }: PageProps<"/attorneys/[id]">) {
   const { id } = await params;
@@ -23,5 +24,6 @@ export default async function AttorneyDetailPage({ params }: PageProps<"/attorne
     <section className={styles.panel} aria-labelledby="linked-clients"><div className={styles.sectionHeader}><Users size={21} aria-hidden="true" /><h2 id="linked-clients">Linked Clients <span>({clients.length})</span></h2></div>
       {clients.length ? <div className={styles.tableScroll}><table><thead><tr><th scope="col">Petitioner name</th><th scope="col">Status</th><th scope="col">Next deadline</th><th scope="col">Actions</th></tr></thead><tbody>{clients.map((client) => { const dueDate = nextByClient.get(client.id); return <tr key={client.id}><td>{client.full_name}</td><td><span className={client.status === "active" ? styles.activeBadge : styles.inactiveBadge}>{client.status === "active" ? "Active" : "Inactive"}</span></td><td>{dueDate ? <Link href={`/deadlines?client=${client.id}`}>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" }).format(new Date(`${dueDate}T12:00:00+08:00`))}</Link> : <span className={styles.pendingDeadline}>No open deadlines</span>}</td><td><a className={styles.detailsButton} href={`/clients/${client.id}`}>View Client</a></td></tr>; })}</tbody></table></div> : <div className={styles.emptyState}><Users size={29} aria-hidden="true" /><strong>No linked clients</strong><p>This attorney does not have any current client records.</p></div>}
     </section>
+    <RecordNotes target={{ kind: "attorney", id }} />
   </main>;
 }
