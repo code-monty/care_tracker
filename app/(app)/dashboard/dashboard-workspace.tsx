@@ -13,7 +13,7 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number }) {
+export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, showAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; showAppointments: boolean }) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
@@ -41,7 +41,7 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
       </Link>
 
       <div className={styles.columns}>
-        <section className={styles.panel} aria-labelledby="appointments-heading">
+        {showAppointments && <section className={styles.panel} aria-labelledby="appointments-heading">
           <div className={styles.panelHeading}>
             <div>
               <div className={styles.headingTitle}><CalendarClock aria-hidden="true" size={21} /><h2 id="appointments-heading">Upcoming Appointments</h2></div>
@@ -64,7 +64,7 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
             <p>No appointments are scheduled for this date.</p>
           </div>}
           <Link href="/appointments" className={styles.panelLink}>View all appointments <ArrowRight aria-hidden="true" size={18} /></Link>
-        </section>
+        </section>}
 
         <section className={styles.panel} aria-labelledby="deadlines-heading">
           <div className={styles.panelHeading}>

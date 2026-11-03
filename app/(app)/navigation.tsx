@@ -25,9 +25,10 @@ function activeRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppNavigation({ variant, isAdmin, expanded = false }: {
+export function AppNavigation({ variant, isAdmin, isStaff, expanded = false }: {
   variant: "rail" | "mobile";
   isAdmin: boolean;
+  isStaff: boolean;
   expanded?: boolean;
 }) {
   const pathname = usePathname();
@@ -37,7 +38,7 @@ export function AppNavigation({ variant, isAdmin, expanded = false }: {
     <nav id={mobile ? undefined : "desktop-sidebar-navigation"} aria-label={mobile ? "Mobile navigation" : "Main navigation"} className={mobile ? styles.mobileNav : styles.railNav} data-expanded={!mobile && expanded ? "true" : undefined}>
       <div className={styles.railTop}>
         <div className={mobile ? styles.mobileLinks : styles.railGroup}>
-          {mainLinks.map(({ href, label, icon: Icon, asset }) => (
+          {mainLinks.filter(({ href }) => !isStaff || href !== "/appointments").map(({ href, label, icon: Icon, asset }) => (
             <Link key={href} href={href} aria-label={label} title={label} aria-current={activeRoute(pathname, href) ? "page" : undefined} className={styles.navLink}>
               {asset ? <Image src={asset} alt="" width={21} height={26} /> : Icon ? <Icon aria-hidden="true" size={26} strokeWidth={2.3} /> : null}
               <span className={styles.navLabel}>{label}</span>

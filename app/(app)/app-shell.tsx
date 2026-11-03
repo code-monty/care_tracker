@@ -88,14 +88,14 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
 
       <div className={styles.body}>
         <div className={styles.railDock} data-expanded={sidebarOpen ? "true" : undefined}>
-          <AppNavigation variant="rail" isAdmin={isAdmin} expanded={sidebarOpen} />
+          <AppNavigation variant="rail" isAdmin={isAdmin} isStaff={role === "staff"} expanded={sidebarOpen} />
           <button type="button" className={styles.railToggle} onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"} aria-expanded={sidebarOpen} aria-controls="desktop-sidebar-navigation" title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}>
             {sidebarOpen ? <ChevronLeft aria-hidden="true" size={16} /> : <ChevronRight aria-hidden="true" size={16} />}
           </button>
         </div>
         <div className={styles.workspace}><div className={styles.content}>{children}</div></div>
       </div>
-      <AppNavigation variant="mobile" isAdmin={isAdmin} />
+      <AppNavigation variant="mobile" isAdmin={isAdmin} isStaff={role === "staff"} />
     </div>
   );
 }

@@ -2,9 +2,12 @@ import AppointmentsWorkspace from "./appointments-workspace";
 import { getAppointments } from "@/lib/data/records";
 import type { AppointmentStatus } from "@/lib/rules/appointments";
 import { requireActiveUser } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
 export default async function AppointmentsPage() {
-  const [rows, { profile }] = await Promise.all([getAppointments(), requireActiveUser()]);
+  const { profile } = await requireActiveUser();
+  if (profile.role === "staff") redirect("/dashboard");
+  const rows = await getAppointments();
   const appointments = rows.map((row) => {
     const client = Array.isArray(row.clients) ? row.clients[0] : row.clients;
     const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(row.scheduled_at));
