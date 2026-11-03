@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
 test("Staff can add separate client and attorney notes with local date and time", async ({ page }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(360_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const split = line.indexOf("="); return [line.slice(0, split), line.slice(split + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Local Supabase required");
   const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -39,13 +39,33 @@ test("Staff can add separate client and attorney notes with local date and time"
   await expect(clientNotes.getByText("Do not enter clinical details such as test results or session content.")).toBeVisible();
   await clientNotes.getByRole("textbox", { name: "Note" }).fill(`Fake client note ${suffix}`);
   await clientNotes.getByRole("button", { name: "Save note" }).click();
-  await expect(clientNotes.getByRole("button", { name: "Save note" })).toBeHidden({ timeout: 30_000 });
+  await expect(clientNotes.getByRole("textbox", { name: "Note" })).toBeHidden({ timeout: 30_000 });
   await expect(clientNotes.getByText(`Fake client note ${suffix}`)).toBeVisible({ timeout: 30_000 });
   await page.reload();
   await expect(clientNotes.getByText(`Fake client note ${suffix}`)).toBeVisible({ timeout: 30_000 });
   const clientTime = await clientNotes.locator("time").first().innerText();
   expect(clientTime.split("\n").filter(Boolean)).toHaveLength(2);
   expect(clientTime).not.toMatch(/\.\d{3}/);
+  const firstClientCard = clientNotes.locator("article").filter({ hasText: `Fake client note ${suffix}` });
+  await firstClientCard.getByRole("button", { name: "Pin note" }).click();
+  await expect(firstClientCard.getByText("Pinned")).toBeVisible({ timeout: 30_000 });
+  await clientNotes.getByRole("button", { name: "Add Note" }).click();
+  await clientNotes.getByRole("textbox", { name: "Note" }).fill(`Fake second client note ${suffix}`);
+  await clientNotes.getByRole("button", { name: "Save note" }).click();
+  await expect(clientNotes.getByRole("textbox", { name: "Note" })).toBeHidden({ timeout: 30_000 });
+  await expect(clientNotes.locator("article").first()).toContainText(`Fake client note ${suffix}`);
+  const secondClientCard = clientNotes.locator("article").filter({ hasText: `Fake second client note ${suffix}` });
+  await secondClientCard.getByRole("button", { name: "Pin note" }).click();
+  await expect(clientNotes.locator("article").first()).toContainText(`Fake second client note ${suffix}`, { timeout: 30_000 });
+  await secondClientCard.getByRole("button", { name: "Unpin note" }).click();
+  await expect(clientNotes.locator("article").first()).toContainText(`Fake client note ${suffix}`, { timeout: 30_000 });
+  await firstClientCard.getByRole("button", { name: `Reply to note by Fake Notes Staff ${suffix}` }).click();
+  await firstClientCard.getByRole("textbox", { name: "Reply" }).fill(`Fake client reply ${suffix}`);
+  await firstClientCard.getByRole("button", { name: "Save reply" }).click();
+  await expect(firstClientCard.getByRole("textbox", { name: "Reply" })).toBeHidden({ timeout: 30_000 });
+  await expect(firstClientCard.getByText(`Fake client reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  await page.reload();
+  await expect(clientNotes.getByText(`Fake client reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
 
   await page.goto(`/attorneys/${attorney.id}`);
   const attorneyNotes = page.getByRole("region", { name: "Notes" });
@@ -53,12 +73,32 @@ test("Staff can add separate client and attorney notes with local date and time"
   await attorneyNotes.getByRole("button", { name: "Add Note" }).click();
   await attorneyNotes.getByRole("textbox", { name: "Note" }).fill(`Fake attorney note ${suffix}`);
   await attorneyNotes.getByRole("button", { name: "Save note" }).click();
+  await expect(attorneyNotes.getByRole("textbox", { name: "Note" })).toBeHidden({ timeout: 30_000 });
   await expect(attorneyNotes.getByText(`Fake attorney note ${suffix}`)).toBeVisible({ timeout: 30_000 });
   await page.reload();
   await expect(attorneyNotes.getByText(`Fake attorney note ${suffix}`)).toBeVisible({ timeout: 30_000 });
   const attorneyTime = await attorneyNotes.locator("time").first().innerText();
   expect(attorneyTime.split("\n").filter(Boolean)).toHaveLength(2);
   expect(attorneyTime).not.toMatch(/\.\d{3}/);
+  const attorneyCard = attorneyNotes.locator("article").filter({ hasText: `Fake attorney note ${suffix}` });
+  await attorneyCard.getByRole("button", { name: "Pin note" }).click();
+  await expect(attorneyCard.getByText("Pinned")).toBeVisible({ timeout: 30_000 });
+  await attorneyCard.getByRole("button", { name: `Reply to note by Fake Notes Staff ${suffix}` }).click();
+  await attorneyCard.getByRole("textbox", { name: "Reply" }).fill(`Fake attorney reply ${suffix}`);
+  await attorneyCard.getByRole("button", { name: "Save reply" }).click();
+  await expect(attorneyCard.getByRole("textbox", { name: "Reply" })).toBeHidden({ timeout: 30_000 });
+  await expect(attorneyCard.getByText(`Fake attorney reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  await page.reload();
+  await expect(attorneyNotes.getByText(`Fake attorney reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+
+  await page.setViewportSize({ width: 390, height: 680 });
+  await expect(attorneyNotes.getByRole("button", { name: "Unpin note" })).toBeVisible();
+  expect(await attorneyNotes.evaluate((element) => element.getBoundingClientRect().right <= innerWidth)).toBe(true);
+  await page.screenshot({ path: "test-results/notes-mobile-dark.png", fullPage: true });
+  await page.getByRole("button", { name: "Open profile menu" }).click();
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(page.locator('html[data-theme="light"]')).toHaveCount(1);
+  await page.screenshot({ path: "test-results/notes-mobile-light.png", fullPage: true });
 
   await db.from("clients").update({ is_archived: true }).eq("id", client.id);
   await db.from("profiles").update({ status: "disabled" }).eq("id", userId);
