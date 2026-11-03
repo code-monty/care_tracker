@@ -238,3 +238,9 @@ Added manual name entry to Add and Edit Appointment for people absent from the s
 
 ### Login page copy update (October 30, 2026)
 Removed the version and Secure sign-in labels from the login page, changed the heading to Sign In, and updated the footer to “© 2026 Code2Care · All rights reserved.” The HLT branding panel and other authentication screens were not changed.
+
+### CareTracker features and system overview document (October 30, 2026)
+Created `CareTracker_Features_and_System_Overview.docx` for HLT stakeholders and the technical team. The report explains the paper-record workflow the system is intended to improve, documents implemented application features and role permissions, summarizes the security approach and technology stack, and identifies the Queue, Backup, Privacy Policy, and Terms of Service pages as unfinished placeholders. It distinguishes repository implementation from hosted deployment status. A standard-library Python generator is retained at `scripts/generate_caretracker_overview.py` so the report can be regenerated without adding dependencies. Local document structure and content checks and `git diff --check` passed; no hosted verification or deployment was performed.
+
+### Client View heading and archive wording (November 3, 2026)
+Removed the repeated client name beneath the Client Information heading. Renamed the Admin action and confirmation from Delete client to Archive client so the wording matches the existing archive behavior. Updated the related browser test selector. No data model or permission behavior changed. Local lint, typecheck, and `git diff --check` passed; no browser or hosted verification was performed.

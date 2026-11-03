@@ -89,7 +89,7 @@ test("Admin edits records and archives or restores clients and unused attorneys"
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByRole("button", { name: "Switch to dark theme" }).click();
   await expect(page.locator('html[data-theme="dark"]')).toHaveCount(1);
-  await page.getByRole("button", { name: "Delete client" }).click();
+  await page.getByRole("button", { name: "Archive client" }).click();
   await expect(page).toHaveURL(/\/clients$/);
   await page.goto("/clients/archived");
   await expect(page.getByRole("table").getByRole("columnheader", { name: "Actions" })).toBeVisible();
