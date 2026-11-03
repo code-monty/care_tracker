@@ -45,10 +45,13 @@ test("Admin views, filters, and exports activity while Staff is denied", async (
     await page.goto("/admin/logs", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Activity Logs" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "UpdateID" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Role" })).toBeVisible();
     await page.locator('select[name="activity"]').selectOption("login");
     await page.getByRole("button", { name: "Apply filters" }).click();
     await expect(page).toHaveURL(/activity=login/);
-    await expect(page.getByRole("row", { name: /Fake Logs Admin.*Signed in/ }).first()).toBeVisible();
+    const loginRow = page.getByRole("row", { name: /Fake Logs Admin.*Admin.*Signed in/ }).first();
+    await expect(loginRow).toBeVisible();
+    await expect(loginRow.getByRole("cell").nth(2)).toHaveText(/^\d{1,2}:\d{2} [AP]M$/);
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("link", { name: "Export to CSV" }).click();
     const download = await downloadPromise;
@@ -56,6 +59,8 @@ test("Admin views, filters, and exports activity while Staff is denied", async (
     let csv = "";
     for await (const chunk of stream) csv += chunk.toString();
     expect(csv).toContain("UpdateID");
+    expect(csv).toContain('"User","Role","Activity"');
+    expect(csv).toMatch(/"\d{1,2}:\d{2} [AP]M","Fake Logs Admin","Admin","Signed in"/);
     expect(csv).toContain("Signed in");
     expect(csv).not.toContain("Failed sign-in attempt");
 

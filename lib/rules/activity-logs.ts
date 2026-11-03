@@ -20,10 +20,20 @@ export function formatLogDateTime(value: string) {
   const date = new Date(value);
   return {
     date: new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", year: "numeric", month: "short", day: "2-digit" }).format(date),
-    time: new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Manila", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(date) + `.${String(date.getMilliseconds()).padStart(3, "0")}`,
+    time: new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit", hour12: true }).format(date),
   };
 }
 
 export function logActorName(row: Pick<LogRow, "actor_id" | "profiles">) {
   return row.actor_id ? row.profiles?.full_name?.trim() || "Former or unnamed user" : "Unidentified user";
+}
+
+export function logActorRole(row: Pick<LogRow, "actor_id" | "profiles">) {
+  if (!row.actor_id) return "Unknown role";
+  switch (row.profiles?.role) {
+    case "admin": return "Admin";
+    case "secretary": return "Secretary";
+    case "staff": return "Staff";
+    default: return "Unknown role";
+  }
 }

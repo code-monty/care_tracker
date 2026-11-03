@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 export const LOG_PAGE_SIZE = 25;
 export type LogFilters = { from: string; to: string; user: string; activity: string };
-export type LogRow = { id: number; actor_id: string | null; action: string; entity_type: string | null; entity_id: string | null; created_at: string; profiles: { full_name: string | null } | null };
+export type LogRow = { id: number; actor_id: string | null; action: string; entity_type: string | null; entity_id: string | null; created_at: string; profiles: { full_name: string | null; role: string | null } | null };
 export const LOG_ACTIONS = ["login", "logout", "failed_login", "create", "update", "complete", "assign", "status_change", "archive", "restore", "approve", "role_change", "deactivate", "reactivate", "email_change", "password_reset", "password_change", "export"];
 
 export function parseLogFilters(params: URLSearchParams): LogFilters {
@@ -35,7 +35,7 @@ export async function listLogUsers() {
 }
 
 function filteredQuery(db: Awaited<ReturnType<typeof createClient>>, filters: LogFilters) {
-  let query = db.from("activity_log").select("id,actor_id,action,entity_type,entity_id,created_at,profiles!actor_id(full_name)", { count: "exact" });
+  let query = db.from("activity_log").select("id,actor_id,action,entity_type,entity_id,created_at,profiles!actor_id(full_name,role)", { count: "exact" });
   if (filters.from) query = query.gte("created_at", `${filters.from}T00:00:00+08:00`);
   if (filters.to) {
     const end = new Date(`${filters.to}T00:00:00+08:00`);
