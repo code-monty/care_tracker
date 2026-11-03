@@ -9,5 +9,5 @@ export default async function DeadlinesPage({ searchParams }: { searchParams: Pr
     return { id: client.id, name: client.full_name, attorneyId: client.attorney_id, attorneyName: attorney?.full_name ?? "" };
   });
   const initialClientId = clients.some((client) => client.id === params.client) ? params.client : undefined;
-  return <DeadlinesWorkspace initialTasks={tasks} clients={clients} staff={staff} initialClientId={initialClientId} currentUserId={user.id} canManage={profile.role !== "staff"} />;
+  return <DeadlinesWorkspace initialTasks={tasks} clients={clients} staff={staff} initialClientId={initialClientId} currentUserId={user.id} canManage={profile.role !== "staff"} canComplete={profile.role !== "secretary"} />;
 }

@@ -78,16 +78,14 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
 
     await page.goto("/deadlines");
     await page.getByRole("searchbox", { name: "Search client or task" }).fill(editedTitle);
-    page.once("dialog", (confirmation) => confirmation.accept());
-    await page.getByRole("button", { name: "Mark Done" }).click();
-    await expect(page.getByText("No matching deadlines")).toBeVisible();
-    await page.getByLabel("Status").selectOption("Done");
+    await expect(page.getByRole("button", { name: "Mark Done" })).toHaveCount(0);
+    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(editedTitle) })).toBeVisible();
     await expect(page.getByRole("button", { name: `Edit ${editedTitle}` })).toBeVisible();
     await page.goto(`/clients/${clientId}`);
     await expect(page.getByText(editedTitle)).toBeVisible();
-    await expect(page.getByText("Done", { exact: true })).toBeVisible();
+    await expect(page.getByText("Done", { exact: true })).toHaveCount(0);
     await page.goto("/dashboard");
-    await expect(page.getByRole("region", { name: "Deadlines" }).getByText(editedTitle)).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Deadlines" }).getByText(editedTitle)).toBeVisible();
   } finally {
     if (clientId) await admin.from("clients").update({ is_archived: true }).eq("id", clientId);
     await admin.from("profiles").update({ status: "disabled" }).eq("id", userId);

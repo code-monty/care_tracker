@@ -161,6 +161,7 @@ export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
 
 export async function completeTask(id: string) {
   const { user, profile } = await requireActiveUser();
+  if (profile.role === "secretary") throw new Error("Access denied");
   const db = await createClient();
   let query = db.from("tasks").update({ status: "done" }).eq("id", uuid.parse(id)).eq("status", "open");
   if (profile.role === "staff") query = query.eq("assigned_to", user.id);

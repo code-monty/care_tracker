@@ -54,6 +54,7 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     await dialog.getByLabel("Deadline (Date)").fill(due);
     await dialog.getByRole("button", { name: "Save Task" }).click();
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary task ${suffix}`) })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary task ${suffix}`) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
 
     for (const path of ["/admin/users", "/admin/logs", "/admin/settings", "/admin/backup"]) {
       await page.goto(path);

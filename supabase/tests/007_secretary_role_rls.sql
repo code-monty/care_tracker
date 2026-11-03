@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(21);
 
 insert into auth.users(id,email) values
 ('71000000-0000-0000-0000-000000000001','secretary-admin@example.test'),
@@ -27,7 +27,9 @@ select is((select count(*) from public.active_personnel_directory() where id='71
 select is((select count(*) from public.active_personnel_directory() where id='71000000-0000-0000-0000-000000000004')::int,0,'Disabled Secretary is not assignable');
 select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values
 ('73000000-0000-0000-0000-000000000001','Fake Secretary task','71000000-0000-0000-0000-000000000002',current_date + 7,'71000000-0000-0000-0000-000000000002')$$,'Secretary can create a task assigned to Secretary');
-select lives_ok($$update public.tasks set status='done' where title='Fake Secretary task'$$,'Secretary can complete a task');
+select lives_ok($$update public.tasks set title='Fake Secretary edited task' where title='Fake Secretary task'$$,'Secretary can edit task details');
+select throws_ok($$update public.tasks set status='done' where title='Fake Secretary edited task'$$,'Secretary cannot change task status','Secretary cannot complete a task');
+select is((select status from public.tasks where title='Fake Secretary edited task'),'open','Rejected completion leaves task open');
 select throws_ok($$update public.clients set is_archived=true where id='73000000-0000-0000-0000-000000000001'$$,'P0001','Only Admin may archive or restore clients','Secretary cannot archive clients');
 select throws_ok($$update public.profiles set role='admin' where id='71000000-0000-0000-0000-000000000002'$$,'P0001','Only Admins can change role, status, or login-security fields','Secretary cannot change own role');
 select ok(not has_function_privilege('authenticated','public.admin_set_profile(uuid,uuid,text,text,text,boolean,text)','EXECUTE'),'Secretary cannot call privileged account mutation');
@@ -36,6 +38,10 @@ select set_config('role','service_role',true);
 select set_config('request.jwt.claims','',true);
 select lives_ok($$select public.admin_set_profile('71000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000003','Fake Staff','secretary','active',null,'role_change')$$,'Admin can assign the Secretary role');
 select is((select role from public.profiles where id='71000000-0000-0000-0000-000000000003'),'secretary','Secretary role assignment is persisted');
+
+select set_config('role','authenticated',true);
+select set_config('request.jwt.claims','{"sub":"71000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select lives_ok($$update public.tasks set status='done' where title='Fake Secretary edited task'$$,'Admin can complete a Secretary-assigned task');
 
 select set_config('role','authenticated',true);
 select set_config('request.jwt.claims','{"sub":"71000000-0000-0000-0000-000000000004","role":"authenticated"}',true);
