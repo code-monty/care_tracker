@@ -30,17 +30,18 @@ select is((select count(*) from public.active_staff_directory() where id='410000
 select is((select count(*) from public.tasks where id='44000000-0000-0000-0000-000000000001')::int,1,'active staff can read shared tasks');
 select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Due Soon','three days ahead is Due Soon');
 select throws_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Fake hearing','41000000-0000-0000-0000-000000000002',current_date + 4,'41000000-0000-0000-0000-000000000002')$$,'new row violates row-level security policy for table "tasks"','staff cannot create task');
-select throws_ok($$update public.tasks set title='Changed' where id='44000000-0000-0000-0000-000000000001'$$,'Staff may only complete their own assigned task','staff cannot edit task details');
+select throws_ok($$update public.tasks set title='Changed' where id='44000000-0000-0000-0000-000000000001'$$,'Staff may only submit their own assigned task','staff cannot edit task details');
 select is((select title from public.tasks where id='44000000-0000-0000-0000-000000000001'),'Fake report','rejected edit leaves task unchanged');
 select lives_ok($$update public.tasks set status='done' where id='44000000-0000-0000-0000-000000000002'$$,'staff cannot reach another assignee task for update');
 select is((select status from public.tasks where id='44000000-0000-0000-0000-000000000002'),'open','staff cannot complete another assignee task');
-select lives_ok($$update public.tasks set status='done' where id='44000000-0000-0000-0000-000000000001'$$,'staff can complete task');
-select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Done','done task remains in history');
-select lives_ok($$update public.tasks set status='open' where id='44000000-0000-0000-0000-000000000001'$$,'staff cannot reach completed task for update');
-select is((select status from public.tasks where id='44000000-0000-0000-0000-000000000001'),'done','staff cannot reopen task');
+select lives_ok($$update public.tasks set status='awaiting_approval' where id='44000000-0000-0000-0000-000000000001'$$,'staff can submit task');
+select is((select deadline_status from public.deadline_status where id='44000000-0000-0000-0000-000000000001'),'Due Soon','submitted task remains a deadline');
+select lives_ok($$update public.tasks set status='open' where id='44000000-0000-0000-0000-000000000001'$$,'staff cannot reach submitted task for update');
+select is((select status from public.tasks where id='44000000-0000-0000-0000-000000000001'),'awaiting_approval','staff cannot reopen submitted task');
 select set_config('request.jwt.claims','{"sub":"41000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select is((select count(*) from public.tasks where client_id='43000000-0000-0000-0000-000000000001')::int,2,'admin can read all tasks');
 select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values ('43000000-0000-0000-0000-000000000001','Fake admin task','41000000-0000-0000-0000-000000000002',current_date + 4,'41000000-0000-0000-0000-000000000001')$$,'admin can create task');
+update public.tasks set status='done' where id='44000000-0000-0000-0000-000000000001';
 select ok((select count(*) from public.activity_log where entity_type='tasks' and entity_id='44000000-0000-0000-0000-000000000001' and action='complete') = 1,'completion writes a specific audit row');
 
 select * from finish();

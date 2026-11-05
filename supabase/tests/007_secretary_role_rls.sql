@@ -28,7 +28,7 @@ select is((select count(*) from public.active_personnel_directory() where id='71
 select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values
 ('73000000-0000-0000-0000-000000000001','Fake Secretary task','71000000-0000-0000-0000-000000000002',current_date + 7,'71000000-0000-0000-0000-000000000002')$$,'Secretary can create a task assigned to Secretary');
 select lives_ok($$update public.tasks set title='Fake Secretary edited task' where title='Fake Secretary task'$$,'Secretary can edit task details');
-select throws_ok($$update public.tasks set status='done' where title='Fake Secretary edited task'$$,'Secretary cannot change task status','Secretary cannot complete a task');
+select throws_ok($$update public.tasks set status='done' where title='Fake Secretary edited task'$$,'Secretary cannot change task review','Secretary cannot complete a task');
 select is((select status from public.tasks where title='Fake Secretary edited task'),'open','Rejected completion leaves task open');
 select throws_ok($$update public.clients set is_archived=true where id='73000000-0000-0000-0000-000000000001'$$,'P0001','Only Admin may archive or restore clients','Secretary cannot archive clients');
 select throws_ok($$update public.profiles set role='admin' where id='71000000-0000-0000-0000-000000000002'$$,'P0001','Only Admins can change role, status, or login-security fields','Secretary cannot change own role');

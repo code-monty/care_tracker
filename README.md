@@ -70,11 +70,11 @@ Active Admin, Secretary, and Staff accounts can change their own name and passwo
 
 ## Staff record access
 
-Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can mark an open task done only when assigned to them. Other Staff access, including client information export and queue operations, is unchanged.
+Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
 
 The Staff interface does not show the Appointments page or Dashboard appointment summary. Direct Staff visits to `/appointments` redirect to `/dashboard`. Admin and Secretary retain both views; database read permissions are unchanged.
 
-Secretary can create, edit, and assign tasks but cannot mark tasks done or change their status. Admin can mark any open task done; Staff can mark only their own assigned open tasks done.
+Secretary can create, edit, and assign tasks but cannot submit, review, or complete them. Staff submit their own assigned tasks from Deadlines. Admin checks the document outside CareTracker, then uses **Awaiting Approval** to approve and mark a task Done, or return it with a required comment. Returned tasks show **Needs changes** and can be resubmitted. Submissions remain in open deadline counts and overdue tracking until approval. Admin may mark an open or returned task Done directly. Task details are locked while awaiting review; review history is visible to Admin and the assigned Staff member. Approval comments stay in CareTracker, without email or case-document uploads.
 
 ## Admin user management
 

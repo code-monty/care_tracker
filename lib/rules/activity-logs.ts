@@ -9,7 +9,7 @@ export function activityDescription(row: Pick<LogRow, "action" | "entity_type" |
   if (row.action === "failed_login") return "Failed sign-in attempt";
   if (row.action === "complete" && row.entity_type === "tasks") return `Completed task${row.entity_id ? ` #${row.entity_id.slice(0, 8)}` : ""}`;
   if (row.action === "assign" && row.entity_type === "tasks") return `Assigned task${row.entity_id ? ` #${row.entity_id.slice(0, 8)}` : ""}`;
-  if (row.action === "status_change" && row.entity_type === "tasks") return "Changed task status (completed or reopened)";
+  if (row.action === "status_change" && row.entity_type === "tasks") return "Changed task review status";
   if (row.action === "status_change") return `Changed ${nouns[row.entity_type ?? ""] ?? "record"} status`;
   const verb = verbs[row.action] ?? "Changed";
   const noun = row.entity_type === "activity_log" ? "activity logs" : nouns[row.entity_type ?? ""] ?? "record";

@@ -1,4 +1,6 @@
 export type DeadlineStatus = "Overdue" | "Due Soon" | "Upcoming" | "Done";
+export type TaskStatus = "open" | "awaiting_approval" | "needs_changes" | "done";
+export type TaskReviewEvent = { event: "submitted" | "approved" | "returned" | "completed"; comment: string | null; createdAt: string };
 
 export type DeadlineRecord = {
   id: string;
@@ -11,11 +13,12 @@ export type DeadlineRecord = {
   assignedTo: string;
   assignedName: string;
   dueDate: string;
-  status: "open" | "done";
+  status: TaskStatus;
   deadlineStatus: DeadlineStatus;
+  reviewHistory: TaskReviewEvent[];
 };
 
-export function deadlineStatus(dueDate: string, status: "open" | "done", today: string): DeadlineStatus {
+export function deadlineStatus(dueDate: string, status: TaskStatus, today: string): DeadlineStatus {
   if (status === "done") return "Done";
   if (dueDate < today) return "Overdue";
   const end = new Date(`${today}T12:00:00Z`);

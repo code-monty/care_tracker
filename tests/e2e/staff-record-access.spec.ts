@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("Staff can view records and complete only an assigned task", async ({ page }) => {
+test("Staff can view records and submit only an assigned task", async ({ page }) => {
   test.setTimeout(120_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const index = line.indexOf("="); return [line.slice(0, index), line.slice(index + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Staff E2E requires local Supabase");
@@ -59,25 +59,21 @@ test("Staff can view records and complete only an assigned task", async ({ page 
     await page.goto("/attorneys");
     await expect(page.getByText(`Fake Lawyer ${suffix}`)).toBeVisible();
     await page.goto("/appointments");
+    await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole("button", { name: "Add Appointment" })).toHaveCount(0);
-    await page.getByRole("combobox", { name: "Filter by date" }).selectOption("all");
-    await page.getByRole("textbox", { name: "Search appointments" }).fill(clientName);
-    await expect(page.getByLabel(`More actions for ${clientName}`)).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "View details" }).first()).toBeVisible();
 
     await page.goto(`/deadlines?client=${clientId}`);
     await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
     const mine = page.getByRole("row", { name: new RegExp(myTask) });
     const others = page.getByRole("row", { name: new RegExp(otherTask) });
-    await expect(mine.getByRole("button", { name: "Mark Done" })).toBeVisible();
-    await expect(others.getByRole("button", { name: "Mark Done" })).toHaveCount(0);
+    await expect(mine.getByRole("button", { name: "Submit for approval" })).toBeVisible();
+    await expect(others.getByRole("button", { name: "Submit for approval" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: `Edit ${myTask}` })).toHaveCount(0);
     page.once("dialog", (confirmation) => confirmation.accept());
-    await mine.getByRole("button", { name: "Mark Done" }).click();
-    await page.getByLabel("Status").selectOption("Done");
-    await expect(page.getByRole("row", { name: new RegExp(myTask) })).toBeVisible();
-    const { data: done } = await admin.from("tasks").select("status").eq("id", myTaskId).single();
-    expect(done?.status).toBe("done");
+    await mine.getByRole("button", { name: "Submit for approval" }).click();
+    await expect(page.getByRole("row", { name: new RegExp(myTask) }).getByText("Awaiting approval")).toBeVisible();
+    const { data: submitted } = await admin.from("tasks").select("status").eq("id", myTaskId).single();
+    expect(submitted?.status).toBe("awaiting_approval");
     const { data: open } = await admin.from("tasks").select("status").eq("id", otherTaskId).single();
     expect(open?.status).toBe("open");
   } finally {

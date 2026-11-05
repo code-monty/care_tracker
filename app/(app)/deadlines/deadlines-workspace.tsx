@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ClipboardList, Plus, Search, X } from "lucide-react";
-import { completeTask, deadlinesForPage, saveTask } from "@/lib/actions/records";
+import { completeTask, deadlinesForPage, reviewTask, saveTask, submitTaskForApproval } from "@/lib/actions/records";
 import { manilaToday, type DeadlineRecord, type DeadlineStatus } from "@/lib/rules/deadlines";
 import styles from "./deadlines.module.css";
 
@@ -13,25 +13,31 @@ const PAGE_SIZE = 10;
 const dateFormatter = new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
 const showDate = (value: string) => dateFormatter.format(new Date(`${value}T12:00:00+08:00`));
 
-export default function DeadlinesWorkspace({ initialTasks, clients, staff, initialClientId, currentUserId, canManage, canComplete }: { initialTasks: DeadlineRecord[]; clients: ClientChoice[]; staff: PersonnelChoice[]; initialClientId?: string; currentUserId: string; canManage: boolean; canComplete: boolean }) {
+export default function DeadlinesWorkspace({ initialTasks, clients, staff, initialClientId, currentUserId, role }: { initialTasks: DeadlineRecord[]; clients: ClientChoice[]; staff: PersonnelChoice[]; initialClientId?: string; currentUserId: string; role: "admin" | "secretary" | "staff" }) {
+  const canManage = role !== "staff";
   const [tasks, setTasks] = useState(initialTasks);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<DeadlineStatus | "Open" | "All">("Open");
+  const [status, setStatus] = useState<DeadlineStatus | "Open" | "Awaiting approval" | "Needs changes" | "All">("Open");
   const [attorneyId, setAttorneyId] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<DeadlineRecord | null>(null);
+  const [reviewing, setReviewing] = useState<DeadlineRecord | null>(null);
+  const [historyTask, setHistoryTask] = useState<DeadlineRecord | null>(null);
+  const [reviewComment, setReviewComment] = useState("");
   const [selectedClient, setSelectedClient] = useState(initialClientId ?? "");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const reviewDialog = useRef<HTMLDialogElement>(null);
+  const historyDialog = useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const today = manilaToday();
   const attorneys = useMemo(() => [...new Map(clients.map((client) => [client.attorneyId, { id: client.attorneyId, name: client.attorneyName }])).values()].sort((a, b) => a.name.localeCompare(b.name)), [clients]);
   const filtered = useMemo(() => tasks.filter((task) => {
     const query = search.trim().toLocaleLowerCase();
     return (!query || `${task.clientName} ${task.title}`.toLocaleLowerCase().includes(query))
-      && (status === "All" || (status === "Open" ? task.status === "open" : task.deadlineStatus === status))
+      && (status === "All" || (status === "Open" ? task.status !== "done" : status === "Awaiting approval" ? task.status === "awaiting_approval" : status === "Needs changes" ? task.status === "needs_changes" : task.deadlineStatus === status))
       && (!attorneyId || task.attorneyId === attorneyId)
       && (!assignedTo || task.assignedTo === assignedTo);
   }), [tasks, search, status, attorneyId, assignedTo]);
@@ -41,6 +47,8 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
 
   function openAdd() { form.current?.reset(); setEditing(null); setSelectedClient(initialClientId ?? ""); setNotice(""); dialog.current?.showModal(); }
   function openEdit(task: DeadlineRecord) { setEditing(task); setSelectedClient(task.clientId); setNotice(""); dialog.current?.showModal(); }
+  function openReview(task: DeadlineRecord) { setReviewing(task); setReviewComment(""); setNotice(""); reviewDialog.current?.showModal(); }
+  function openHistory(task: DeadlineRecord) { setHistoryTask(task); historyDialog.current?.showModal(); }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -56,11 +64,18 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
     } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to save task."); }
     finally { setBusy(false); }
   }
-  async function markDone(task: DeadlineRecord) {
-    if (!window.confirm(`Mark “${task.title}” done?`)) return;
+  async function advanceTask(task: DeadlineRecord) {
+    if (!window.confirm(role === "staff" ? `Submit “${task.title}” for Admin approval?` : `Mark “${task.title}” done?`)) return;
     setBusy(true); setNotice("");
-    try { await completeTask(task.id); setTasks(await deadlinesForPage()); setNotice("Task marked done."); }
-    catch { setNotice("Unable to complete task."); }
+    try { if (role === "staff") await submitTaskForApproval(task.id); else await completeTask(task.id); setTasks(await deadlinesForPage()); setNotice(role === "staff" ? "Task sent for Admin approval." : "Task marked done."); }
+    catch { setNotice("Unable to update task."); }
+    finally { setBusy(false); }
+  }
+  async function decideTask(decision: "approve" | "return") {
+    if (!reviewing || (decision === "return" && !reviewComment.trim())) { setNotice("Enter a comment before returning the task."); return; }
+    setBusy(true); setNotice("");
+    try { await reviewTask(reviewing.id, decision, decision === "return" ? reviewComment : undefined); setTasks(await deadlinesForPage()); reviewDialog.current?.close(); setReviewing(null); setNotice(decision === "approve" ? "Task approved and marked done." : "Task returned to Staff with feedback."); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Unable to review task."); }
     finally { setBusy(false); }
   }
 
@@ -72,13 +87,28 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
     <section className={styles.panel} aria-label="Deadline list">
       <div className={styles.toolbar}>
         <label className={styles.search}><Search size={17} aria-hidden="true" /><span className={styles.srOnly}>Search client or task</span><input type="search" placeholder="Search client or task" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></label>
-        <label className={styles.filter}>Status<select value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }}><option>Open</option><option>Overdue</option><option>Due Soon</option><option>Upcoming</option><option>Done</option><option>All</option></select></label>
+        <label className={styles.filter}>Status<select value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }}><option>Open</option><option>Overdue</option><option>Due Soon</option><option>Upcoming</option>{role === "admin" && <option>Awaiting approval</option>}<option>Needs changes</option><option>Done</option><option>All</option></select></label>
         <label className={styles.filter}>Attorney<select value={attorneyId} onChange={(event) => { setAttorneyId(event.target.value); setPage(1); }}><option value="">All</option>{attorneys.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>
         <label className={styles.filter}>Assigned personnel<select value={assignedTo} onChange={(event) => { setAssignedTo(event.target.value); setPage(1); }}><option value="">All</option>{staff.map((person) => <option key={person.id} value={person.id}>{person.full_name}</option>)}</select></label>
       </div>
-      <div className={styles.tableScroll}><table><thead><tr><th scope="col">Client Name</th><th scope="col">Task Name</th><th scope="col">Assign Personnel</th><th scope="col">Deadline (Date)</th><th scope="col">Status</th></tr></thead><tbody>
-        {visible.map((task) => <tr key={task.id}><td><Link className={styles.clientLink} href={`/clients/${task.clientId}`}>{task.clientName}</Link></td><td>{canManage ? <button type="button" className={styles.taskButton} onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}>{task.title}</button> : task.title}</td><td>{task.assignedName}</td><td className={styles.dateCell}>{showDate(task.dueDate)}</td><td><div className={styles.statusCell}><span className={`${styles.statusBadge} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span>{canComplete && task.status === "open" && (canManage || task.assignedTo === currentUserId) && <button type="button" className={styles.doneButton} onClick={() => markDone(task)} disabled={busy}>Mark Done</button>}</div></td></tr>)}
-        {!visible.length && <tr><td colSpan={5}><div className={styles.empty}><ClipboardList size={28} aria-hidden="true" /><strong>{tasks.length ? "No matching deadlines" : "No tasks yet"}</strong><p>{tasks.length ? "Try another search or filter." : canManage ? "Add a task to start tracking deadlines." : "Tasks will appear here when assigned."}</p></div></td></tr>}
+      <div className={styles.tableScroll}><table><thead><tr><th scope="col">Client Name</th><th scope="col">Task Name</th><th scope="col">Assign Personnel</th><th scope="col">Deadline (Date)</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead><tbody>
+        {visible.map((task) => <tr key={task.id}>
+          <td><Link className={styles.clientLink} href={`/clients/${task.clientId}`}>{task.clientName}</Link></td>
+          <td>{canManage && task.status !== "awaiting_approval" ? <button type="button" className={styles.taskButton} onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}>{task.title}</button> : task.title}</td>
+          <td>{task.assignedName}</td>
+          <td className={styles.dateCell}>{showDate(task.dueDate)}</td>
+          <td><div className={styles.statusCell}>
+            <div className={styles.statusBadges}>{task.status === "awaiting_approval" && <span className={`${styles.statusBadge} ${styles.awaiting}`}>Awaiting approval</span>}{task.status === "needs_changes" && <span className={`${styles.statusBadge} ${styles.changes}`}>Needs changes</span>}<span className={`${styles.statusBadge} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span></div>
+            {role === "staff" && task.assignedTo === currentUserId && task.status === "needs_changes" && task.reviewHistory.some((entry) => entry.event === "returned") && <span className={styles.feedback}>Admin feedback: {[...task.reviewHistory].reverse().find((entry) => entry.event === "returned")?.comment}</span>}
+          </div></td>
+          <td><div className={styles.actionsCell}>
+            {task.reviewHistory.length > 0 && <button type="button" className={styles.doneButton} onClick={() => openHistory(task)}>Review history</button>}
+            {role === "staff" && task.assignedTo === currentUserId && (task.status === "open" || task.status === "needs_changes") && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Submit for approval</button>}
+            {role === "admin" && (task.status === "open" || task.status === "needs_changes") && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Mark Done</button>}
+            {role === "admin" && task.status === "awaiting_approval" && <button type="button" className={styles.doneButton} onClick={() => openReview(task)} disabled={busy}>Awaiting Approval</button>}
+          </div></td>
+        </tr>)}
+        {!visible.length && <tr><td colSpan={6}><div className={styles.empty}><ClipboardList size={28} aria-hidden="true" /><strong>{tasks.length ? "No matching deadlines" : "No tasks yet"}</strong><p>{tasks.length ? "Try another search or filter." : canManage ? "Add a task to start tracking deadlines." : "Tasks will appear here when assigned."}</p></div></td></tr>}
       </tbody></table></div>
       <div className={styles.footer}><span>{filtered.length ? `Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} of ${filtered.length} tasks` : "Showing 0 of 0 tasks"}</span><nav aria-label="Deadline pages" className={styles.pagination}><button type="button" aria-label="Previous page" disabled={currentPage === 1} onClick={() => setPage((value) => value - 1)}><ChevronLeft size={17} /></button><span aria-current="page">{currentPage}</span><button type="button" aria-label="Next page" disabled={currentPage === pageCount} onClick={() => setPage((value) => value + 1)}><ChevronRight size={17} /></button></nav></div>
     </section>
@@ -90,5 +120,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
       {notice && <p role="alert" className={styles.formError}>{notice}</p>}
       <div className={styles.formActions}><button type="button" onClick={() => dialog.current?.close()}>Cancel</button><button className={styles.primaryButton} type="submit" disabled={busy}>{busy ? "Saving…" : "Save Task"}</button></div>
     </form></dialog>}
+    {role === "admin" && <dialog ref={reviewDialog} className={styles.dialog} onClose={() => setReviewing(null)} aria-label="Review task"><div className={styles.dialogHeading}><h2>Review task</h2><button type="button" onClick={() => reviewDialog.current?.close()} aria-label="Close review"><X size={19} /></button></div><div className={styles.form}><p>Has the document for “{reviewing?.title}” been checked and verified?</p><label>Comment if returning to Staff<textarea className={styles.commentInput} value={reviewComment} maxLength={1000} onChange={(event) => setReviewComment(event.target.value)} placeholder="Explain what needs to be changed" /></label>{notice && <p role="alert" className={styles.formError}>{notice}</p>}<div className={styles.formActions}><button type="button" onClick={() => reviewDialog.current?.close()}>Cancel</button><button type="button" className={styles.reviewReturnButton} disabled={busy || !reviewComment.trim()} onClick={() => decideTask("return")}>No, return with comment</button><button type="button" className={styles.primaryButton} disabled={busy} onClick={() => decideTask("approve")}>Yes, approve</button></div></div></dialog>}
+    <dialog ref={historyDialog} className={styles.dialog} onClose={() => setHistoryTask(null)} aria-label="Task review history"><div className={styles.dialogHeading}><h2>Review history</h2><button type="button" onClick={() => historyDialog.current?.close()} aria-label="Close history"><X size={19} /></button></div><div className={styles.form}><p>{historyTask?.title}</p><ol className={styles.historyList}>{historyTask?.reviewHistory.map((entry, index) => <li key={`${entry.createdAt}-${index}`}><strong>{entry.event === "submitted" ? "Submitted for approval" : entry.event === "returned" ? "Returned for changes" : entry.event === "approved" ? "Approved" : "Completed by Admin"}</strong><span>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.createdAt))}</span>{entry.comment && <p>{entry.comment}</p>}</li>)}</ol></div></dialog>
   </main>;
 }

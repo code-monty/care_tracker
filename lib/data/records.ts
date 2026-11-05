@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveUser } from "@/lib/auth/session";
-import type { DeadlineRecord, DeadlineStatus } from "@/lib/rules/deadlines";
+import type { DeadlineRecord, DeadlineStatus, TaskReviewEvent, TaskStatus } from "@/lib/rules/deadlines";
 import { sortDeadlines } from "@/lib/rules/deadlines";
 
 export async function getClients() {
@@ -76,7 +76,7 @@ export async function getDashboardRecords(date: string) {
   if (clients.error) throw clients.error;
   if (appointments.error) throw appointments.error;
   const deadlines = await getDeadlineRecords();
-  const openDeadlines = deadlines.filter((task) => task.status === "open" && task.clientStatus === "active");
+  const openDeadlines = deadlines.filter((task) => task.status !== "done" && task.clientStatus === "active");
   return { activeClients: clients.count ?? 0, appointments: (appointments.data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived), deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length };
 }
 
@@ -101,6 +101,15 @@ export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRec
   if (tasks.error) throw tasks.error;
   if (clients.error) throw clients.error;
   if (staff.error) throw staff.error;
+  const ids = (tasks.data ?? []).map((task) => task.id);
+  const reviews = ids.length ? await db.from("task_review_events").select("task_id,event,comment,created_at").in("task_id", ids).order("created_at") : { data: [], error: null };
+  if (reviews.error) throw reviews.error;
+  const reviewMap = new Map<string, TaskReviewEvent[]>();
+  for (const row of reviews.data ?? []) {
+    const entries = reviewMap.get(row.task_id) ?? [];
+    entries.push({ event: row.event as TaskReviewEvent["event"], comment: row.comment, createdAt: row.created_at });
+    reviewMap.set(row.task_id, entries);
+  }
   const clientMap = new Map((clients.data ?? []).map((client) => [client.id, client]));
   const staffMap = new Map(((staff.data ?? []) as { id: string; full_name: string }[]).map((person) => [person.id, person.full_name]));
   return (tasks.data ?? []).flatMap((task) => {
@@ -111,7 +120,8 @@ export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRec
       id: task.id, clientId: task.client_id, clientName: client.full_name, clientStatus: client.status,
       attorneyId: client.attorney_id, attorneyName: attorney?.full_name ?? "",
       title: task.title, assignedTo: task.assigned_to, assignedName: staffMap.get(task.assigned_to) ?? "Former staff member",
-      dueDate: task.due_date, status: task.status as "open" | "done", deadlineStatus: task.deadline_status as DeadlineStatus,
+      dueDate: task.due_date, status: task.status as TaskStatus, deadlineStatus: task.deadline_status as DeadlineStatus,
+      reviewHistory: reviewMap.get(task.id) ?? [],
     }];
   }).sort(sortDeadlines);
 }
