@@ -265,3 +265,6 @@ Added an Admin review workflow for assigned Staff tasks. Staff submit open or re
 
 ### Deadlines review table layout (November 4, 2026)
 Separated task actions into their own table column and kept review and deadline badges with Admin feedback in the Status column, following the supplied layout. Added a border to the existing "No, return with comment" action in the Admin review dialog. Existing wording, color values, and approval behavior were retained. Local lint, typecheck, `git diff --check`, and the authenticated Chromium task approval flow passed. No database migration or hosted deployment was performed.
+
+### Deadlines spacing and Review history timeline (November 5, 2026)
+Aligned the six Deadlines columns with consistent cell padding and wider Status and Actions columns. Arranged Review history as a vertical timeline with returned comments beside their events on desktop and beneath them at narrow widths. Preserved event order, wording, comments, and Manila date formatting. Added existing theme hover backgrounds to the Admin review dialog's Cancel and enabled "No, return with comment" buttons. Local lint, typecheck, `git diff --check`, and the focused authenticated Chromium approval flow passed. Reviewed the dialog in dark and light themes at desktop width and in light theme at narrow width. No API, database, or hosted deployment changes were made.

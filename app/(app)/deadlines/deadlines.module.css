@@ -17,13 +17,13 @@
 .filter option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .filter select { color-scheme: light; }
 .tableScroll { overflow-x: auto; }
-.tableScroll table { width: 100%; min-width: 760px; table-layout: fixed; border-collapse: collapse; text-align: left; }
-.tableScroll th:nth-child(1) { width: 8%; }
-.tableScroll th:nth-child(2) { width: 11%; }
-.tableScroll th:nth-child(3) { width: 13%; }
-.tableScroll th:nth-child(4) { width: 12%; }
-.tableScroll th:nth-child(5) { width: 31%; }
-.tableScroll th:nth-child(6) { width: 25%; text-align: right; }
+.tableScroll table { width: 100%; min-width: 980px; table-layout: fixed; border-collapse: collapse; text-align: left; }
+.tableScroll th:nth-child(1) { width: 12%; }
+.tableScroll th:nth-child(2) { width: 13%; }
+.tableScroll th:nth-child(3) { width: 15%; }
+.tableScroll th:nth-child(4) { width: 14%; }
+.tableScroll th:nth-child(5) { width: 24%; }
+.tableScroll th:nth-child(6) { width: 22%; text-align: right; }
 .tableScroll th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
 .tableScroll td { padding: .85rem 1.2rem; border-bottom: 1px solid var(--line); font-size: .85rem; vertical-align: middle; overflow-wrap: anywhere; }
 .tableScroll tr:last-child td { border-bottom: 0; }
@@ -53,6 +53,7 @@
 .pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .pagination span { color: var(--text); background: var(--hover); }
 .dialog { width: min(32rem, calc(100vw - 1rem)); max-width: none; max-height: 90dvh; margin: auto; padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: .85rem; color: var(--text); background: var(--surface); box-shadow: 0 24px 70px #0008; }
+.historyDialog { width: min(58rem, calc(100vw - 1rem)); }
 .dialog:not([open]) { display: none; }
 .dialog::backdrop { background: #061321b8; }
 .dialogHeading { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
@@ -63,10 +64,15 @@
 .form label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 650; }
 .form :is(input, select) { width: 100%; min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
 .commentInput { width: 100%; min-height: 6rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; resize: vertical; }
-.historyList { display: grid; gap: .75rem; padding-left: 1.3rem; }
-.historyList li { padding-left: .25rem; }
-.historyList span { display: block; color: var(--muted); font-size: .78rem; }
-.historyList p { margin-top: .35rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.historyList { display: grid; gap: .25rem; padding: 0; list-style: none; }
+.historyItem { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 45%); gap: 1rem; min-height: 5.5rem; padding: .75rem; border-radius: .6rem; }
+.historyItem:not(:last-child)::before { position: absolute; top: 2.75rem; bottom: -.75rem; left: 1.7rem; border-left: 1px solid var(--line); content: ""; }
+.historyItem:last-child { background: var(--hover); }
+.historyEvent { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-content: start; gap: .8rem; }
+.historyMarker { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: 50%; color: var(--brand); background: var(--surface); }
+.historyEvent strong { display: block; font-weight: 700; }
+.historyTime { display: block; margin-top: .2rem; color: var(--muted); font-size: .78rem; }
+.historyComment { align-self: start; min-width: 0; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .6rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .form select { color-scheme: dark; }
 .form select option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .form select { color-scheme: light; }
@@ -74,6 +80,8 @@
 .formActions { display: flex; justify-content: flex-end; gap: .6rem; padding-top: .4rem; }
 .formActions > button:first-child { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .85rem; }
 .reviewReturnButton { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .85rem; }
+.reviewDialog .formActions > button:first-child:hover, .reviewDialog .reviewReturnButton:hover:not(:disabled) { background: var(--hover); }
 .page :is(button, input, select, a):focus-visible, .dialog :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 760px) { .page { padding: 1rem 1rem 3rem; } .toolbar { padding: 1rem; } .search { flex: 1 1 100%; width: 100%; } .footer { padding: .75rem 1rem; } }
+@media (max-width: 640px) { .historyItem { grid-template-columns: minmax(0, 1fr); } .historyComment { margin-left: 2.8rem; } }
