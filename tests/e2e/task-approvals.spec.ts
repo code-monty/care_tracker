@@ -70,18 +70,41 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await page.reload();
     await expect(staffRow.getByText("Needs changes")).toBeVisible();
     await expect(staffRow.getByText("Admin feedback: Please correct the fake report.")).toBeVisible();
-    page.once("dialog", (dialog) => dialog.accept());
     await staffRow.getByRole("button", { name: "Submit for approval" }).click();
+    const resubmitDialog = page.getByRole("dialog", { name: "Resubmit task" });
+    await expect(resubmitDialog.getByRole("button", { name: "Submit for approval" })).toBeDisabled();
+    await resubmitDialog.getByRole("textbox", { name: "Changes made" }).fill("Corrected the fake report.");
+    await resubmitDialog.getByRole("button", { name: "Submit for approval" }).click();
     await expect(staffRow.getByText("Awaiting approval")).toBeVisible();
 
     await adminPage.reload();
     await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Awaiting Approval" }).click();
+    await expect(adminPage.getByRole("dialog", { name: "Review task" }).getByText("Staff changes: Corrected the fake report.")).toBeVisible();
+    await adminPage.getByRole("dialog", { name: "Review task" }).getByRole("textbox", { name: "Comment if returning to Staff" }).fill("Please fix the missing section too.");
+    await adminPage.getByRole("dialog", { name: "Review task" }).getByRole("button", { name: "No, return with comment" }).click();
+    await expect(adminPage.getByRole("status").getByText("Task returned to Staff with feedback.")).toBeVisible();
+
+    await page.reload();
+    await staffRow.getByRole("button", { name: "Submit for approval" }).click();
+    await resubmitDialog.getByRole("textbox", { name: "Changes made" }).fill("Added the missing section.");
+    await resubmitDialog.getByRole("button", { name: "Submit for approval" }).click();
+    await expect(staffRow.getByText("Awaiting approval")).toBeVisible();
+
+    await adminPage.reload();
+    await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Awaiting Approval" }).click();
+    await expect(adminPage.getByRole("dialog", { name: "Review task" }).getByText("Staff changes: Added the missing section.")).toBeVisible();
     await adminPage.getByRole("dialog", { name: "Review task" }).getByRole("button", { name: "Yes, approve" }).click();
     await expect(adminPage.getByRole("status").getByText("Task approved and marked done.")).toBeVisible();
     const { data: task } = await db.from("tasks").select("status").eq("id", taskId).single();
     expect(task?.status).toBe("done");
     const { data: history } = await db.from("task_review_events").select("event,comment").eq("task_id", taskId).order("created_at");
-    expect(history?.map((entry) => entry.event)).toEqual(["submitted", "returned", "submitted", "approved"]);
+    expect(history?.map((entry) => entry.event)).toEqual(["submitted", "returned", "submitted", "returned", "submitted", "approved"]);
+    expect(history?.filter((entry) => entry.event === "submitted").map((entry) => entry.comment)).toEqual([null, "Corrected the fake report.", "Added the missing section."]);
+    await adminPage.getByLabel("Status").selectOption("All");
+    await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Review history" }).click();
+    const historyDialog = adminPage.getByRole("dialog", { name: "Task review history" });
+    await expect(historyDialog.getByRole("listitem").filter({ hasText: "Corrected the fake report." })).toContainText("Staff changes:");
+    await expect(historyDialog.getByRole("listitem").filter({ hasText: "Added the missing section." })).toContainText("Staff changes:");
   } finally {
     await adminContext.close();
     await db.from("clients").update({ is_archived: true }).eq("id", clientId);

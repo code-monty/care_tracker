@@ -73,6 +73,8 @@
 .historyEvent strong { display: block; font-weight: 700; }
 .historyTime { display: block; margin-top: .2rem; color: var(--muted); font-size: .78rem; }
 .historyComment { align-self: start; min-width: 0; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .6rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.historyComment strong { font-weight: 700; }
+.reviewExplanation { padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .6rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .form select { color-scheme: dark; }
 .form select option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .form select { color-scheme: light; }

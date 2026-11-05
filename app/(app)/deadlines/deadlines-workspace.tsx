@@ -23,13 +23,17 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<DeadlineRecord | null>(null);
   const [reviewing, setReviewing] = useState<DeadlineRecord | null>(null);
+  const [resubmitting, setResubmitting] = useState<DeadlineRecord | null>(null);
   const [historyTask, setHistoryTask] = useState<DeadlineRecord | null>(null);
   const [reviewComment, setReviewComment] = useState("");
+  const [submissionComment, setSubmissionComment] = useState("");
+  const [submissionError, setSubmissionError] = useState("");
   const [selectedClient, setSelectedClient] = useState(initialClientId ?? "");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const reviewDialog = useRef<HTMLDialogElement>(null);
+  const submissionDialog = useRef<HTMLDialogElement>(null);
   const historyDialog = useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const today = manilaToday();
@@ -44,10 +48,12 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const latestSubmissionComment = reviewing ? [...reviewing.reviewHistory].reverse().find((entry) => entry.event === "submitted")?.comment : null;
 
   function openAdd() { form.current?.reset(); setEditing(null); setSelectedClient(initialClientId ?? ""); setNotice(""); dialog.current?.showModal(); }
   function openEdit(task: DeadlineRecord) { setEditing(task); setSelectedClient(task.clientId); setNotice(""); dialog.current?.showModal(); }
   function openReview(task: DeadlineRecord) { setReviewing(task); setReviewComment(""); setNotice(""); reviewDialog.current?.showModal(); }
+  function openResubmission(task: DeadlineRecord) { setResubmitting(task); setSubmissionComment(""); setSubmissionError(""); submissionDialog.current?.showModal(); }
   function openHistory(task: DeadlineRecord) { setHistoryTask(task); historyDialog.current?.showModal(); }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,10 +71,22 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
     finally { setBusy(false); }
   }
   async function advanceTask(task: DeadlineRecord) {
+    if (role === "staff" && task.status === "needs_changes") { openResubmission(task); return; }
     if (!window.confirm(role === "staff" ? `Submit “${task.title}” for Admin approval?` : `Mark “${task.title}” done?`)) return;
     setBusy(true); setNotice("");
     try { if (role === "staff") await submitTaskForApproval(task.id); else await completeTask(task.id); setTasks(await deadlinesForPage()); setNotice(role === "staff" ? "Task sent for Admin approval." : "Task marked done."); }
     catch { setNotice("Unable to update task."); }
+    finally { setBusy(false); }
+  }
+  async function sendResubmission() {
+    if (!resubmitting || !submissionComment.trim()) { setSubmissionError("Describe the changes made before resubmitting."); return; }
+    setBusy(true); setSubmissionError(""); setNotice("");
+    try {
+      await submitTaskForApproval(resubmitting.id, submissionComment);
+      setTasks(await deadlinesForPage());
+      submissionDialog.current?.close();
+      setNotice("Task sent for Admin approval.");
+    } catch (error) { setSubmissionError(error instanceof Error ? error.message : "Unable to submit task."); }
     finally { setBusy(false); }
   }
   async function decideTask(decision: "approve" | "return") {
@@ -120,7 +138,8 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
       {notice && <p role="alert" className={styles.formError}>{notice}</p>}
       <div className={styles.formActions}><button type="button" onClick={() => dialog.current?.close()}>Cancel</button><button className={styles.primaryButton} type="submit" disabled={busy}>{busy ? "Saving…" : "Save Task"}</button></div>
     </form></dialog>}
-    {role === "admin" && <dialog ref={reviewDialog} className={`${styles.dialog} ${styles.reviewDialog}`} onClose={() => setReviewing(null)} aria-label="Review task"><div className={styles.dialogHeading}><h2>Review task</h2><button type="button" onClick={() => reviewDialog.current?.close()} aria-label="Close review"><X size={19} /></button></div><div className={styles.form}><p>Has the document for “{reviewing?.title}” been checked and verified?</p><label>Comment if returning to Staff<textarea className={styles.commentInput} value={reviewComment} maxLength={1000} onChange={(event) => setReviewComment(event.target.value)} placeholder="Explain what needs to be changed" /></label>{notice && <p role="alert" className={styles.formError}>{notice}</p>}<div className={styles.formActions}><button type="button" onClick={() => reviewDialog.current?.close()}>Cancel</button><button type="button" className={styles.reviewReturnButton} disabled={busy || !reviewComment.trim()} onClick={() => decideTask("return")}>No, return with comment</button><button type="button" className={styles.primaryButton} disabled={busy} onClick={() => decideTask("approve")}>Yes, approve</button></div></div></dialog>}
-    <dialog ref={historyDialog} className={`${styles.dialog} ${styles.historyDialog}`} onClose={() => setHistoryTask(null)} aria-label="Task review history"><div className={styles.dialogHeading}><h2>Review history</h2><button type="button" onClick={() => historyDialog.current?.close()} aria-label="Close history"><X size={19} /></button></div><div className={styles.form}><p>{historyTask?.title}</p><ol className={styles.historyList}>{historyTask?.reviewHistory.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className={styles.historyItem}><div className={styles.historyEvent}><span className={styles.historyMarker} aria-hidden="true">{entry.event === "returned" ? <ArrowRight size={17} /> : <Check size={17} />}</span><div><strong>{entry.event === "submitted" ? "Submitted for approval" : entry.event === "returned" ? "Returned for changes" : entry.event === "approved" ? "Approved" : "Completed by Admin"}</strong><span className={styles.historyTime}>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.createdAt))}</span></div></div>{entry.comment && <p className={styles.historyComment}>{entry.comment}</p>}</li>)}</ol></div></dialog>
+    {role === "staff" && <dialog ref={submissionDialog} className={styles.dialog} onClose={() => setResubmitting(null)} aria-label="Resubmit task"><div className={styles.dialogHeading}><h2>Resubmit task</h2><button type="button" onClick={() => submissionDialog.current?.close()} aria-label="Close resubmission"><X size={19} /></button></div><div className={styles.form}><p>Describe the changes made to “{resubmitting?.title}” for Admin review.</p><label>Changes made<textarea className={styles.commentInput} value={submissionComment} maxLength={1000} required onChange={(event) => setSubmissionComment(event.target.value)} placeholder="Explain what you changed" /></label>{submissionError && <p role="alert" className={styles.formError}>{submissionError}</p>}<div className={styles.formActions}><button type="button" onClick={() => submissionDialog.current?.close()}>Cancel</button><button type="button" className={styles.primaryButton} disabled={busy || !submissionComment.trim()} onClick={sendResubmission}>Submit for approval</button></div></div></dialog>}
+    {role === "admin" && <dialog ref={reviewDialog} className={`${styles.dialog} ${styles.reviewDialog}`} onClose={() => setReviewing(null)} aria-label="Review task"><div className={styles.dialogHeading}><h2>Review task</h2><button type="button" onClick={() => reviewDialog.current?.close()} aria-label="Close review"><X size={19} /></button></div><div className={styles.form}><p>Has the document for “{reviewing?.title}” been checked and verified?</p>{latestSubmissionComment && <p className={styles.reviewExplanation}><strong>Staff changes:</strong> {latestSubmissionComment}</p>}<label>Comment if returning to Staff<textarea className={styles.commentInput} value={reviewComment} maxLength={1000} onChange={(event) => setReviewComment(event.target.value)} placeholder="Explain what needs to be changed" /></label>{notice && <p role="alert" className={styles.formError}>{notice}</p>}<div className={styles.formActions}><button type="button" onClick={() => reviewDialog.current?.close()}>Cancel</button><button type="button" className={styles.reviewReturnButton} disabled={busy || !reviewComment.trim()} onClick={() => decideTask("return")}>No, return with comment</button><button type="button" className={styles.primaryButton} disabled={busy} onClick={() => decideTask("approve")}>Yes, approve</button></div></div></dialog>}
+    <dialog ref={historyDialog} className={`${styles.dialog} ${styles.historyDialog}`} onClose={() => setHistoryTask(null)} aria-label="Task review history"><div className={styles.dialogHeading}><h2>Review history</h2><button type="button" onClick={() => historyDialog.current?.close()} aria-label="Close history"><X size={19} /></button></div><div className={styles.form}><p>{historyTask?.title}</p><ol className={styles.historyList}>{historyTask?.reviewHistory.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className={styles.historyItem}><div className={styles.historyEvent}><span className={styles.historyMarker} aria-hidden="true">{entry.event === "returned" ? <ArrowRight size={17} /> : <Check size={17} />}</span><div><strong>{entry.event === "submitted" ? "Submitted for approval" : entry.event === "returned" ? "Returned for changes" : entry.event === "approved" ? "Approved" : "Completed by Admin"}</strong><span className={styles.historyTime}>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.createdAt))}</span></div></div>{entry.comment && <p className={styles.historyComment}>{entry.event === "submitted" && <><strong>Staff changes:</strong><br /></>}{entry.comment}</p>}</li>)}</ol></div></dialog>
   </main>;
 }

@@ -167,6 +167,8 @@ On November 3, 2026, the owner removed task completion from Secretary. Secretary
 
 On November 4, 2026, the owner approved Admin review for Staff tasks. Staff may submit an assigned open or returned task, changing it to Awaiting approval. Admin verifies the document outside CareTracker and approves it as Done or returns it as Needs changes with a required comment. Staff can see feedback and resubmit. Submitted and returned tasks remain active deadlines until approved. Admin may directly complete open or returned tasks. Secretary still cannot change task status. Task details are locked during review, and review comments are retained in task history without copying them into Activity Logs. No case document uploads or email notifications are part of this workflow. This supersedes the earlier direct Staff completion wording.
 
+On November 5, 2026, Staff resubmission of a returned task requires a comment describing the changes made. Admin sees the latest Staff explanation in Review task, and each explanation remains with its submission in Review history. First submissions still need no comment. Staff explanations remain private to Admin and the assigned Staff member and are excluded from Activity Logs.
+
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 
 ---

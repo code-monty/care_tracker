@@ -169,12 +169,13 @@ export async function completeTask(id: string) {
   revalidatePath(`/clients/${data.client_id}`);
 }
 
-export async function submitTaskForApproval(id: string) {
+export async function submitTaskForApproval(id: string, comment?: string) {
   const { user, profile } = await requireActiveUser();
   if (profile.role !== "staff") throw new Error("Access denied");
+  const value = z.object({ id: uuid, comment: z.string().trim().min(1).max(1000).optional() }).parse({ id, comment });
   const db = await createClient();
-  const { data, error } = await db.from("tasks").update({ status: "awaiting_approval", review_comment: null })
-    .eq("id", uuid.parse(id)).eq("assigned_to", user.id).in("status", ["open", "needs_changes"])
+  const { data, error } = await db.from("tasks").update({ status: "awaiting_approval", review_comment: null, submission_comment: value.comment ?? null })
+    .eq("id", value.id).eq("assigned_to", user.id).in("status", ["open", "needs_changes"])
     .select("client_id").single();
   if (error || !data) fail(error);
   refresh();
@@ -187,7 +188,7 @@ export async function reviewTask(id: string, decision: "approve" | "return", com
   const value = z.object({ id: uuid, decision: z.enum(["approve", "return"]), comment: z.string().trim().min(1).max(1000).optional() }).parse({ id, decision, comment });
   if (value.decision === "return" && !value.comment) throw new Error("Enter a comment before returning the task.");
   const db = await createClient();
-  const update = value.decision === "approve" ? { status: "done" } : { status: "needs_changes", review_comment: value.comment };
+  const update = value.decision === "approve" ? { status: "done", submission_comment: null } : { status: "needs_changes", review_comment: value.comment, submission_comment: null };
   const { data, error } = await db.from("tasks").update(update).eq("id", value.id).eq("status", "awaiting_approval").select("client_id").single();
   if (error || !data) fail(error);
   refresh();
