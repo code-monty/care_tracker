@@ -12,6 +12,7 @@ export type DeadlineRecord = {
   title: string;
   assignedTo: string;
   assignedName: string;
+  assignedRole: "staff" | "secretary" | null;
   dueDate: string;
   status: TaskStatus;
   deadlineStatus: DeadlineStatus;

@@ -89,7 +89,7 @@ export async function getActivePersonnel() {
 }
 
 export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRecord[]> {
-  await requireActiveUser();
+  const { profile } = await requireActiveUser();
   const db = await createClient();
   let query = db.from("deadline_status").select("id,client_id,title,assigned_to,due_date,status,deadline_status");
   if (clientId) query = query.eq("client_id", clientId);
@@ -102,6 +102,12 @@ export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRec
   if (clients.error) throw clients.error;
   if (staff.error) throw staff.error;
   const ids = (tasks.data ?? []).map((task) => task.id);
+  const assigneeIds = [...new Set((tasks.data ?? []).map((task) => task.assigned_to))];
+  const assigneeRoles = profile.role === "admin" && assigneeIds.length
+    ? await db.from("profiles").select("id,role").in("id", assigneeIds)
+    : { data: [], error: null };
+  if (assigneeRoles.error) throw assigneeRoles.error;
+  const roleMap = new Map((assigneeRoles.data ?? []).map((person) => [person.id, person.role as "staff" | "secretary"]));
   const reviews = ids.length ? await db.from("task_review_events").select("task_id,event,comment,created_at").in("task_id", ids).order("created_at") : { data: [], error: null };
   if (reviews.error) throw reviews.error;
   const reviewMap = new Map<string, TaskReviewEvent[]>();
@@ -119,9 +125,21 @@ export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRec
     return [{
       id: task.id, clientId: task.client_id, clientName: client.full_name, clientStatus: client.status,
       attorneyId: client.attorney_id, attorneyName: attorney?.full_name ?? "",
-      title: task.title, assignedTo: task.assigned_to, assignedName: staffMap.get(task.assigned_to) ?? "Former staff member",
+      title: task.title, assignedTo: task.assigned_to, assignedName: staffMap.get(task.assigned_to) ?? "Former staff member", assignedRole: roleMap.get(task.assigned_to) ?? null,
       dueDate: task.due_date, status: task.status as TaskStatus, deadlineStatus: task.deadline_status as DeadlineStatus,
       reviewHistory: reviewMap.get(task.id) ?? [],
     }];
   }).sort(sortDeadlines);
+}
+
+export async function getArchivedTasks() {
+  const { profile } = await requireActiveUser();
+  if (profile.role !== "admin") throw new Error("Access denied");
+  const db = await createClient();
+  const { data, error } = await db.from("tasks").select("id,title,client_id,due_date,status,clients(full_name)").eq("is_archived", true).order("due_date");
+  if (error) throw error;
+  return (data ?? []).map((task) => ({
+    id: task.id, title: task.title, dueDate: task.due_date, status: task.status,
+    clientName: (Array.isArray(task.clients) ? task.clients[0] : task.clients)?.full_name ?? "Former client",
+  }));
 }

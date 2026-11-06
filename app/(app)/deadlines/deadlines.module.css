@@ -2,6 +2,11 @@
 .heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
 .heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
+.headingActions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.headingActions a { color: var(--brand); font-size: .85rem; font-weight: 650; }
+.headingActions a:hover { text-decoration: underline; }
+.backLink { display: inline-block; margin-bottom: 1rem; color: var(--brand); font-size: .85rem; }
+.backLink:hover { text-decoration: underline; }
 .primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-size: .875rem; font-weight: 650; cursor: pointer; }
 .primaryButton:hover { background: #00543a; }
 .primaryButton:disabled { opacity: .55; cursor: not-allowed; }
@@ -24,6 +29,10 @@
 .tableScroll th:nth-child(4) { width: 14%; }
 .tableScroll th:nth-child(5) { width: 24%; }
 .tableScroll th:nth-child(6) { width: 22%; text-align: center; }
+.tableScroll .archiveTable { min-width: 680px; }
+.archiveTable th:nth-child(1), .archiveTable th:nth-child(2), .archiveTable th:nth-child(3), .archiveTable th:nth-child(4) { width: 25%; }
+.archiveTable th:nth-child(4) { text-align: center; }
+.archiveError { margin: 1rem 1.2rem 0; color: #b91c1c; font-size: .85rem; }
 .tableScroll th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
 .tableScroll td { padding: .85rem 1.2rem; border-bottom: 1px solid var(--line); font-size: .85rem; vertical-align: middle; overflow-wrap: anywhere; }
 .tableScroll tr:last-child td { border-bottom: 0; }
@@ -64,6 +73,7 @@
 .form label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 650; }
 .form :is(input, select) { width: 100%; min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
 .commentInput { width: 100%; min-height: 6rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; resize: vertical; }
+.commentInput[aria-invalid="true"] { border-color: #b91c1c; outline: 2px solid #b91c1c; outline-offset: 1px; }
 .historyList { display: grid; gap: .25rem; padding: 0; list-style: none; }
 .historyItem { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(12rem, 45%); gap: 1rem; min-height: 5.5rem; padding: .75rem; border-radius: .6rem; }
 .historyItem:not(:last-child)::before { position: absolute; top: 2.75rem; bottom: -.75rem; left: 1.7rem; border-left: 1px solid var(--line); content: ""; }
@@ -80,10 +90,16 @@
 :global([data-theme="light"]) .form select { color-scheme: light; }
 .formError { color: #b91c1c; font-size: .8rem; }
 .formActions { display: flex; justify-content: flex-end; gap: .6rem; padding-top: .4rem; }
-.formActions > button:first-child { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .85rem; }
+.deleteTaskButton { margin-right: auto; min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid #f87171; border-radius: .5rem; color: #f87171; font-size: .85rem; }
+.deleteTaskButton:hover { background: #f871711a; }
+:global([data-theme="light"]) .deleteTaskButton { border-color: #b91c1c; color: #b91c1c; }
+:global([data-theme="light"]) .deleteTaskButton:hover { background: var(--hover); }
+.deleteTaskButton:disabled { opacity: .5; }
+.formActions > button:first-child:not(.deleteTaskButton) { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .85rem; }
 .reviewReturnButton { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .5rem; font-size: .85rem; }
 .reviewDialog .formActions > button:first-child:hover, .reviewDialog .reviewReturnButton:hover:not(:disabled) { background: var(--hover); }
 .page :is(button, input, select, a):focus-visible, .dialog :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.dialog .commentInput[aria-invalid="true"]:focus-visible { outline-color: #b91c1c; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 760px) { .page { padding: 1rem 1rem 3rem; } .toolbar { padding: 1rem; } .search { flex: 1 1 100%; width: 100%; } .footer { padding: .75rem 1rem; } }
 @media (max-width: 640px) { .historyItem { grid-template-columns: minmax(0, 1fr); } .historyComment { margin-left: 2.8rem; } }

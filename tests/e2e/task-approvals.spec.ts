@@ -45,11 +45,15 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     if (attorneyError) throw attorneyError;
     const { error: clientError } = await db.from("clients").insert({ id: clientId, full_name: `Fake Approval Client ${suffix}`, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `approval-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: adminId });
     if (clientError) throw clientError;
+    const { error: respondentError } = await db.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `approval-respondent-${suffix}@example.test`, address: "Fake address" });
+    if (respondentError) throw respondentError;
     const { error: taskError } = await db.from("tasks").insert({ id: taskId, client_id: clientId, title, assigned_to: staffId, due_date: "2026-11-01", created_by: adminId });
     if (taskError) throw taskError;
 
     await signIn(page, staffEmail, password, staffId);
     await signIn(adminPage, adminEmail, password, adminId);
+    await adminPage.goto(`/deadlines?client=${clientId}`);
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
     await page.goto(`/deadlines?client=${clientId}`);
     const staffRow = page.getByRole("row", { name: new RegExp(title) });
     page.once("dialog", (dialog) => dialog.accept());
@@ -63,10 +67,18 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await adminRow.getByRole("button", { name: "Awaiting Approval" }).click();
     await expect(adminPage.getByText(/Has the document.*checked and verified/)).toBeVisible();
     const reviewDialog = adminPage.getByRole("dialog", { name: "Review task" });
-    await expect(reviewDialog.getByRole("button", { name: "No, return with comment" })).toBeDisabled();
-    await reviewDialog.getByRole("textbox", { name: "Comment if returning to Staff" }).fill("Please correct the fake report.");
+    const reviewComment = reviewDialog.getByRole("textbox", { name: "Comment if returning to Staff" });
+    await reviewDialog.getByRole("button", { name: "No, return with comment" }).click();
+    await expect(reviewComment).toBeFocused();
+    await expect(reviewComment).toHaveAttribute("aria-invalid", "true");
+    await expect(reviewDialog.getByRole("alert")).toHaveText("Enter a comment before returning the task.");
+    await reviewComment.fill("Please correct the fake report.");
+    await expect(reviewComment).toHaveAttribute("aria-invalid", "false");
     await reviewDialog.getByRole("button", { name: "No, return with comment" }).click();
     await expect(adminPage.getByRole("status").getByText("Task returned to Staff with feedback.")).toBeVisible();
+    await adminPage.getByLabel("Status").selectOption("Open");
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Mark Done" })).toBeVisible();
+    await adminPage.getByLabel("Status").selectOption("Awaiting approval");
 
     await page.reload();
     await expect(staffRow.getByText("Needs changes")).toBeVisible();
@@ -107,6 +119,30 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await expect(historyDialog.getByRole("listitem").filter({ hasText: "Please correct the fake report." })).toContainText("Admin feedback:");
     await expect(historyDialog.getByRole("listitem").filter({ hasText: "Corrected the fake report." })).toContainText("Staff changes:");
     await expect(historyDialog.getByRole("listitem").filter({ hasText: "Added the missing section." })).toContainText("Staff changes:");
+    await historyDialog.getByRole("button", { name: "Close history" }).click();
+    await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: `Edit ${title}` }).click();
+    const editDialog = adminPage.getByRole("dialog").filter({ has: adminPage.getByRole("heading", { name: "Edit Task" }) });
+    adminPage.once("dialog", (dialog) => dialog.accept());
+    await editDialog.getByRole("button", { name: "Delete task" }).click();
+    await expect(adminPage.getByRole("status").getByText("Task archived.")).toBeVisible();
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) })).toHaveCount(0);
+    await page.reload();
+    await page.getByLabel("Status").selectOption("All");
+    await expect(page.getByRole("row", { name: new RegExp(title) })).toHaveCount(0);
+    await page.goto(`/clients/${clientId}`);
+    await expect(page.getByText("No tasks are tracked for this client yet.")).toBeVisible({ timeout: 30_000 });
+    await expect(adminPage.getByRole("link", { name: "View archived tasks" })).toHaveAttribute("href", "/deadlines/archived");
+    await adminPage.goto("/deadlines/archived");
+    await expect(adminPage).toHaveURL(/\/deadlines\/archived/);
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) })).toBeVisible();
+    await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Restore" }).click();
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) })).toHaveCount(0);
+    await adminPage.getByRole("link", { name: "Back to Deadlines" }).click();
+    await adminPage.getByLabel("Status").selectOption("All");
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Review history" })).toBeVisible();
+    await page.goto(`/deadlines?client=${clientId}`);
+    await page.getByLabel("Status").selectOption("All");
+    await expect(page.getByRole("row", { name: new RegExp(title) })).toBeVisible();
   } finally {
     await adminContext.close();
     await db.from("clients").update({ is_archived: true }).eq("id", clientId);

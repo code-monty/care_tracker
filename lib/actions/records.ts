@@ -151,7 +151,7 @@ export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
   if (personnel.error || !(personnel.data as { id: string }[] | null)?.some((person) => person.id === value.assignedTo)) throw new Error("Select an active personnel member.");
   const payload = { client_id: value.clientId, title: value.title, assigned_to: value.assignedTo, due_date: value.dueDate };
   const { data, error } = id
-    ? await db.from("tasks").update(payload).eq("id", uuid.parse(id)).select("id").single()
+    ? await db.from("tasks").update(payload).eq("id", uuid.parse(id)).eq("is_archived", false).select("id").single()
     : await db.from("tasks").insert({ ...payload, created_by: user.id }).select("id").single();
   if (error || !data) fail(error);
   refresh();
@@ -163,10 +163,41 @@ export async function completeTask(id: string) {
   const { profile } = await requireActiveUser();
   if (profile.role !== "admin") throw new Error("Access denied");
   const db = await createClient();
-  const { data, error } = await db.from("tasks").update({ status: "done" }).eq("id", uuid.parse(id)).in("status", ["open", "needs_changes"]).select("client_id").single();
+  const taskId = uuid.parse(id);
+  const { data: task, error: taskError } = await db.from("tasks").select("status,assigned_to").eq("id", taskId).eq("is_archived", false).single();
+  if (taskError || !task) fail(taskError);
+  if (task.status === "open") {
+    const { data: assignee, error: assigneeError } = await db.from("profiles").select("role").eq("id", task.assigned_to).single();
+    if (assigneeError || assignee?.role !== "secretary") throw new Error("Staff work requires a submission before completion.");
+  }
+  const { data, error } = await db.from("tasks").update({ status: "done" }).eq("id", taskId).eq("is_archived", false).in("status", ["open", "needs_changes"]).select("client_id").single();
   if (error || !data) fail(error);
   refresh();
   revalidatePath(`/clients/${data.client_id}`);
+}
+
+export async function archiveTask(id: string) {
+  const { profile } = await requireActiveUser();
+  if (profile.role !== "admin") throw new Error("Access denied");
+  const db = await createClient();
+  const { data, error } = await db.from("tasks").update({ is_archived: true }).eq("id", uuid.parse(id))
+    .eq("is_archived", false).neq("status", "awaiting_approval").select("client_id").single();
+  if (error || !data) fail(error);
+  refresh();
+  revalidatePath(`/clients/${data.client_id}`);
+  revalidatePath("/deadlines/archived");
+}
+
+export async function restoreTask(id: string) {
+  const { profile } = await requireActiveUser();
+  if (profile.role !== "admin") throw new Error("Access denied");
+  const db = await createClient();
+  const { data, error } = await db.from("tasks").update({ is_archived: false }).eq("id", uuid.parse(id))
+    .eq("is_archived", true).select("client_id").single();
+  if (error || !data) fail(error);
+  refresh();
+  revalidatePath(`/clients/${data.client_id}`);
+  revalidatePath("/deadlines/archived");
 }
 
 export async function submitTaskForApproval(id: string, comment?: string) {
@@ -175,7 +206,7 @@ export async function submitTaskForApproval(id: string, comment?: string) {
   const value = z.object({ id: uuid, comment: z.string().trim().min(1).max(1000).optional() }).parse({ id, comment });
   const db = await createClient();
   const { data, error } = await db.from("tasks").update({ status: "awaiting_approval", review_comment: null, submission_comment: value.comment ?? null })
-    .eq("id", value.id).eq("assigned_to", user.id).in("status", ["open", "needs_changes"])
+    .eq("id", value.id).eq("assigned_to", user.id).eq("is_archived", false).in("status", ["open", "needs_changes"])
     .select("client_id").single();
   if (error || !data) fail(error);
   refresh();
@@ -189,7 +220,7 @@ export async function reviewTask(id: string, decision: "approve" | "return", com
   if (value.decision === "return" && !value.comment) throw new Error("Enter a comment before returning the task.");
   const db = await createClient();
   const update = value.decision === "approve" ? { status: "done", submission_comment: null } : { status: "needs_changes", review_comment: value.comment, submission_comment: null };
-  const { data, error } = await db.from("tasks").update(update).eq("id", value.id).eq("status", "awaiting_approval").select("client_id").single();
+  const { data, error } = await db.from("tasks").update(update).eq("id", value.id).eq("status", "awaiting_approval").eq("is_archived", false).select("client_id").single();
   if (error || !data) fail(error);
   refresh();
   revalidatePath(`/clients/${data.client_id}`);

@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronLeft, ChevronRight, ClipboardList, Plus, Search, X } from "lucide-react";
-import { completeTask, deadlinesForPage, reviewTask, saveTask, submitTaskForApproval } from "@/lib/actions/records";
+import { archiveTask, completeTask, deadlinesForPage, reviewTask, saveTask, submitTaskForApproval } from "@/lib/actions/records";
 import { manilaToday, type DeadlineRecord, type DeadlineStatus } from "@/lib/rules/deadlines";
 import styles from "./deadlines.module.css";
 
@@ -26,6 +26,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const [resubmitting, setResubmitting] = useState<DeadlineRecord | null>(null);
   const [historyTask, setHistoryTask] = useState<DeadlineRecord | null>(null);
   const [reviewComment, setReviewComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
   const [submissionComment, setSubmissionComment] = useState("");
   const [submissionError, setSubmissionError] = useState("");
   const [selectedClient, setSelectedClient] = useState(initialClientId ?? "");
@@ -33,6 +34,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const reviewDialog = useRef<HTMLDialogElement>(null);
+  const reviewCommentInput = useRef<HTMLTextAreaElement>(null);
   const submissionDialog = useRef<HTMLDialogElement>(null);
   const historyDialog = useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
@@ -52,7 +54,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
 
   function openAdd() { form.current?.reset(); setEditing(null); setSelectedClient(initialClientId ?? ""); setNotice(""); dialog.current?.showModal(); }
   function openEdit(task: DeadlineRecord) { setEditing(task); setSelectedClient(task.clientId); setNotice(""); dialog.current?.showModal(); }
-  function openReview(task: DeadlineRecord) { setReviewing(task); setReviewComment(""); setNotice(""); reviewDialog.current?.showModal(); }
+  function openReview(task: DeadlineRecord) { setReviewing(task); setReviewComment(""); setReviewError(""); setNotice(""); reviewDialog.current?.showModal(); }
   function openResubmission(task: DeadlineRecord) { setResubmitting(task); setSubmissionComment(""); setSubmissionError(""); submissionDialog.current?.showModal(); }
   function openHistory(task: DeadlineRecord) { setHistoryTask(task); historyDialog.current?.showModal(); }
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -68,6 +70,13 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
       dialog.current?.close();
       setNotice(editing ? "Task updated." : "Task added.");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Unable to save task."); }
+    finally { setBusy(false); }
+  }
+  async function deleteTask() {
+    if (!editing || role !== "admin" || !window.confirm(`Delete “${editing.title}”? The task will be archived and can be restored by an Admin.`)) return;
+    setBusy(true); setNotice("");
+    try { await archiveTask(editing.id); setTasks(await deadlinesForPage()); dialog.current?.close(); setNotice("Task archived."); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Unable to archive task."); }
     finally { setBusy(false); }
   }
   async function advanceTask(task: DeadlineRecord) {
@@ -90,15 +99,16 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
     finally { setBusy(false); }
   }
   async function decideTask(decision: "approve" | "return") {
-    if (!reviewing || (decision === "return" && !reviewComment.trim())) { setNotice("Enter a comment before returning the task."); return; }
-    setBusy(true); setNotice("");
+    if (!reviewing) return;
+    if (decision === "return" && !reviewComment.trim()) { setReviewError("Enter a comment before returning the task."); reviewCommentInput.current?.focus(); return; }
+    setBusy(true); setReviewError(""); setNotice("");
     try { await reviewTask(reviewing.id, decision, decision === "return" ? reviewComment : undefined); setTasks(await deadlinesForPage()); reviewDialog.current?.close(); setReviewing(null); setNotice(decision === "approve" ? "Task approved and marked done." : "Task returned to Staff with feedback."); }
-    catch (error) { setNotice(error instanceof Error ? error.message : "Unable to review task."); }
+    catch (error) { setReviewError(error instanceof Error ? error.message : "Unable to review task."); }
     finally { setBusy(false); }
   }
 
   return <main className={styles.page}>
-    <div className={styles.heading}><div><h1>Deadlines</h1><p>Track client tasks and assignments.</p></div>{canManage && <button className={styles.primaryButton} type="button" onClick={openAdd} disabled={!clients.length || !staff.length}><Plus size={18} aria-hidden="true" /> Add Task</button>}</div>
+    <div className={styles.heading}><div><h1>Deadlines</h1><p>Track client tasks and assignments.</p></div><div className={styles.headingActions}>{role === "admin" && <Link href="/deadlines/archived">View archived tasks</Link>}{canManage && <button className={styles.primaryButton} type="button" onClick={openAdd} disabled={!clients.length || !staff.length}><Plus size={18} aria-hidden="true" /> Add Task</button>}</div></div>
     {initialClientId && <p className={styles.context}>{canManage ? "Adding a task for" : "Viewing deadlines for"} <Link href={`/clients/${initialClientId}`}>{clients.find((client) => client.id === initialClientId)?.name}</Link>.</p>}
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     {canManage && !staff.length && <p className={styles.notice} role="alert">An active Staff or Secretary account is needed before tasks can be assigned.</p>}
@@ -122,7 +132,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
           <td><div className={styles.actionsCell}>
             {task.reviewHistory.length > 0 && <button type="button" className={styles.doneButton} onClick={() => openHistory(task)}>Review history</button>}
             {role === "staff" && task.assignedTo === currentUserId && (task.status === "open" || task.status === "needs_changes") && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Submit for approval</button>}
-            {role === "admin" && (task.status === "open" || task.status === "needs_changes") && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Mark Done</button>}
+            {role === "admin" && (task.status === "needs_changes" || (task.status === "open" && task.assignedRole === "secretary")) && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Mark Done</button>}
             {role === "admin" && task.status === "awaiting_approval" && <button type="button" className={styles.doneButton} onClick={() => openReview(task)} disabled={busy}>Awaiting Approval</button>}
             {role === "admin" && task.status !== "awaiting_approval" && <button type="button" className={styles.doneButton} onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}>Edit</button>}
           </div></td>
@@ -137,10 +147,10 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
       <label>Assign Personnel<select name="assignedTo" required defaultValue={editing?.assignedTo ?? ""}><option value="">Select active personnel</option>{staff.map((person) => <option key={person.id} value={person.id}>{person.full_name}</option>)}</select></label>
       <label>Deadline (Date)<input name="dueDate" type="date" required defaultValue={editing?.dueDate ?? today} /></label>
       {notice && <p role="alert" className={styles.formError}>{notice}</p>}
-      <div className={styles.formActions}><button type="button" onClick={() => dialog.current?.close()}>Cancel</button><button className={styles.primaryButton} type="submit" disabled={busy}>{busy ? "Saving…" : "Save Task"}</button></div>
+      <div className={styles.formActions}>{role === "admin" && editing && <button type="button" className={styles.deleteTaskButton} onClick={deleteTask} disabled={busy}>Delete task</button>}<button type="button" onClick={() => dialog.current?.close()}>Cancel</button><button className={styles.primaryButton} type="submit" disabled={busy}>{busy ? "Saving…" : "Save Task"}</button></div>
     </form></dialog>}
     {role === "staff" && <dialog ref={submissionDialog} className={styles.dialog} onClose={() => setResubmitting(null)} aria-label="Resubmit task"><div className={styles.dialogHeading}><h2>Resubmit task</h2><button type="button" onClick={() => submissionDialog.current?.close()} aria-label="Close resubmission"><X size={19} /></button></div><div className={styles.form}><p>Describe the changes made to “{resubmitting?.title}” for Admin review.</p><label>Changes made<textarea className={styles.commentInput} value={submissionComment} maxLength={1000} required onChange={(event) => setSubmissionComment(event.target.value)} placeholder="Explain what you changed" /></label>{submissionError && <p role="alert" className={styles.formError}>{submissionError}</p>}<div className={styles.formActions}><button type="button" onClick={() => submissionDialog.current?.close()}>Cancel</button><button type="button" className={styles.primaryButton} disabled={busy || !submissionComment.trim()} onClick={sendResubmission}>Submit for approval</button></div></div></dialog>}
-    {role === "admin" && <dialog ref={reviewDialog} className={`${styles.dialog} ${styles.reviewDialog}`} onClose={() => setReviewing(null)} aria-label="Review task"><div className={styles.dialogHeading}><h2>Review task</h2><button type="button" onClick={() => reviewDialog.current?.close()} aria-label="Close review"><X size={19} /></button></div><div className={styles.form}><p>Has the document for “{reviewing?.title}” been checked and verified?</p>{latestSubmissionComment && <p className={styles.reviewExplanation}><strong>Staff changes:</strong> {latestSubmissionComment}</p>}<label>Comment if returning to Staff<textarea className={styles.commentInput} value={reviewComment} maxLength={1000} onChange={(event) => setReviewComment(event.target.value)} placeholder="Explain what needs to be changed" /></label>{notice && <p role="alert" className={styles.formError}>{notice}</p>}<div className={styles.formActions}><button type="button" onClick={() => reviewDialog.current?.close()}>Cancel</button><button type="button" className={styles.reviewReturnButton} disabled={busy || !reviewComment.trim()} onClick={() => decideTask("return")}>No, return with comment</button><button type="button" className={styles.primaryButton} disabled={busy} onClick={() => decideTask("approve")}>Yes, approve</button></div></div></dialog>}
+    {role === "admin" && <dialog ref={reviewDialog} className={`${styles.dialog} ${styles.reviewDialog}`} onClose={() => setReviewing(null)} aria-label="Review task"><div className={styles.dialogHeading}><h2>Review task</h2><button type="button" onClick={() => reviewDialog.current?.close()} aria-label="Close review"><X size={19} /></button></div><div className={styles.form}><p>Has the document for “{reviewing?.title}” been checked and verified?</p>{latestSubmissionComment && <p className={styles.reviewExplanation}><strong>Staff changes:</strong> {latestSubmissionComment}</p>}<label>Comment if returning to Staff<textarea ref={reviewCommentInput} className={styles.commentInput} value={reviewComment} maxLength={1000} aria-invalid={Boolean(reviewError && !reviewComment.trim())} aria-describedby={reviewError ? "review-comment-error" : undefined} onChange={(event) => { setReviewComment(event.target.value); setReviewError(""); }} placeholder="Explain what needs to be changed" /></label>{reviewError && <p id="review-comment-error" role="alert" className={styles.formError}>{reviewError}</p>}<div className={styles.formActions}><button type="button" onClick={() => reviewDialog.current?.close()}>Cancel</button><button type="button" className={styles.reviewReturnButton} disabled={busy} onClick={() => decideTask("return")}>No, return with comment</button><button type="button" className={styles.primaryButton} disabled={busy} onClick={() => decideTask("approve")}>Yes, approve</button></div></div></dialog>}
     <dialog ref={historyDialog} className={`${styles.dialog} ${styles.historyDialog}`} onClose={() => setHistoryTask(null)} aria-label="Task review history"><div className={styles.dialogHeading}><h2>Review history</h2><button type="button" onClick={() => historyDialog.current?.close()} aria-label="Close history"><X size={19} /></button></div><div className={styles.form}><p>{historyTask?.title}</p><ol className={styles.historyList}>{historyTask?.reviewHistory.map((entry, index) => <li key={`${entry.createdAt}-${index}`} className={styles.historyItem}><div className={styles.historyEvent}><span className={styles.historyMarker} aria-hidden="true">{entry.event === "returned" ? <ArrowRight size={17} /> : <Check size={17} />}</span><div><strong>{entry.event === "submitted" ? "Submitted for approval" : entry.event === "returned" ? "Returned for changes" : entry.event === "approved" ? "Approved" : "Completed by Admin"}</strong><span className={styles.historyTime}>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.createdAt))}</span></div></div>{entry.comment && <p className={styles.historyComment}>{entry.event === "submitted" ? <><strong>Staff changes:</strong><br /></> : entry.event === "returned" ? <><strong>Admin feedback:</strong><br /></> : null}{entry.comment}</p>}</li>)}</ol></div></dialog>
   </main>;
 }

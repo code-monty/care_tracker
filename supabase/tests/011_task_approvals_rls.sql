@@ -17,7 +17,7 @@ insert into public.clients(id,full_name,birthdate,contact_no,email,address,attor
 ('83000000-0000-0000-0000-000000000001','Fake Review Client','1990-01-01','0912-345-6789','review-client@example.test','Fake address','82000000-0000-0000-0000-000000000001','81000000-0000-0000-0000-000000000001');
 insert into public.tasks(id,client_id,title,assigned_to,due_date,created_by) values
 ('84000000-0000-0000-0000-000000000001','83000000-0000-0000-0000-000000000001','Fake document check','81000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Manila')::date - 1,'81000000-0000-0000-0000-000000000001'),
-('84000000-0000-0000-0000-000000000002','83000000-0000-0000-0000-000000000001','Fake other work','81000000-0000-0000-0000-000000000003',(now() at time zone 'Asia/Manila')::date + 1,'81000000-0000-0000-0000-000000000001');
+('84000000-0000-0000-0000-000000000002','83000000-0000-0000-0000-000000000001','Fake Secretary work','81000000-0000-0000-0000-000000000004',(now() at time zone 'Asia/Manila')::date + 1,'81000000-0000-0000-0000-000000000001');
 
 select set_config('role','anon',true);
 select is((select count(*) from public.task_review_events)::int,0,'anonymous cannot read review history');
