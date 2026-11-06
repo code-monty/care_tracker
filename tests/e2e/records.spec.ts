@@ -141,7 +141,7 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await clientSearch.fill(`No Client ${suffix}`);
   const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + (2 + parseInt(suffix, 16) % 300) * 86400000));
   await dialog.locator('input[name="date"]').fill(date);
-  await dialog.locator('input[name="time"]').fill(`14:${String(parseInt(suffix, 16) % 60).padStart(2, "0")}`);
+  await dialog.getByRole("combobox", { name: "Appointment time" }).selectOption("14:00");
   await dialog.getByRole("button", { name: "Add appointment" }).click();
   await expect(dialog.getByText("Select a client from the search results.")).toBeVisible();
   await clientSearch.fill(name);

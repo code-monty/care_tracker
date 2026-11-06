@@ -70,6 +70,8 @@ Active Admin, Secretary, and Staff accounts can change their own name and passwo
 
 ## Staff record access
 
+Admin and Secretary book or reschedule appointments using nine one-hour Asia/Manila slots from 8:00 AM to 5:00 PM. Each date allows one active appointment per overlapping slot; cancelled appointments free their time. Existing appointments with other start times remain at their saved time until rescheduled. Past appointments still prompt for confirmation.
+
 Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
 
 The Staff interface does not show the Appointments page or Dashboard appointment summary. Direct Staff visits to `/appointments` redirect to `/dashboard`. Admin and Secretary retain both views; database read permissions are unchanged.

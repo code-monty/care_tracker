@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, CalendarDays, ChevronLeft, ChevronRight, Clock3, Ey
 import { Appointment, AppointmentStatus, SortKey, filterAppointments, getCalendarDays, sortAppointments } from "@/lib/rules/appointments";
 import styles from "./appointments.module.css";
 import { appointmentWarnings, saveAppointment } from "@/lib/actions/records";
+import AppointmentTimeFields from "./appointment-time-fields";
 import type { NameMatch } from "@/lib/actions/records";
 import RecordNameSearch from "@/components/record-name-search";
 
@@ -65,6 +66,8 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
   const [addManual, setAddManual] = useState(false);
   const [editManual, setEditManual] = useState(false);
   const [clientError, setClientError] = useState("");
+  const [slotError, setSlotError] = useState("");
+  const [availabilityVersion, setAvailabilityVersion] = useState(0);
   const filtered = useMemo(() => sortAppointments(filterAppointments(appointments, { search, dateFilter, statusFilter, today }), sort), [appointments, search, dateFilter, statusFilter, sort, today]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -100,9 +103,12 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
       status: "Pending",
     };
     const warning = await appointmentWarnings(appointment.date, appointment.time);
-    if ((warning.past || warning.occupied) && !window.confirm("Appointment is in the past or overlaps another appointment. Save anyway?")) return;
-    try { appointment.id = await saveAppointment({ clientId: client?.id ?? null, guestName, date: appointment.date, time: appointment.time, reason, status: "pending" }); }
-    catch { setNotice("Unable to save appointment."); return; }
+    if (warning.past && !window.confirm("Appointment is in the past. Save anyway?")) return;
+    try {
+      const result = await saveAppointment({ clientId: client?.id ?? null, guestName, date: appointment.date, time: appointment.time, reason, status: "pending" });
+      if ("error" in result) { setSlotError("Appointment time is no longer available."); setAvailabilityVersion((value) => value + 1); return; }
+      appointment.id = result.id;
+    } catch { setSlotError("Unable to save appointment."); return; }
     setAppointments((current) => [...current, appointment]);
     setDateFilter("all");
     setPage(1);
@@ -130,10 +136,12 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
     if (editManual && !guestName) { setClientError("Enter a guest name."); return; }
     if (!reason || !date || !time) return;
     const status = String(data.get("status")) as AppointmentStatus;
-    const warning = await appointmentWarnings(date, time, editing.id);
-    if ((warning.past || warning.occupied) && !window.confirm("Appointment is in the past or overlaps another appointment. Save anyway?")) return;
-    try { await saveAppointment({ clientId: client?.id ?? null, guestName, date, time, reason, status: status.toLowerCase() as "pending" | "confirmed" | "cancelled" }, editing.id); }
-    catch { setNotice("Unable to update appointment."); return; }
+    const warning = await appointmentWarnings(date, time);
+    if (warning.past && !window.confirm("Appointment is in the past. Save anyway?")) return;
+    try {
+      const result = await saveAppointment({ clientId: client?.id ?? null, guestName, date, time, reason, status: status.toLowerCase() as "pending" | "confirmed" | "cancelled" }, editing.id);
+      if ("error" in result) { setSlotError("Appointment time is no longer available."); setAvailabilityVersion((value) => value + 1); return; }
+    } catch { setSlotError("Unable to update appointment."); return; }
     setAppointments((current) => current.map((item) => item.id === editing.id ? { ...item, clientName, clientId: client?.id, clientContact: client?.contact, clientEmail: client?.detail, reason, date, time, status } : item));
     setNotice("Appointment updated.");
     setEditing(null);
@@ -142,7 +150,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
   }
 
   function actions(appointment: Appointment) {
-    const openEdit = () => { setEditClient(appointment.clientId ? { id: appointment.clientId, name: appointment.clientName, detail: appointment.clientEmail ?? "", contact: appointment.clientContact } : null); setEditManual(!appointment.clientId); setClientError(""); setEditing(appointment); };
+    const openEdit = () => { setEditClient(appointment.clientId ? { id: appointment.clientId, name: appointment.clientName, detail: appointment.clientEmail ?? "", contact: appointment.clientContact } : null); setEditManual(!appointment.clientId); setClientError(""); setSlotError(""); setEditing(appointment); };
     return <div className={styles.rowActions}><button type="button" className={styles.detailsButton} onClick={() => setSelected(appointment)}><Eye aria-hidden="true" size={17} /> View details</button>{canManage && <details className={styles.actionMenu}><summary aria-label={`More actions for ${appointment.clientName}`}><MoreVertical aria-hidden="true" size={20} /></summary><div><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); openEdit(); }}>Edit appointment</button><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); openEdit(); }}>Change status</button></div></details>}</div>;
   }
 
@@ -153,7 +161,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
     <main className={styles.appointments}>
       <header className={styles.pageHeader}>
         <div><h1>Appointments</h1><p>Review and organize client appointments across list and calendar views.</p></div>
-        {canManage && <button type="button" className={styles.primaryButton} onClick={() => setAdding(true)}><Plus aria-hidden="true" size={18} /> Add Appointment</button>}
+        {canManage && <button type="button" className={styles.primaryButton} onClick={() => { setSlotError(""); setAdding(true); }}><Plus aria-hidden="true" size={18} /> Add Appointment</button>}
       </header>
 
       {notice && <div className={styles.notice} role="status"><span>{notice}</span><button type="button" onClick={() => setNotice("")} aria-label="Dismiss message"><X aria-hidden="true" size={17} /></button></div>}
@@ -195,7 +203,8 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
           <p className={styles.formIntro}>Select a saved client or enter a guest name to schedule an appointment.</p>
           <div className={styles.entryMode}><button type="button" aria-pressed={!addManual} onClick={() => { setAddManual(false); setClientError(""); }}>Saved client</button><button type="button" aria-pressed={addManual} onClick={() => { setAddManual(true); setClientError(""); }}>Enter name manually</button></div>
           {addManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" required maxLength={120} autoFocus />{clientError && <small role="alert">{clientError}</small>}</label> : <RecordNameSearch kind="client" label="Client *" value={addClient} onChange={(item) => { setAddClient(item); setClientError(""); }} errorMessage={clientError} autoFocus />}
-          <div className={styles.formRow}><label><span>Appointment date <b aria-hidden="true">*</b></span><input name="date" type="date" defaultValue={today} required /></label><label><span>Appointment time <b aria-hidden="true">*</b></span><input name="time" type="time" required /></label></div>
+          <AppointmentTimeFields className={styles.formRow} initialDate={today} refreshKey={availabilityVersion} />
+          {slotError && <small role="alert">{slotError}</small>}
           <label><span>Reason <b aria-hidden="true">*</b></span><select name="reason" value={reasonChoice} onChange={(event) => setReasonChoice(event.target.value)}><option>Follow-up</option><option>Assessment</option><option>Consultation</option><option>Other</option></select></label>
           {reasonChoice === "Other" && <label><span>Custom reason <b aria-hidden="true">*</b></span><input name="customReason" required maxLength={100} placeholder="Enter appointment reason" /></label>}
           <div className={styles.formActions}><button type="button" className={styles.secondaryButton} onClick={() => setAdding(false)}>Cancel</button><button type="submit" className={styles.primaryButton}>Add appointment</button></div>
@@ -206,7 +215,8 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
         <p className={styles.formIntro}>Update appointment details and status.</p>
         <div className={styles.entryMode}><button type="button" aria-pressed={!editManual} onClick={() => { setEditManual(false); setClientError(""); }}>Saved client</button><button type="button" aria-pressed={editManual} onClick={() => { setEditManual(true); setClientError(""); }}>Enter name manually</button></div>
         {editManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" defaultValue={editing.clientId ? "" : editing.clientName} required maxLength={120} />{clientError && <small role="alert">{clientError}</small>}</label> : <RecordNameSearch kind="client" label="Client *" value={editClient} onChange={(item) => { setEditClient(item); setClientError(""); }} errorMessage={clientError} />}
-        <div className={styles.formRow}><label><span>Appointment date</span><input name="date" type="date" defaultValue={editing.date} required /></label><label><span>Appointment time</span><input name="time" type="time" defaultValue={editing.time} required /></label></div>
+        <AppointmentTimeFields className={styles.formRow} initialDate={editing.date} initialTime={editing.time} appointmentId={editing.id} initiallyCancelled={editing.status === "Cancelled"} refreshKey={availabilityVersion} />
+        {slotError && <small role="alert">{slotError}</small>}
         <label><span>Reason</span><input name="reason" defaultValue={editing.reason} required maxLength={100} /></label>
         <label><span>Status</span><select name="status" defaultValue={editing.status}><option>Pending</option><option>Confirmed</option><option>Cancelled</option></select></label>
         <div className={styles.formActions}><button type="button" className={styles.secondaryButton} onClick={() => setEditing(null)}>Cancel</button><button type="submit" className={styles.primaryButton}>Save changes</button></div>

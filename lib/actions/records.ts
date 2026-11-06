@@ -6,6 +6,7 @@ import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { addClientSchema } from "@/lib/validation/client";
 import { getDashboardRecords, getDeadlineRecords } from "@/lib/data/records";
+import { APPOINTMENT_SLOTS, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
 
 const uuid = z.uuid();
 const statusSchema = z.enum(["active", "inactive"]);
@@ -110,28 +111,49 @@ export async function saveAppointment(input: z.infer<typeof appointmentSchema>, 
   requireRecordManager(profile.role);
   const value = appointmentSchema.parse(input);
   const db = await createClient();
+  const appointmentId = id ? uuid.parse(id) : undefined;
+  if (!APPOINTMENT_SLOTS.some((slot) => slot.value === value.time)) {
+    if (!appointmentId) throw new Error("Choose an available one-hour appointment slot.");
+    const { data: existing, error: existingError } = await db.from("appointments").select("scheduled_at").eq("id", appointmentId).single();
+    if (existingError || !existing) fail(existingError);
+    const unchanged = new Date(`${value.date}T${value.time}:00+08:00`).toISOString() === existing.scheduled_at;
+    if (!unchanged) throw new Error("Choose an available one-hour appointment slot.");
+  }
   if (value.clientId) {
     const { data: client } = await db.from("clients").select("id").eq("id", value.clientId).eq("is_archived", false).single();
     if (!client) throw new Error("Select an available client.");
   }
   const scheduled_at = new Date(`${value.date}T${value.time}:00+08:00`).toISOString();
   const payload = { client_id: value.clientId, guest_name: value.guestName, scheduled_at, reason: value.reason, status: value.status };
-  const { data, error } = id ? await db.from("appointments").update(payload).eq("id", uuid.parse(id)).select("id").single() : await db.from("appointments").insert({ ...payload, created_by: user.id }).select("id").single();
+  const { data, error } = appointmentId ? await db.from("appointments").update(payload).eq("id", appointmentId).select("id").single() : await db.from("appointments").insert({ ...payload, created_by: user.id }).select("id").single();
+  if (error?.code === "23P01") return { error: "slot_unavailable" as const };
   if (error || !data) fail(error);
   refresh();
-  return data.id as string;
+  return { id: data.id as string };
 }
 
-export async function appointmentWarnings(date: string, time: string, exceptId?: string) {
+export async function appointmentWarnings(date: string, time: string) {
   await requireActiveUser();
   const value = appointmentFields.pick({ date: true, time: true }).parse({ date, time });
   const scheduled = new Date(`${value.date}T${value.time}:00+08:00`);
+  return { past: scheduled.getTime() < Date.now() };
+}
+
+export async function unavailableAppointmentSlots(date: string, exceptId?: string) {
+  await requireActiveUser();
+  const validDate = z.iso.date().parse(date);
+  const start = new Date(`${validDate}T07:00:00+08:00`);
+  const end = new Date(`${validDate}T17:00:00+08:00`);
   const db = await createClient();
-  let query = db.from("appointments").select("id").eq("scheduled_at", scheduled.toISOString()).neq("status", "cancelled");
+  let query = db.from("appointments").select("id,scheduled_at").gte("scheduled_at", start.toISOString()).lt("scheduled_at", end.toISOString()).neq("status", "cancelled");
   if (exceptId) query = query.neq("id", uuid.parse(exceptId));
-  const { data, error } = await query.limit(1);
+  const { data, error } = await query;
   if (error) fail(error);
-  return { past: scheduled.getTime() < Date.now(), occupied: Boolean(data?.length) };
+  return occupiedAppointmentSlots((data ?? []).map((row) => {
+    const manila = new Date(row.scheduled_at);
+    const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Manila", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(manila);
+    return `${parts.find((part) => part.type === "hour")?.value}:${parts.find((part) => part.type === "minute")?.value}`;
+  }));
 }
 
 export async function dashboardForDate(date: string) {

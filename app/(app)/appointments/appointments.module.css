@@ -98,6 +98,10 @@
 .form label { display: grid; gap: .4rem; font-size: .78rem; font-weight: 600; }
 .form label b { color: #ef4444; }
 .form input, .form select { width: 100%; min-height: 46px; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font-size: .82rem; font-weight: 400; }
+.form select { color-scheme: dark; }
+.form select option { color: var(--text); background: var(--surface); }
+.form select option:disabled { color: var(--muted); }
+:global([data-theme="light"]) .form select { color-scheme: light; }
 .form input[type="date"], .form input[type="time"] { color-scheme: dark; }
 :global([data-theme="light"]) .form input[type="date"], :global([data-theme="light"]) .form input[type="time"] { color-scheme: light; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }

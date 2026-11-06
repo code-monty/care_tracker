@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("guest appointment survives reload, appears on dashboard, and can be edited and cancelled", async ({ page }) => {
+test("guest appointment availability survives reload and updates after cancellation", async ({ page }) => {
   test.setTimeout(180_000);
   const content = readFileSync(".env.local", "utf8");
   const env = Object.fromEntries(content.split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const index = line.indexOf("="); return [line.slice(0, index), line.slice(index + 1).replace(/^['"]|['"]$/g, "")]; }));
@@ -24,7 +24,8 @@ test("guest appointment survives reload, appears on dashboard, and can be edited
   const payload = Buffer.from(JSON.stringify({ userId: created.user.id, verifiedAt: Date.now() })).toString("base64url");
   const signature = createHmac("sha256", env.STEP_UP_SECRET).update(payload).digest("hex");
   await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 86400000));
+  const bookingDay = Date.UTC(2040 + parseInt(suffix.slice(0, 2), 16) % 100, parseInt(suffix.slice(2, 4), 16) % 12, 1 + parseInt(suffix.slice(4, 6), 16) % 27);
+  const date = new Date(bookingDay).toISOString().slice(0, 10);
   const guestName = `Fake Guest ${suffix}`;
   const editedName = `Fake Edited Guest ${suffix}`;
   await page.goto("/appointments");
@@ -33,17 +34,23 @@ test("guest appointment survives reload, appears on dashboard, and can be edited
   await add.getByRole("button", { name: "Enter name manually" }).click();
   await add.getByRole("textbox", { name: "Guest name" }).fill(guestName);
   await add.locator('input[name="date"]').fill(date);
-  await add.locator('input[name="time"]').fill("10:30");
+  await expect(add.getByRole("combobox", { name: "Appointment time" })).toBeEnabled();
+  await add.getByRole("combobox", { name: "Appointment time" }).selectOption("10:00");
   page.on("dialog", (prompt) => prompt.accept());
   await add.getByRole("button", { name: "Add appointment" }).click();
   await expect(page.getByText("Appointment saved.")).toBeVisible();
+  await page.getByRole("button", { name: "Add Appointment" }).first().click();
+  const availability = page.getByRole("dialog", { name: "Add appointment" });
+  await availability.locator('input[name="date"]').fill(date);
+  await expect(availability.locator('option[value="10:00"]')).toHaveAttribute("disabled", "");
+  const anotherDate = new Date(bookingDay + 86400000).toISOString().slice(0, 10);
+  await availability.locator('input[name="date"]').fill(anotherDate);
+  await expect(availability.locator('option[value="10:00"]')).not.toHaveAttribute("disabled");
+  await availability.getByRole("button", { name: "Close dialog" }).click();
   await page.reload();
   await page.getByRole("combobox", { name: "Filter by date" }).selectOption("all");
   await page.getByRole("textbox", { name: "Search appointments" }).fill(guestName);
   await expect(page.getByRole("row", { name: new RegExp(guestName) })).toBeVisible();
-  await page.goto("/dashboard");
-  await page.getByRole("button", { name: "Next day" }).click();
-  await expect(page.getByRole("region", { name: "Upcoming Appointments" }).getByText(guestName)).toBeVisible({ timeout: 15_000 });
   await page.goto("/appointments");
   await page.getByRole("combobox", { name: "Filter by date" }).selectOption("all");
   await page.getByRole("textbox", { name: "Search appointments" }).fill(guestName);
@@ -59,4 +66,26 @@ test("guest appointment survives reload, appears on dashboard, and can be edited
   await page.getByRole("dialog", { name: "Edit appointment" }).getByRole("combobox", { name: "Status" }).selectOption("Cancelled");
   await page.getByRole("dialog", { name: "Edit appointment" }).getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("row", { name: new RegExp(editedName) }).getByText("Cancelled")).toBeVisible();
+  await page.getByRole("button", { name: "Add Appointment" }).first().click();
+  const freed = page.getByRole("dialog", { name: "Add appointment" });
+  await freed.locator('input[name="date"]').fill(date);
+  await expect(freed.locator('option[value="10:00"]')).not.toHaveAttribute("disabled");
+  await freed.getByRole("button", { name: "Close dialog" }).click();
+
+  const secondPage = await page.context().newPage();
+  await secondPage.goto("/appointments");
+  const attempts = [page, secondPage];
+  for (const [index, attempt] of attempts.entries()) {
+    await attempt.getByRole("button", { name: "Add Appointment" }).first().click();
+    const form = attempt.getByRole("dialog", { name: "Add appointment" });
+    await form.getByRole("button", { name: "Enter name manually" }).click();
+    await form.getByRole("textbox", { name: "Guest name" }).fill(`Fake Concurrent ${index} ${suffix}`);
+    await form.locator('input[name="date"]').fill(date);
+    await expect(form.getByRole("combobox", { name: "Appointment time" })).toBeEnabled();
+    await form.getByRole("combobox", { name: "Appointment time" }).selectOption("10:00");
+  }
+  await Promise.all(attempts.map((attempt) => attempt.getByRole("dialog", { name: "Add appointment" }).getByRole("button", { name: "Add appointment" }).click()));
+  await expect.poll(async () => Number(await page.getByText("Appointment saved.").count()) + Number(await secondPage.getByText("Appointment saved.").count())).toBe(1);
+  await expect.poll(async () => Number(await page.getByText("Appointment time is no longer available.").count()) + Number(await secondPage.getByText("Appointment time is no longer available.").count())).toBe(1);
+  await secondPage.close();
 });

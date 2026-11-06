@@ -172,6 +172,8 @@ On November 5, 2026, Staff resubmission of a returned task requires a comment de
 
 On November 6, 2026, Admin direct completion of an open Staff-assigned task requires its first submission; Admin can still directly complete returned Staff work and open Secretary-assigned work. Admin can archive an unlocked task from Edit Task and restore it from the Admin-only archived tasks page. Archived tasks leave active task views and deadline counts while retaining status and review history. Restore requires an active client and assignee. Secretary and Staff cannot archive or restore tasks.
 
+On November 6, 2026, the owner approved nine one-hour Manila appointment slots from 8:00 AM to 5:00 PM for Add and Edit Appointment. Each selected date allows one non-cancelled appointment per overlapping hour; cancellation frees the time. Existing off-slot appointments remain at their saved time until rescheduled. New and rescheduled bookings must use a listed slot, and overlapping bookings are blocked by the database. The earlier FR-APT-07 overlap warning is superseded; its past-appointment warning remains.
+
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 
 ---
