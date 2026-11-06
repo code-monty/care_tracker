@@ -258,6 +258,22 @@ export async function deadlinesForPage() {
 
 export type NameMatch = { id: string; name: string; detail: string; contact?: string };
 
+export async function browseAppointmentClients(term: string, page: number): Promise<{ matches: NameMatch[]; hasMore: boolean }> {
+  const { profile } = await requireActiveUser();
+  requireRecordManager(profile.role);
+  const query = z.string().trim().max(100).parse(term);
+  const pageNumber = z.number().int().min(0).max(500).parse(page);
+  const offset = pageNumber * 20;
+  const db = await createClient();
+  let request = db.from("clients").select("id,full_name,email,contact_no").eq("is_archived", false)
+    .order("full_name").order("id").range(offset, offset + 20);
+  if (query) request = request.ilike("full_name", `%${query.replace(/[\\%_]/g, "\\$&")}%`);
+  const { data, error } = await request;
+  if (error) fail(error);
+  const rows = data ?? [];
+  return { matches: rows.slice(0, 20).map((row) => ({ id: row.id, name: row.full_name, detail: row.email, contact: row.contact_no })), hasMore: rows.length > 20 };
+}
+
 export async function searchRecordNames(kind: "client" | "attorney", term: string): Promise<NameMatch[]> {
   await requireActiveUser();
   const value = z.string().trim().min(1).max(100).parse(term);

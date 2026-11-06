@@ -10,4 +10,7 @@
 .option:hover, .option[aria-selected="true"] { background: var(--hover); }
 .option strong { color: var(--text); font-size: .85rem; font-weight: 600; }
 .option small { color: var(--muted); font-size: .75rem; font-weight: 400; overflow-wrap: anywhere; }
+.loadMore { width: 100%; padding: .7rem .8rem; border-top: 1px solid var(--line); color: var(--brand); background: var(--surface); text-align: left; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.loadMore:hover { background: var(--hover); }
+.retry { color: var(--brand); text-decoration: underline; cursor: pointer; }
 .error { color: #e36060; font-size: .75rem; font-weight: 500; }

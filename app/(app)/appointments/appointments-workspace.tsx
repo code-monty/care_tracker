@@ -7,7 +7,7 @@ import styles from "./appointments.module.css";
 import { appointmentWarnings, saveAppointment } from "@/lib/actions/records";
 import AppointmentTimeFields from "./appointment-time-fields";
 import type { NameMatch } from "@/lib/actions/records";
-import RecordNameSearch from "@/components/record-name-search";
+import AppointmentClientPicker from "./appointment-client-picker";
 
 const PAGE_SIZE = 6;
 const manilaTodayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -202,11 +202,10 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
         <form className={styles.form} onSubmit={addAppointment}>
           <p className={styles.formIntro}>Select a saved client or enter a guest name to schedule an appointment.</p>
           <div className={styles.entryMode}><button type="button" aria-pressed={!addManual} onClick={() => { setAddManual(false); setClientError(""); }}>Saved client</button><button type="button" aria-pressed={addManual} onClick={() => { setAddManual(true); setClientError(""); }}>Enter name manually</button></div>
-          {addManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" required maxLength={120} autoFocus />{clientError && <small role="alert">{clientError}</small>}</label> : <RecordNameSearch kind="client" label="Client *" value={addClient} onChange={(item) => { setAddClient(item); setClientError(""); }} errorMessage={clientError} autoFocus />}
+          {addManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" required maxLength={120} autoFocus />{clientError && <small role="alert">{clientError}</small>}</label> : <AppointmentClientPicker value={addClient} onChange={(item) => { setAddClient(item); setClientError(""); }} errorMessage={clientError} />}
           <AppointmentTimeFields className={styles.formRow} initialDate={today} refreshKey={availabilityVersion} />
           {slotError && <small role="alert">{slotError}</small>}
-          <label><span>Reason <b aria-hidden="true">*</b></span><select name="reason" value={reasonChoice} onChange={(event) => setReasonChoice(event.target.value)}><option>Follow-up</option><option>Assessment</option><option>Consultation</option><option>Other</option></select></label>
-          {reasonChoice === "Other" && <label><span>Custom reason <b aria-hidden="true">*</b></span><input name="customReason" required maxLength={100} placeholder="Enter appointment reason" /></label>}
+          {reasonChoice === "Other" ? <div className={styles.customReason}><label><span>Reason <b aria-hidden="true">*</b></span><input name="customReason" required maxLength={100} placeholder="Enter appointment reason" autoFocus /></label><button type="button" onClick={() => setReasonChoice("Follow-up")}>Choose a preset reason</button></div> : <label><span>Reason <b aria-hidden="true">*</b></span><select name="reason" value={reasonChoice} onChange={(event) => setReasonChoice(event.target.value)}><option>Follow-up</option><option>Assessment</option><option>Consultation</option><option>Other</option></select></label>}
           <div className={styles.formActions}><button type="button" className={styles.secondaryButton} onClick={() => setAdding(false)}>Cancel</button><button type="submit" className={styles.primaryButton}>Add appointment</button></div>
         </form>
       </Modal>}
@@ -214,7 +213,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
       {canManage && editing && <Modal title="Edit appointment" onClose={() => setEditing(null)}><form className={styles.form} onSubmit={updateAppointment}>
         <p className={styles.formIntro}>Update appointment details and status.</p>
         <div className={styles.entryMode}><button type="button" aria-pressed={!editManual} onClick={() => { setEditManual(false); setClientError(""); }}>Saved client</button><button type="button" aria-pressed={editManual} onClick={() => { setEditManual(true); setClientError(""); }}>Enter name manually</button></div>
-        {editManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" defaultValue={editing.clientId ? "" : editing.clientName} required maxLength={120} />{clientError && <small role="alert">{clientError}</small>}</label> : <RecordNameSearch kind="client" label="Client *" value={editClient} onChange={(item) => { setEditClient(item); setClientError(""); }} errorMessage={clientError} />}
+        {editManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" defaultValue={editing.clientId ? "" : editing.clientName} required maxLength={120} />{clientError && <small role="alert">{clientError}</small>}</label> : <AppointmentClientPicker value={editClient} onChange={(item) => { setEditClient(item); setClientError(""); }} errorMessage={clientError} />}
         <AppointmentTimeFields className={styles.formRow} initialDate={editing.date} initialTime={editing.time} appointmentId={editing.id} initiallyCancelled={editing.status === "Cancelled"} refreshKey={availabilityVersion} />
         {slotError && <small role="alert">{slotError}</small>}
         <label><span>Reason</span><input name="reason" defaultValue={editing.reason} required maxLength={100} /></label>

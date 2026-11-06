@@ -105,6 +105,9 @@
 .form input[type="date"], .form input[type="time"] { color-scheme: dark; }
 :global([data-theme="light"]) .form input[type="date"], :global([data-theme="light"]) .form input[type="time"] { color-scheme: light; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.customReason { display: grid; gap: .45rem; }
+.customReason > button { justify-self: start; color: var(--brand); font-size: .78rem; font-weight: 600; cursor: pointer; }
+.customReason > button:hover { text-decoration: underline; }
 .formActions { justify-content: flex-end; gap: .65rem; margin-top: .5rem; }
 .details { padding: 1.25rem; }
 .detailHero { gap: .8rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
