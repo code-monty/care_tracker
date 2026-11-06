@@ -23,7 +23,7 @@
 .tableScroll th:nth-child(3) { width: 15%; }
 .tableScroll th:nth-child(4) { width: 14%; }
 .tableScroll th:nth-child(5) { width: 24%; }
-.tableScroll th:nth-child(6) { width: 22%; text-align: right; }
+.tableScroll th:nth-child(6) { width: 22%; text-align: center; }
 .tableScroll th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
 .tableScroll td { padding: .85rem 1.2rem; border-bottom: 1px solid var(--line); font-size: .85rem; vertical-align: middle; overflow-wrap: anywhere; }
 .tableScroll tr:last-child td { border-bottom: 0; }
@@ -32,7 +32,7 @@
 .dateCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .statusCell { display: grid; gap: .45rem; }
 .statusBadges { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
-.actionsCell { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .55rem; }
+.actionsCell { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .55rem; }
 .statusBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; font-size: .73rem; font-weight: 700; white-space: nowrap; }
 .overdue { color: #9f1b1b; background: #fee2e2; }
 .duesoon { color: #854d0e; background: #fef3c7; }

@@ -49,7 +49,7 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(title) })).toBeVisible();
     await page.reload();
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(title) })).toBeVisible();
-    await expect(page.getByRole("table").getByRole("columnheader")).toHaveText(["Client Name", "Task Name", "Assign Personnel", "Deadline (Date)", "Status"]);
+    await expect(page.getByRole("table").getByRole("columnheader")).toHaveText(["Client Name", "Task Name", "Assign Personnel", "Deadline (Date)", "Status", "Actions"]);
     await page.getByRole("searchbox", { name: "Search client or task" }).focus();
     await page.keyboard.press("Tab");
     await expect(page.getByLabel("Status")).toBeFocused();
@@ -59,7 +59,10 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     await expect(page.getByText(title)).toBeVisible();
     await page.getByRole("link", { name: "Add Task / View Deadlines" }).click();
     await expect(page).toHaveURL(new RegExp(`/deadlines\\?client=${clientId}`));
-    await page.getByRole("button", { name: `Edit ${title}` }).click();
+    const taskRow = page.getByRole("row", { name: new RegExp(title) });
+    await expect(taskRow.getByRole("cell").nth(1).getByRole("button")).toHaveCount(0);
+    await expect(taskRow.getByRole("button").last()).toHaveAccessibleName(`Edit ${title}`);
+    await taskRow.getByRole("button", { name: `Edit ${title}` }).click();
     await dialog.locator('input[name="title"]').fill(editedTitle);
     await dialog.getByRole("button", { name: "Save Task" }).click();
     await expect(page.getByRole("button", { name: `Edit ${editedTitle}` })).toBeVisible();

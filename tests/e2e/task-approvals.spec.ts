@@ -59,6 +59,7 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await adminPage.goto(`/deadlines?client=${clientId}`);
     await adminPage.getByLabel("Status").selectOption("Awaiting approval");
     const adminRow = adminPage.getByRole("row", { name: new RegExp(title) });
+    await expect(adminRow.getByRole("button", { name: `Edit ${title}` })).toHaveCount(0);
     await adminRow.getByRole("button", { name: "Awaiting Approval" }).click();
     await expect(adminPage.getByText(/Has the document.*checked and verified/)).toBeVisible();
     const reviewDialog = adminPage.getByRole("dialog", { name: "Review task" });
@@ -103,6 +104,7 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await adminPage.getByLabel("Status").selectOption("All");
     await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Review history" }).click();
     const historyDialog = adminPage.getByRole("dialog", { name: "Task review history" });
+    await expect(historyDialog.getByRole("listitem").filter({ hasText: "Please correct the fake report." })).toContainText("Admin feedback:");
     await expect(historyDialog.getByRole("listitem").filter({ hasText: "Corrected the fake report." })).toContainText("Staff changes:");
     await expect(historyDialog.getByRole("listitem").filter({ hasText: "Added the missing section." })).toContainText("Staff changes:");
   } finally {
