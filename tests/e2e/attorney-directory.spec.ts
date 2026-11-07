@@ -1,0 +1,86 @@
+import { createHmac, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { expect, test } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
+
+test("attorney directory paginates and filters attorneys with active clients", async ({ page }) => {
+  test.setTimeout(180_000);
+  const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const split = line.indexOf("="); return [line.slice(0, split), line.slice(split + 1).replace(/^['"]|['"]$/g, "")]; }));
+  if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Local Supabase required");
+  const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const suffix = randomUUID().slice(0, 8);
+  const email = `directory-${suffix}@example.test`;
+  const password = `Test-${randomUUID()}-aA1!`;
+  const { data: created, error: createError } = await db.auth.admin.createUser({ email, password, email_confirm: true });
+  if (createError || !created.user) throw createError ?? new Error("Unable to create fake user");
+  const userId = created.user.id;
+  const { error: activateError } = await db.from("profiles").update({ role: "secretary", status: "active" }).eq("id", userId);
+  if (activateError) throw activateError;
+
+  const attorneyRows = Array.from({ length: 13 }, (_, index) => ({ full_name: `Fake Directory ${suffix} ${String(index + 1).padStart(2, "0")}`, contact_no: "0912-345-6789", email: `directory-${suffix}-${index + 1}@example.test` }));
+  const { data: attorneys, error: attorneyError } = await db.from("attorneys").insert(attorneyRows).select("id,full_name");
+  if (attorneyError || !attorneys || attorneys.length !== 13) throw attorneyError ?? new Error("Unable to create fake attorneys");
+  const clientRows = attorneys.slice(0, 12).map((attorney, index) => ({ full_name: `Fake Directory Client ${suffix} ${index + 1}`, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `directory-client-${suffix}-${index + 1}@example.test`, address: "Fake address", attorney_id: attorney.id, status: index === 11 ? "inactive" : "active", created_by: userId }));
+  clientRows.push({ ...clientRows[10], full_name: `Fake Directory Client ${suffix} mixed`, email: `directory-client-${suffix}-mixed@example.test`, status: "inactive" });
+  const { data: clients, error: clientError } = await db.from("clients").insert(clientRows).select("id");
+  if (clientError || !clients || clients.length !== 13) throw clientError ?? new Error("Unable to create fake clients");
+  const { error: respondentError } = await db.from("respondents").insert(clients.map((client, index) => ({ client_id: client.id, full_name: `Fake Directory Respondent ${suffix} ${index}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `directory-respondent-${suffix}-${index}@example.test`, address: "Fake address" })));
+  if (respondentError) throw respondentError;
+
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(email);
+  await page.locator("#password").fill(password);
+  await page.getByRole("button", { name: "Sign In to Portal" }).click();
+  await expect(page).toHaveURL(/\/(mfa|dashboard)/, { timeout: 30_000 });
+  const payload = Buffer.from(JSON.stringify({ userId, verifiedAt: Date.now() })).toString("base64url");
+  const signature = createHmac("sha256", env.STEP_UP_SECRET).update(payload).digest("hex");
+  await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
+
+  await page.goto("/attorneys");
+  const search = page.getByRole("searchbox", { name: "Search attorneys" });
+  const directory = page.getByRole("region", { name: "Attorney directory" });
+  const rows = directory.getByRole("listitem");
+  const activeFilter = page.getByRole("button", { name: "Has active clients" });
+  await search.fill(`Fake Directory ${suffix}`);
+  await expect(rows).toHaveCount(10);
+  await expect(directory.getByText("Showing 1–10 of 13 attorneys")).toBeVisible();
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(rows).toHaveCount(3);
+  await expect(directory.getByText("Showing 11–13 of 13 attorneys")).toBeVisible();
+  await expect(directory.getByRole("link", { name: new RegExp(`Fake Directory ${suffix} 11 and 2 linked clients`) })).toBeVisible();
+  await page.getByRole("button", { name: "Previous page" }).click();
+  await expect(rows).toHaveCount(10);
+  await page.getByRole("button", { name: "Next page" }).click();
+
+  await activeFilter.click();
+  await expect(activeFilter).toHaveAttribute("aria-pressed", "true");
+  await expect(rows).toHaveCount(10);
+  await expect(directory.getByText("Showing 1–10 of 11 attorneys")).toBeVisible();
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(directory.getByText("Showing 11–11 of 11 attorneys")).toBeVisible();
+  await search.fill(`Fake Directory ${suffix} 12`);
+  await expect(rows).toHaveCount(0);
+  await expect(directory.getByText("Showing 0–0 of 0 attorneys")).toBeVisible();
+  await expect(directory.getByText("No matching attorneys")).toBeVisible();
+  await activeFilter.click();
+  await expect(rows).toHaveCount(1);
+  await expect(directory.getByText("Showing 1–1 of 1 attorneys")).toBeVisible();
+  await search.fill(`Fake Directory ${suffix} 13`);
+  await expect(rows).toHaveCount(1);
+  await activeFilter.click();
+  await expect(rows).toHaveCount(0);
+  await search.fill(`Fake Directory ${suffix} 11`);
+  await expect(rows).toHaveCount(1);
+  await page.setViewportSize({ width: 390, height: 700 });
+  await expect(activeFilter).toBeInViewport();
+
+  const { error: deleteRespondentsError } = await db.from("respondents").delete().in("client_id", clients.map((client) => client.id));
+  if (deleteRespondentsError) throw deleteRespondentsError;
+  const { error: deleteClientsError } = await db.from("clients").delete().in("id", clients.map((client) => client.id));
+  if (deleteClientsError) throw deleteClientsError;
+  const { error: deleteAttorneysError } = await db.from("attorneys").delete().in("id", attorneys.map((attorney) => attorney.id));
+  if (deleteAttorneysError) throw deleteAttorneysError;
+  const { error: disableError } = await db.from("profiles").update({ status: "disabled" }).eq("id", userId);
+  if (disableError) throw disableError;
+});
