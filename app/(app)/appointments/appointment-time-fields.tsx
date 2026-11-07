@@ -28,7 +28,7 @@ export default function AppointmentTimeFields({ initialDate, initialTime = "", a
   const existingOffSlot = date === initialDate && initialTime && !APPOINTMENT_SLOTS.some((slot) => slot.value === initialTime);
   return <div className={className}>
     <label><span>Appointment date <b aria-hidden="true">*</b></span><input name="date" type="date" value={date} onChange={(event) => { setDate(event.target.value); setTime(""); setLoading(Boolean(event.target.value)); }} required /></label>
-    <label><span>Appointment time <b aria-hidden="true">*</b></span><select name="time" value={time} onChange={(event) => setTime(event.target.value)} disabled={error} required>
+    <label><span>Appointment time <b aria-hidden="true">*</b></span><select name="time" value={time} onChange={(event) => setTime(event.target.value)} disabled={error || loading} required>
       <option value="">{loading ? "Loading available times..." : "Select an available time"}</option>
       {existingOffSlot && <option value={initialTime}>{initialTime} (existing time)</option>}
       {APPOINTMENT_SLOTS.map((slot) => {

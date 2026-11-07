@@ -20,6 +20,7 @@
 .notice { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: -.5rem 0 1rem; padding: .75rem 1rem; border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line)); border-radius: .75rem; color: var(--text); background: var(--soft); font-size: .8rem; }
 .notice button, .iconButton { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: .5rem; cursor: pointer; }
 .notice button:hover, .iconButton:hover { background: var(--hover); }
+.notice .noticeAction { width: auto; height: auto; padding: .55rem .75rem; margin-left: auto; color: var(--brand); font-weight: 700; white-space: nowrap; }
 .workspace { overflow: hidden; border: 1px solid var(--line); border-radius: 1rem; background: color-mix(in srgb, var(--surface) 94%, transparent); box-shadow: 0 10px 25px -12px #00000025; }
 .toolbar { flex-wrap: wrap; gap: .75rem; padding: 1rem; border-bottom: 1px solid var(--line); }
 .searchField, .selectField { display: flex; align-items: center; gap: .55rem; min-height: 44px; padding: 0 .8rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--muted); background: var(--surface); }

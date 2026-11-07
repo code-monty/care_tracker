@@ -58,7 +58,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
   const [calendarMonth, setCalendarMonth] = useState(() => today.slice(0, 7));
   const [adding, setAdding] = useState(false);
   const [selected, setSelected] = useState<Appointment | null>(null);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<{ message: string; hiddenAppointment?: Appointment } | null>(null);
   const [reasonChoice, setReasonChoice] = useState("Follow-up");
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [addClient, setAddClient] = useState<NameMatch | null>(null);
@@ -84,6 +84,17 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
     setCalendarMonth(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`);
   }
 
+  function showSavedAppointment(appointment: Appointment) {
+    const savedIndex = sortAppointments(appointments, sort).findIndex((item) => item.id === appointment.id);
+    setDateFilter("all");
+    setStatusFilter("all");
+    setSearch("");
+    setPage(Math.floor(Math.max(0, savedIndex) / PAGE_SIZE) + 1);
+    setCalendarMonth(appointment.date.slice(0, 7));
+    setView("list");
+    setNotice(null);
+  }
+
   async function addAppointment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -102,6 +113,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
       reason,
       status: "Pending",
     };
+    if (!appointment.date || !appointment.time) { setSlotError("Select an available time."); return; }
     const warning = await appointmentWarnings(appointment.date, appointment.time);
     if (warning.past && !window.confirm("Appointment is in the past. Save anyway?")) return;
     try {
@@ -109,11 +121,17 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
       if ("error" in result) { setSlotError("Appointment time is no longer available."); setAvailabilityVersion((value) => value + 1); return; }
       appointment.id = result.id;
     } catch { setSlotError("Unable to save appointment."); return; }
-    setAppointments((current) => [...current, appointment]);
-    setDateFilter("all");
-    setPage(1);
-    setCalendarMonth(appointment.date.slice(0, 7));
-    setNotice("Appointment saved.");
+    const updatedAppointments = [...appointments, appointment];
+    const visibleAppointments = sortAppointments(filterAppointments(updatedAppointments, { search, dateFilter, statusFilter, today }), sort);
+    const savedIndex = visibleAppointments.findIndex((item) => item.id === appointment.id);
+    setAppointments(updatedAppointments);
+    if (savedIndex >= 0) {
+      setPage(Math.floor(savedIndex / PAGE_SIZE) + 1);
+      setCalendarMonth(appointment.date.slice(0, 7));
+      setNotice({ message: "Appointment saved." });
+    } else {
+      setNotice({ message: "Appointment saved, but it is outside the current filters.", hiddenAppointment: appointment });
+    }
     setAdding(false);
     setAddClient(null);
     setAddManual(false);
@@ -143,7 +161,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
       if ("error" in result) { setSlotError("Appointment time is no longer available."); setAvailabilityVersion((value) => value + 1); return; }
     } catch { setSlotError("Unable to update appointment."); return; }
     setAppointments((current) => current.map((item) => item.id === editing.id ? { ...item, clientName, clientId: client?.id, clientContact: client?.contact, clientEmail: client?.detail, reason, date, time, status } : item));
-    setNotice("Appointment updated.");
+    setNotice({ message: "Appointment updated." });
     setEditing(null);
     setEditClient(null);
     setEditManual(false);
@@ -164,7 +182,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
         {canManage && <button type="button" className={styles.primaryButton} onClick={() => { setSlotError(""); setAdding(true); }}><Plus aria-hidden="true" size={18} /> Add Appointment</button>}
       </header>
 
-      {notice && <div className={styles.notice} role="status"><span>{notice}</span><button type="button" onClick={() => setNotice("")} aria-label="Dismiss message"><X aria-hidden="true" size={17} /></button></div>}
+      {notice && <div className={styles.notice} role="status"><span>{notice.message}</span>{notice.hiddenAppointment && <button type="button" className={styles.noticeAction} onClick={() => { if (notice.hiddenAppointment) showSavedAppointment(notice.hiddenAppointment); }}>View appointment</button>}<button type="button" onClick={() => setNotice(null)} aria-label="Dismiss message"><X aria-hidden="true" size={17} /></button></div>}
 
       <section className={styles.workspace} aria-label="Appointments workspace">
         <div className={styles.toolbar}>

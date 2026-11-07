@@ -28,6 +28,28 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   const date = new Date(bookingDay).toISOString().slice(0, 10);
   const { error: appointmentError } = await admin.from("appointments").insert({ client_id: clients[0].id, scheduled_at: `${date}T10:00:00+08:00`, reason: "Fake existing appointment", created_by: created.user.id });
   if (appointmentError) throw appointmentError;
+  const manilaParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit" }).formatToParts(new Date());
+  const year = Number(manilaParts.find((part) => part.type === "year")?.value);
+  const month = Number(manilaParts.find((part) => part.type === "month")?.value);
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const nextMonth = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10);
+  const { data: existingMonthly, error: existingMonthlyError } = await admin.from("appointments").select("scheduled_at,status")
+    .gte("scheduled_at", `${monthStart}T00:00:00+08:00`).lt("scheduled_at", `${nextMonth}T00:00:00+08:00`).neq("status", "cancelled");
+  if (existingMonthlyError) throw existingMonthlyError;
+  const manilaDateTime = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const occupied = (existingMonthly ?? []).map((item) => {
+    const parts = manilaDateTime.formatToParts(new Date(item.scheduled_at));
+    const part = (type: string) => parts.find((entry) => entry.type === type)?.value ?? "";
+    return { date: `${part("year")}-${part("month")}-${part("day")}`, start: Number(part("hour")) * 60 + Number(part("minute")) };
+  });
+  const monthDate = Array.from({ length: new Date(Date.UTC(year, month, 0)).getUTCDate() }, (_, index) =>
+    `${year}-${String(month).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`).reverse().find((day) =>
+    [8, 9, 10, 11, 12, 13, 16].every((hour) => occupied.every((item) => item.date !== day || item.start + 60 <= hour * 60 || item.start >= (hour + 1) * 60)));
+  if (!monthDate) throw new Error("No date has seven free appointment slots for the browser fixture");
+  const { error: monthlyError } = await admin.from("appointments").insert(Array.from({ length: 6 }, (_, index) => ({
+    client_id: clients[index].id, scheduled_at: `${monthDate}T${String(index + 8).padStart(2, "0")}:00:00+08:00`, reason: "Fake monthly appointment", created_by: created.user.id,
+  })));
+  if (monthlyError) throw monthlyError;
 
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);
@@ -68,7 +90,10 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   await add.getByRole("combobox", { name: "Reason" }).selectOption("Other");
   await add.getByRole("textbox", { name: "Reason" }).fill("Fake custom reason");
   await add.getByRole("button", { name: "Add appointment" }).click();
-  await expect(page.getByText("Appointment saved.")).toBeVisible();
+  await expect(page.getByText("Appointment saved, but it is outside the current filters.")).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Filter by date" })).toHaveValue("month");
+  await page.getByRole("button", { name: "View appointment" }).click();
+  await expect(page.getByRole("combobox", { name: "Filter by date" })).toHaveValue("all");
   await page.getByRole("textbox", { name: "Search appointments" }).fill(clients[21].full_name);
   await expect(page.getByRole("row", { name: new RegExp(clients[21].full_name) }).getByText("Fake custom reason")).toBeVisible();
 
@@ -79,11 +104,29 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   const edit = page.getByRole("dialog", { name: "Edit appointment" });
   const editClient = edit.getByRole("combobox", { name: "Client *" });
   await editClient.fill("");
-  await expect(edit.getByRole("listbox", { name: "Client * matches" }).getByRole("option")).toHaveCount(20, { timeout: 20_000 });
+  const editOptions = edit.getByRole("listbox", { name: "Client * matches" }).getByRole("option");
+  await expect.poll(async () => await editOptions.count() || await edit.getByRole("button", { name: "Retry" }).count(), { timeout: 20_000 }).toBeGreaterThan(0);
+  if (await edit.getByRole("button", { name: "Retry" }).isVisible()) await edit.getByRole("button", { name: "Retry" }).click();
+  await expect(editOptions).toHaveCount(20, { timeout: 20_000 });
   await editClient.fill(clients[1].full_name);
   await edit.getByRole("option", { name: new RegExp(clients[1].full_name) }).click();
   await edit.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("Appointment updated.")).toBeVisible();
+
+  await page.getByRole("textbox", { name: "Search appointments" }).fill("");
+  await page.getByRole("combobox", { name: "Filter by date" }).selectOption("month");
+  await page.getByRole("button", { name: "Add Appointment" }).first().click();
+  const monthlyClient = add.getByRole("combobox", { name: "Client *" });
+  await monthlyClient.fill(clients[21].full_name);
+  await add.getByRole("option", { name: new RegExp(clients[21].full_name) }).click();
+  await add.locator('input[name="date"]').fill(monthDate);
+  await add.getByRole("combobox", { name: "Appointment time" }).selectOption("16:00");
+  await expect(add.getByRole("combobox", { name: "Appointment time" })).toHaveValue("16:00");
+  await add.getByRole("button", { name: "Add appointment" }).click();
+  await expect(page.getByText("Appointment saved.")).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Filter by date" })).toHaveValue("month");
+  await expect(page.getByRole("row", { name: new RegExp(clients[21].full_name) })).toBeVisible();
+  await expect(page.getByText(/Page [2-9] of/)).toBeVisible();
 
   const cleanup = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const { error: signInError } = await cleanup.auth.signInWithPassword({ email, password });
