@@ -24,7 +24,7 @@ export async function getArchivedAttorneys() {
   const { profile } = await requireActiveUser();
   if (profile.role !== "admin") throw new Error("Access denied");
   const db = await createClient();
-  const { data, error } = await db.from("attorneys").select("id,full_name,contact_no,email").eq("is_archived", true).order("full_name");
+  const { data, error } = await db.from("attorneys").select("id,full_name,contact_no,email").eq("is_archived", true).order("full_name").order("id");
   if (error) throw error;
   return data ?? [];
 }
@@ -33,7 +33,7 @@ export async function getArchivedClients() {
   const { profile } = await requireActiveUser();
   if (profile.role !== "admin") throw new Error("Access denied");
   const db = await createClient();
-  const { data, error } = await db.from("clients").select("id,full_name").eq("is_archived", true).order("full_name");
+  const { data, error } = await db.from("clients").select("id,full_name").eq("is_archived", true).order("full_name").order("id");
   if (error) throw error;
   return data ?? [];
 }

@@ -2,3 +2,6 @@
 .restoreButton:disabled { opacity: .5; cursor: not-allowed; }
 .restoreButton:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .error { margin: 1rem 1.5rem 0; color: #e36060; font-size: .85rem; }
+.footer { flex-wrap: wrap; }
+.footer nav { margin-left: auto; }
+.footer button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
