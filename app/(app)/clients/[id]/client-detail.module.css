@@ -28,12 +28,21 @@
 .statusControl option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .statusControl select { color-scheme: light; }
 .statusHint, .emptyTasks { margin-top: .75rem; color: var(--muted); font-size: .78rem; line-height: 1.5; }
-.taskList { display: grid; gap: .7rem; margin-top: 1rem; }
-.taskList li { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line); font-size: .8rem; }
-.taskList li div { display: grid; gap: .2rem; min-width: 0; }
-.taskList li strong { overflow-wrap: anywhere; }
-.taskList li div span { color: var(--muted); font-size: .74rem; }
-.taskStatus { flex: none; color: var(--brand); font-size: .73rem; font-weight: 650; }
+.tasksCard { margin-top: 1.5rem; }
+.taskTableWrap { width: 100%; overflow-x: auto; }
+.taskTableWrap:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.taskTable { width: 100%; min-width: 43rem; border-collapse: collapse; text-align: left; font-size: .85rem; }
+.taskTable th, .taskTable td { padding: .9rem 1rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.taskTable th { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; white-space: nowrap; }
+.taskTable th:first-child, .taskTable td:first-child { padding-left: 0; width: 32%; }
+.taskTable th:last-child, .taskTable td:last-child { padding-right: 0; width: 28%; }
+.taskTable td strong { overflow-wrap: anywhere; font-weight: 650; }
+.taskStatuses { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
+.taskStatus { display: inline-block; padding: .3rem .65rem; border-radius: 999px; font-size: .73rem; font-weight: 700; white-space: nowrap; }
+.overdue, .changes { color: #9f1b1b; background: #fee2e2; }
+.duesoon, .awaiting { color: #854d0e; background: #fef3c7; }
+.upcoming { color: #065f46; background: #d1fae5; }
+.done { color: #334155; background: #e2e8f0; }
 .taskLink { display: inline-flex; margin-top: 1rem; color: var(--brand); font-size: .8rem; font-weight: 650; }
 .taskLink:hover { text-decoration: underline; }
 .unavailable { display: grid; justify-items: center; max-width: 34rem; margin: 3rem auto; padding: 3rem 2rem; text-align: center; }

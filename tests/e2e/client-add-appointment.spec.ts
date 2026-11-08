@@ -44,6 +44,7 @@ test("client detail books a fixed-client appointment for Admin and Secretary onl
       await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
       await page.goto(`/clients/${clientId}`);
       await expect(page.getByRole("heading", { name: "Client Information" })).toBeVisible();
+      await expect(page.getByRole("link", { name: user.role === "staff" ? "View Deadlines" : "Add Task / View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
       const open = page.getByRole("button", { name: "Add Appointment" });
       if (user.role === "staff") { await expect(open).toHaveCount(0); continue; }
 

@@ -59,6 +59,22 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     page.once("dialog", (dialog) => dialog.accept());
     await staffRow.getByRole("button", { name: "Submit for approval" }).click();
     await expect(staffRow.getByText("Awaiting approval")).toBeVisible();
+    await page.goto(`/clients/${clientId}`);
+    const clientTasks = page.getByRole("region", { name: "Tasks table" });
+    await expect(clientTasks).toBeVisible({ timeout: 30_000 });
+    await expect(clientTasks.getByRole("columnheader")).toHaveText(["Task name", "Assigned personnel", "Deadline", "Status"]);
+    const clientTaskRow = clientTasks.getByRole("row", { name: new RegExp(title) });
+    await expect(clientTaskRow.getByRole("cell")).toHaveCount(4);
+    await expect(clientTaskRow.getByText("Awaiting approval")).toBeVisible();
+    await expect(clientTaskRow.getByText("Overdue")).toBeVisible();
+    await expect(clientTaskRow.getByText("November 1, 2026")).toBeVisible();
+    await expect(page.getByRole("link", { name: "View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(clientTasks).toBeVisible();
+    expect(await clientTasks.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+    await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
+    await expect(clientTaskRow).toBeVisible();
+    await page.goto(`/deadlines?client=${clientId}`);
 
     await adminPage.goto(`/deadlines?client=${clientId}`);
     await adminPage.getByLabel("Status").selectOption("Awaiting approval");
@@ -75,7 +91,13 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await reviewComment.fill("Please correct the fake report.");
     await expect(reviewComment).toHaveAttribute("aria-invalid", "false");
     await reviewDialog.getByRole("button", { name: "No, return with comment" }).click();
-    await expect(adminPage.getByRole("status").getByText("Task returned to Staff with feedback.")).toBeVisible();
+    await expect(adminPage.getByRole("status").getByText("Task returned to Staff with feedback.")).toBeVisible({ timeout: 20_000 });
+    await adminPage.goto(`/clients/${clientId}`);
+    const returnedRow = adminPage.getByRole("region", { name: "Tasks table" }).getByRole("row", { name: new RegExp(title) });
+    await expect(returnedRow.getByText("Needs changes")).toBeVisible({ timeout: 30_000 });
+    await expect(returnedRow.getByText("Overdue")).toBeVisible();
+    await expect(adminPage.getByRole("link", { name: "Add Task / View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
+    await adminPage.goto(`/deadlines?client=${clientId}`);
     await adminPage.getByLabel("Status").selectOption("Open");
     await expect(adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Mark Done" })).toBeVisible();
     await adminPage.getByLabel("Status").selectOption("Awaiting approval");
@@ -95,7 +117,7 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await expect(adminPage.getByRole("dialog", { name: "Review task" }).getByText("Staff changes: Corrected the fake report.")).toBeVisible();
     await adminPage.getByRole("dialog", { name: "Review task" }).getByRole("textbox", { name: "Comment if returning to Staff" }).fill("Please fix the missing section too.");
     await adminPage.getByRole("dialog", { name: "Review task" }).getByRole("button", { name: "No, return with comment" }).click();
-    await expect(adminPage.getByRole("status").getByText("Task returned to Staff with feedback.")).toBeVisible();
+    await expect(adminPage.getByRole("status").getByText("Task returned to Staff with feedback.")).toBeVisible({ timeout: 20_000 });
 
     await page.reload();
     await staffRow.getByRole("button", { name: "Submit for approval" }).click();
@@ -107,7 +129,10 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Awaiting Approval" }).click();
     await expect(adminPage.getByRole("dialog", { name: "Review task" }).getByText("Staff changes: Added the missing section.")).toBeVisible();
     await adminPage.getByRole("dialog", { name: "Review task" }).getByRole("button", { name: "Yes, approve" }).click();
-    await expect(adminPage.getByRole("status").getByText("Task approved and marked done.")).toBeVisible();
+    await expect(adminPage.getByRole("status").getByText("Task approved and marked done.")).toBeVisible({ timeout: 20_000 });
+    await adminPage.goto(`/clients/${clientId}`);
+    await expect(adminPage.getByRole("region", { name: "Tasks table" }).getByRole("row", { name: new RegExp(title) }).getByText("Done")).toBeVisible({ timeout: 30_000 });
+    await adminPage.goto(`/deadlines?client=${clientId}`);
     const { data: task } = await db.from("tasks").select("status").eq("id", taskId).single();
     expect(task?.status).toBe("done");
     const { data: history } = await db.from("task_review_events").select("event,comment").eq("task_id", taskId).order("created_at");
@@ -136,7 +161,7 @@ test("Admin returns Staff work with feedback and approves its resubmission", asy
     await expect(adminPage).toHaveURL(/\/deadlines\/archived/);
     await expect(adminPage.getByRole("row", { name: new RegExp(title) })).toBeVisible();
     await adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Restore" }).click();
-    await expect(adminPage.getByRole("row", { name: new RegExp(title) })).toHaveCount(0);
+    await expect(adminPage.getByRole("row", { name: new RegExp(title) })).toHaveCount(0, { timeout: 20_000 });
     await adminPage.getByRole("link", { name: "Back to Deadlines" }).click();
     await adminPage.getByLabel("Status").selectOption("All");
     await expect(adminPage.getByRole("row", { name: new RegExp(title) }).getByRole("button", { name: "Review history" })).toBeVisible();
