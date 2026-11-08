@@ -1,5 +1,5 @@
 begin;
-select plan(25);
+select plan(29);
 insert into auth.users(id,email) values
 ('81000000-0000-0000-0000-000000000001','records-admin@example.test'),
 ('81000000-0000-0000-0000-000000000002','records-secretary@example.test'),
@@ -33,15 +33,21 @@ select lives_ok($$select public.update_client_record('83000000-0000-0000-0000-00
 select is((select full_name from public.clients where id='83000000-0000-0000-0000-000000000001'),'Fake Updated Client','Client edit persists');
 select is((select full_name from public.respondents where client_id='83000000-0000-0000-0000-000000000001'),'Fake Updated Respondent','Respondent edit persists');
 select is((select attorney_id from public.clients where id='83000000-0000-0000-0000-000000000001'),'82000000-0000-0000-0000-000000000003'::uuid,'Attorney reassignment persists');
-select throws_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000003'$$,'P0001','Reassign all linked clients before archiving this attorney','Linked attorney archive is blocked');
+select throws_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000003'$$,'P0001','Reassign all current linked clients before archiving this attorney','Linked attorney archive is blocked');
 select lives_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000002'$$,'Secretary can archive unused attorney');
 select is((select count(*) from public.activity_log where entity_type='attorneys' and entity_id='82000000-0000-0000-0000-000000000002' and action='archive')::int,0,'Secretary cannot read audit log');
 select throws_ok($$update public.attorneys set is_archived=false where id='82000000-0000-0000-0000-000000000002'$$,'P0001','Only Admin may restore attorneys','Secretary cannot restore attorney');
 select throws_ok($$update public.clients set is_archived=true where id='83000000-0000-0000-0000-000000000001'$$,'P0001','Only Admin may archive or restore clients','Secretary cannot archive client');
 
 select set_config('request.jwt.claims','{"sub":"81000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+update public.clients set status='inactive' where id='83000000-0000-0000-0000-000000000001';
+select throws_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000003'$$,'P0001','Reassign all current linked clients before archiving this attorney','Inactive current client still blocks attorney archive');
+update public.clients set status='active' where id='83000000-0000-0000-0000-000000000001';
 select lives_ok($$update public.clients set is_archived=true where id='83000000-0000-0000-0000-000000000001'$$,'Admin can archive client');
-select throws_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000003'$$,'P0001','Reassign all linked clients before archiving this attorney','Archived client still blocks attorney archive');
+select lives_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000003'$$,'Admin can archive attorney with only archived clients');
+select is((select attorney_id from public.clients where id='83000000-0000-0000-0000-000000000001'),'82000000-0000-0000-0000-000000000003'::uuid,'Archived client keeps its attorney link');
+select throws_ok($$update public.clients set is_archived=false where id='83000000-0000-0000-0000-000000000001'$$,'P0001','Restore the attorney before restoring this client','Client cannot be restored while attorney is archived');
+select lives_ok($$update public.attorneys set is_archived=false where id='82000000-0000-0000-0000-000000000003'$$,'Admin can restore attorney linked to archived client');
 select lives_ok($$update public.clients set is_archived=false where id='83000000-0000-0000-0000-000000000001'$$,'Admin can restore client');
 select lives_ok($$update public.attorneys set is_archived=false where id='82000000-0000-0000-0000-000000000002'$$,'Admin can restore attorney');
 select is((select is_archived from public.attorneys where id='82000000-0000-0000-0000-000000000002'),false,'Restored attorney is available');

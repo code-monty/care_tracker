@@ -48,14 +48,6 @@ export async function getAttorneyClients(attorneyId?: string) {
   return data ?? [];
 }
 
-export async function getAttorneyLinkCount(attorneyId: string) {
-  await requireActiveUser();
-  const db = await createClient();
-  const { count, error } = await db.from("clients").select("id", { count: "exact", head: true }).eq("attorney_id", attorneyId);
-  if (error) throw error;
-  return count ?? 0;
-}
-
 export async function getAppointments() {
   await requireActiveUser();
   const db = await createClient();

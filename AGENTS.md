@@ -174,6 +174,8 @@ On November 6, 2026, Admin direct completion of an open Staff-assigned task requ
 
 On November 6, 2026, the owner approved nine one-hour Manila appointment slots from 8:00 AM to 5:00 PM for Add and Edit Appointment. Each selected date allows one non-cancelled appointment per overlapping hour; cancellation frees the time. Existing off-slot appointments remain at their saved time until rescheduled. New and rescheduled bookings must use a listed slot, and overlapping bookings are blocked by the database. The earlier FR-APT-07 overlap warning is superseded; its past-appointment warning remains.
 
+On November 7, 2026, the owner approved archiving an attorney when no non-archived client remains linked. Archived clients retain their attorney link for history and do not block attorney archiving. Admin must restore the attorney before restoring one of those clients. Admin and Secretary may archive attorneys; only Admin may restore attorneys or clients. This supersedes the earlier rule that archived clients block attorney archiving.
+
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 
 ---

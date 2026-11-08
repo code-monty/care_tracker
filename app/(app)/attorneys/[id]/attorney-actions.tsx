@@ -27,7 +27,7 @@ export default function AttorneyActions({ attorney, linkedCount }: { attorney: A
   }
 
   async function archive() {
-    if (!window.confirm("Delete this attorney? The record will be archived and hidden from lists. An Admin can restore it.")) return;
+    if (!window.confirm("Archive this attorney? The record will be hidden from lists. An Admin can restore it.")) return;
     setSaving(true); setError("");
     try { await archiveAttorneyRecord(attorney.id); router.push("/attorneys"); router.refresh(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to archive attorney."); }
@@ -35,7 +35,7 @@ export default function AttorneyActions({ attorney, linkedCount }: { attorney: A
   }
 
   return <>
-    <div className={styles.toolbar}><button className={styles.recordButton} type="button" disabled={saving} onClick={() => { setValues(attorney); setError(""); setEditing(true); }}><Pencil size={16} aria-hidden="true" />Edit attorney</button><button className={styles.dangerButton} type="button" onClick={archive} disabled={saving || linkedCount > 0}>Delete attorney</button>{linkedCount > 0 && <span className={styles.hint}>Reassign all linked clients before deleting.</span>}</div>
+    <div className={styles.toolbar}><button className={styles.recordButton} type="button" disabled={saving} onClick={() => { setValues(attorney); setError(""); setEditing(true); }}><Pencil size={16} aria-hidden="true" />Edit attorney</button><button className={styles.dangerButton} type="button" onClick={archive} disabled={saving || linkedCount > 0}>Archive attorney</button>{linkedCount > 0 && <span className={styles.hint}>Reassign all current linked clients before archiving.</span>}</div>
     {!editing && error && <p role="alert" className={styles.error}>{error}</p>}
     {editing && <dialog ref={dialogRef} className={formStyles.dialog} aria-labelledby="edit-attorney-title" onClose={() => setEditing(false)} onCancel={(event) => { if (saving) event.preventDefault(); }}>
       <form onSubmit={save} className={styles.editForm}>

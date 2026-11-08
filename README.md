@@ -74,6 +74,8 @@ Admin and Secretary book or reschedule appointments using nine one-hour Asia/Man
 
 Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
 
+Admin and Secretary can archive an attorney after all non-archived linked clients have been reassigned or archived. Archived clients keep their attorney link. Only Admin can restore an attorney or client; if both are archived, restore the attorney first.
+
 The Staff interface does not show the Appointments page or Dashboard appointment summary. Direct Staff visits to `/appointments` redirect to `/dashboard`. Admin and Secretary retain both views; database read permissions are unchanged.
 
 Secretary can create, edit, and assign tasks but cannot submit, review, or complete them. Staff submit their own assigned tasks from Deadlines. Admin checks the document outside CareTracker, then uses **Awaiting Approval** to approve and mark a task Done, or return it with a required comment. Returned tasks show **Needs changes** and can be resubmitted. Submissions remain in open deadline counts and overdue tracking until approval. Admin may mark an open or returned task Done directly. Task details are locked while awaiting review; review history is visible to Admin and the assigned Staff member. Approval comments stay in CareTracker, without email or case-document uploads.

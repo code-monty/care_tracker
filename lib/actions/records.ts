@@ -59,6 +59,7 @@ export async function restoreClientRecord(id: string) {
   if (profile.role !== "admin") throw new Error("Access denied");
   const db = await createClient();
   const { data, error } = await db.from("clients").update({ is_archived: false }).eq("id", uuid.parse(id)).eq("is_archived", true).select("id").single();
+  if (error?.message.includes("Restore the attorney before restoring this client")) throw new Error("Restore the attorney before restoring this client.");
   if (error || !data) fail(error);
   refreshPeople(id);
   revalidatePath("/clients/archived");

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("Admin edits records and archives or restores clients and unused attorneys", async ({ page }) => {
+test("Admin edits records and restores archived clients after their attorney", async ({ page }) => {
   test.setTimeout(180_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const split = line.indexOf("="); return [line.slice(0, split), line.slice(split + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Local Supabase required");
@@ -39,7 +39,8 @@ test("Admin edits records and archives or restores clients and unused attorneys"
   page.on("dialog", (dialog) => dialog.accept());
 
   await page.goto(`/attorneys/${first.id}`);
-  await expect(page.getByRole("button", { name: "Delete attorney" })).toBeDisabled();
+  await expect(page.getByText("Attorney information and linked clients")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Archive attorney" })).toBeDisabled();
   await page.getByRole("button", { name: "Edit attorney" }).click();
   const attorneyDialog = page.getByRole("dialog", { name: "Edit attorney information" });
   await expect(attorneyDialog.getByRole("heading", { name: "Attorney Details" })).toBeVisible();
@@ -75,8 +76,8 @@ test("Admin edits records and archives or restores clients and unused attorneys"
   await expect(page.getByText(secondName)).toBeVisible();
 
   await page.goto(`/attorneys/${first.id}`);
-  await page.getByRole("button", { name: "Delete attorney" }).click();
-  await expect(page).toHaveURL(/\/attorneys$/);
+  await page.getByRole("button", { name: "Archive attorney" }).click();
+  await expect(page).toHaveURL(/\/attorneys$/, { timeout: 20_000 });
   await page.goto("/attorneys/archived");
   await expect(page.getByRole("table").getByRole("columnheader", { name: "Name" })).toBeVisible();
   await expect(page.getByRole("table").getByRole("columnheader", { name: "Actions" })).toBeVisible();
@@ -91,16 +92,35 @@ test("Admin edits records and archives or restores clients and unused attorneys"
   await expect(page.locator('html[data-theme="dark"]')).toHaveCount(1);
   await page.getByRole("button", { name: "Archive client" }).click();
   await expect(page).toHaveURL(/\/clients$/);
+  await page.goto(`/attorneys/${second.id}`);
+  await expect(page.getByRole("heading", { name: "Linked Clients (0)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Archive attorney" })).toBeEnabled();
+  await page.getByRole("button", { name: "Archive attorney" }).click();
+  await expect(page).toHaveURL(/\/attorneys$/, { timeout: 20_000 });
   await page.goto("/clients/archived");
   await expect(page.getByRole("table").getByRole("columnheader", { name: "Actions" })).toBeVisible();
   await expect(page.getByText(`Fake Edited Client ${suffix}`)).toBeVisible();
+  await page.getByRole("row").filter({ hasText: `Fake Edited Client ${suffix}` }).getByRole("button", { name: "Restore" }).click();
+  await expect(page.getByRole("region", { name: "Archived clients" }).getByRole("alert")).toContainText("Restore the attorney before restoring this client");
+  await expect(page.getByText(`Fake Edited Client ${suffix}`)).toBeVisible();
+  await page.goto("/attorneys/archived");
+  await page.getByRole("row").filter({ hasText: secondName }).getByRole("button", { name: "Restore" }).click();
+  await expect(page.getByText(secondName)).toBeHidden();
+  await page.goto("/clients/archived");
   await page.getByRole("row").filter({ hasText: `Fake Edited Client ${suffix}` }).getByRole("button", { name: "Restore" }).click();
   await expect(page.getByText(`Fake Edited Client ${suffix}`)).toBeHidden();
   await page.goto(`/clients/${client.id}`);
   await expect(page.getByText(`Fake Edited Client ${suffix}`).first()).toBeVisible();
 
-  await db.from("clients").update({ is_archived: true }).eq("id", client.id);
-  await db.from("profiles").update({ status: "disabled" }).eq("id", userId);
+  const { error: cleanupClientError } = await db.from("clients").update({ is_archived: true }).eq("id", client.id);
+  if (cleanupClientError) throw cleanupClientError;
+  const cleanup = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const { error: cleanupSignInError } = await cleanup.auth.signInWithPassword({ email, password });
+  if (cleanupSignInError) throw cleanupSignInError;
+  const { error: cleanupAttorneyError } = await cleanup.from("attorneys").update({ is_archived: true }).in("id", [first.id, second.id]);
+  if (cleanupAttorneyError) throw cleanupAttorneyError;
+  const { error: disableError } = await db.from("profiles").update({ status: "disabled" }).eq("id", userId);
+  if (disableError) throw disableError;
 });
 
 test("Secretary can edit and archive an unused attorney while Staff sees no record controls", async ({ page }) => {
@@ -142,8 +162,8 @@ test("Secretary can edit and archive an unused attorney while Staff sees no reco
   await dialog.getByRole("button", { name: "Save changes" }).click();
   await expect(dialog).toBeHidden();
   page.on("dialog", (confirmation) => confirmation.accept());
-  await page.getByRole("button", { name: "Delete attorney" }).click();
-  await expect(page).toHaveURL(/\/attorneys$/);
+  await page.getByRole("button", { name: "Archive attorney" }).click();
+  await expect(page).toHaveURL(/\/attorneys$/, { timeout: 20_000 });
   await page.goto("/attorneys/archived");
   await expect(page).toHaveURL(/\/attorneys$/);
   await page.goto("/clients/archived");
