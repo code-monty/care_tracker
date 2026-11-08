@@ -1,8 +1,12 @@
 .page { padding: 1.5rem 1.5rem 4rem; color: var(--text); }
 .backLink { display: inline-flex; align-items: center; gap: .4rem; margin-bottom: 1rem; color: var(--brand); font-size: .82rem; font-weight: 650; }
 .backLink:hover { text-decoration: underline; }
-.heading { margin-bottom: 1.5rem; }
+.heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
+.addAppointment { display: inline-flex; align-items: center; gap: .4rem; align-self: flex-start; min-height: 2.5rem; padding: .4rem 0; border: 0; color: var(--brand); background: transparent; font-size: .88rem; font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; cursor: pointer; }
+.addAppointment:hover { color: var(--text); }
+.appointmentNotice { margin: -.5rem 0 1.5rem; padding: .75rem 1rem; border-radius: .6rem; color: var(--text); background: var(--hover); font-size: .85rem; }
+.appointmentNotice a { margin-left: .4rem; color: var(--brand); font-weight: 700; text-decoration: underline; }
 .heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; line-height: 1.45; }
 .columns { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(17rem, 1fr); align-items: start; gap: 1.5rem; }
 .mainColumn, .sideColumn { display: grid; gap: 1.5rem; min-width: 0; }
@@ -37,7 +41,7 @@
 .unavailable h1 { font-size: 1.2rem; font-weight: 700; }
 .unavailable p { margin: .5rem 0 1.25rem; color: var(--muted); font-size: .85rem; line-height: 1.5; }
 .unavailable a { padding: .65rem 1rem; border-radius: .5rem; color: #fff; background: #006948; font-size: .82rem; font-weight: 650; }
-.page :is(a, select):focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.page :is(a, button, select):focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 @media (max-width: 900px) { .columns { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .page { padding: 1rem 1rem 3rem; } .card { padding: 1rem; } .detailGrid { grid-template-columns: 1fr; gap: 1rem; } .cardHeader h2 { font-size: 1.05rem; } }
 .noAttorney { padding-top: 1.25rem; color: var(--muted); }
