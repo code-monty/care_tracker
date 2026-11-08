@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { addClientSchema } from "@/lib/validation/client";
+import { addClientSchema, clientDetailsSchema, type AttorneyChoice, type ClientInput } from "@/lib/validation/client";
 import { getDashboardRecords, getDeadlineRecords } from "@/lib/data/records";
 import { APPOINTMENT_SLOTS, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
 
@@ -25,14 +25,24 @@ function refreshPeople(id?: string) {
   if (id) { revalidatePath(`/clients/${id}`); revalidatePath(`/attorneys/${id}`); }
 }
 
-export async function updateClientRecord(id: string, input: z.infer<typeof addClientSchema>, attorneyId: string) {
+export async function updateClientRecord(id: string, input: ClientInput, choice: AttorneyChoice) {
   const { profile } = await requireActiveUser();
   requireRecordManager(profile.role);
-  const value = addClientSchema.parse(input);
+  const value = choice.mode === "new" ? addClientSchema.parse(input) : clientDetailsSchema.parse(input);
   const db = await createClient();
-  const { error } = await db.rpc("update_client_record", { p_id: uuid.parse(id), p_client: value, p_attorney_id: uuid.parse(attorneyId) });
+  const { data, error } = await db.rpc("save_client_record", { p_id: uuid.parse(id), p_client: value, p_attorney_mode: choice.mode, p_attorney_id: choice.mode === "existing" ? uuid.parse(choice.attorneyId) : null });
   if (error) fail(error);
   refreshPeople(id);
+  return data as string | null;
+}
+
+export async function getClientAttorneyHistory(id: string) {
+  await requireActiveUser();
+  const db = await createClient();
+  const { data, error } = await db.from("client_attorney_history")
+    .select("id,detached_at,attorneys(full_name)").eq("client_id", uuid.parse(id)).order("detached_at", { ascending: false });
+  if (error) fail(error);
+  return (data ?? []).map((entry) => ({ id: entry.id, detachedAt: entry.detached_at, attorneyName: (Array.isArray(entry.attorneys) ? entry.attorneys[0] : entry.attorneys)?.full_name ?? "Former attorney" }));
 }
 
 export async function updateAttorneyRecord(id: string, input: z.infer<typeof attorneySchema>) {
@@ -59,7 +69,6 @@ export async function restoreClientRecord(id: string) {
   if (profile.role !== "admin") throw new Error("Access denied");
   const db = await createClient();
   const { data, error } = await db.from("clients").update({ is_archived: false }).eq("id", uuid.parse(id)).eq("is_archived", true).select("id").single();
-  if (error?.message.includes("Restore the attorney before restoring this client")) throw new Error("Restore the attorney before restoring this client.");
   if (error || !data) fail(error);
   refreshPeople(id);
   revalidatePath("/clients/archived");

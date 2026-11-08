@@ -1,5 +1,5 @@
 begin;
-select plan(29);
+select plan(31);
 insert into auth.users(id,email) values
 ('81000000-0000-0000-0000-000000000001','records-admin@example.test'),
 ('81000000-0000-0000-0000-000000000002','records-secretary@example.test'),
@@ -46,9 +46,11 @@ update public.clients set status='active' where id='83000000-0000-0000-0000-0000
 select lives_ok($$update public.clients set is_archived=true where id='83000000-0000-0000-0000-000000000001'$$,'Admin can archive client');
 select lives_ok($$update public.attorneys set is_archived=true where id='82000000-0000-0000-0000-000000000003'$$,'Admin can archive attorney with only archived clients');
 select is((select attorney_id from public.clients where id='83000000-0000-0000-0000-000000000001'),'82000000-0000-0000-0000-000000000003'::uuid,'Archived client keeps its attorney link');
-select throws_ok($$update public.clients set is_archived=false where id='83000000-0000-0000-0000-000000000001'$$,'P0001','Restore the attorney before restoring this client','Client cannot be restored while attorney is archived');
-select lives_ok($$update public.attorneys set is_archived=false where id='82000000-0000-0000-0000-000000000003'$$,'Admin can restore attorney linked to archived client');
-select lives_ok($$update public.clients set is_archived=false where id='83000000-0000-0000-0000-000000000001'$$,'Admin can restore client');
+select lives_ok($$update public.clients set is_archived=false where id='83000000-0000-0000-0000-000000000001'$$,'Admin can restore client without restoring archived attorney');
+select is((select attorney_id from public.clients where id='83000000-0000-0000-0000-000000000001'),null::uuid,'Restored client has no current attorney');
+select is((select count(*) from public.client_attorney_history where client_id='83000000-0000-0000-0000-000000000001')::int,1,'Former attorney link is preserved');
+select lives_ok($$update public.attorneys set is_archived=false where id='82000000-0000-0000-0000-000000000003'$$,'Admin can restore former attorney afterward');
+select is((select attorney_id from public.clients where id='83000000-0000-0000-0000-000000000001'),null::uuid,'Restoring former attorney does not relink client');
 select lives_ok($$update public.attorneys set is_archived=false where id='82000000-0000-0000-0000-000000000002'$$,'Admin can restore attorney');
 select is((select is_archived from public.attorneys where id='82000000-0000-0000-0000-000000000002'),false,'Restored attorney is available');
 select is((select count(*) from public.activity_log where entity_type='attorneys' and entity_id='82000000-0000-0000-0000-000000000002' and action='archive')::int,1,'Attorney archive writes metadata audit event');

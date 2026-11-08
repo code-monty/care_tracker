@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import type { ClientInput } from "@/lib/validation/client";
+import type { AttorneyChoice, ClientInput } from "@/lib/validation/client";
 import { createClientRecord, setClientStatus, updateClientRecord, archiveClientRecord } from "@/lib/actions/records";
 
 export type ClientStatus = "Active" | "Inactive";
-export type ClientRecord = ClientInput & { id: string; attorneyId: string; status: ClientStatus };
+export type ClientRecord = ClientInput & { id: string; attorneyId: string | null; status: ClientStatus };
 
 type ClientStore = {
   role: string;
@@ -13,7 +13,7 @@ type ClientStore = {
   attorneys: { id: string; full_name: string; contact_no: string; email: string }[];
   addClient: (input: ClientInput, attorneyId?: string) => Promise<void>;
   setStatus: (id: string, status: ClientStatus) => Promise<void>;
-  editClient: (id: string, input: ClientInput, attorneyId: string) => Promise<void>;
+  editClient: (id: string, input: ClientInput, choice: AttorneyChoice) => Promise<void>;
   archiveClient: (id: string) => Promise<void>;
 };
 
@@ -35,9 +35,11 @@ export function ClientStoreProvider({ children, initialClients, attorneys, role 
     setClients((current) => current.map((client) => client.id === id ? { ...client, status } : client));
   }
 
-  async function editClient(id: string, input: ClientInput, attorneyId: string) {
-    await updateClientRecord(id, input, attorneyId);
-    const attorney = availableAttorneys.find((item) => item.id === attorneyId);
+  async function editClient(id: string, input: ClientInput, choice: AttorneyChoice) {
+    const attorneyId = await updateClientRecord(id, input, choice);
+    const attorney = availableAttorneys.find((item) => item.id === attorneyId)
+      ?? (choice.mode !== "keep" && attorneyId ? { id: attorneyId, full_name: input.attorneyName, contact_no: input.attorneyContact, email: input.attorneyEmail } : null);
+    if (choice.mode !== "keep" && attorney && !availableAttorneys.some((item) => item.id === attorney.id)) setAvailableAttorneys((current) => [...current, attorney]);
     setClients((current) => current.map((client) => client.id === id ? { ...client, ...input, attorneyId, attorneyName: attorney?.full_name ?? "", attorneyContact: attorney?.contact_no ?? "", attorneyEmail: attorney?.email ?? "" } : client));
   }
 

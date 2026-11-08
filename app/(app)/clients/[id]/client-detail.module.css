@@ -40,3 +40,7 @@
 .page :is(a, select):focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 @media (max-width: 900px) { .columns { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .page { padding: 1rem 1rem 3rem; } .card { padding: 1rem; } .detailGrid { grid-template-columns: 1fr; gap: 1rem; } .cardHeader h2 { font-size: 1.05rem; } }
+.noAttorney { padding-top: 1.25rem; color: var(--muted); }
+.formerAttorneys { list-style: none; margin: 0; padding: 1rem 0 0; display: grid; gap: .75rem; }
+.formerAttorneys li { display: grid; gap: .2rem; }
+.formerAttorneys span { color: var(--muted); font-size: .875rem; }

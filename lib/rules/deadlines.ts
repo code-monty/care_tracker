@@ -7,7 +7,7 @@ export type DeadlineRecord = {
   clientId: string;
   clientName: string;
   clientStatus: string;
-  attorneyId: string;
+  attorneyId: string | null;
   attorneyName: string;
   title: string;
   assignedTo: string;

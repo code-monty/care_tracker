@@ -176,6 +176,8 @@ On November 6, 2026, the owner approved nine one-hour Manila appointment slots f
 
 On November 7, 2026, the owner approved archiving an attorney when no non-archived client remains linked. Archived clients retain their attorney link for history and do not block attorney archiving. Admin must restore the attorney before restoring one of those clients. Admin and Secretary may archive attorneys; only Admin may restore attorneys or clients. This supersedes the earlier rule that archived clients block attorney archiving.
 
+On November 8, 2026, the owner approved restoring an archived client without first restoring its archived attorney. That restore clears the current attorney link and records the former link in read-only history; restoring the attorney later never relinks the client. An attorney still linked and available remains assigned on client restore. Admin and Secretary can edit an unassigned client without assigning an attorney, or use Edit Client to add a new attorney or select an available one. New clients still require an attorney. This supersedes the November 7 client-restore ordering rule.
+
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 
 ---

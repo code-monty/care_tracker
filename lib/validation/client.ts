@@ -23,8 +23,10 @@ export const clientFieldSchemas = {
 } as const;
 
 export const addClientSchema = z.object(clientFieldSchemas);
+export const clientDetailsSchema = addClientSchema.omit({ attorneyName: true, attorneyContact: true, attorneyEmail: true });
 export type ClientField = keyof typeof clientFieldSchemas;
 export type ClientInput = z.infer<typeof addClientSchema>;
+export type AttorneyChoice = { mode: "keep" } | { mode: "existing"; attorneyId: string } | { mode: "new" };
 
 export function ageFromBirthdate(birthdateValue: string, today = todayInManila()): number | null {
   if (!z.iso.date().safeParse(birthdateValue).success || birthdateValue > today) return null;

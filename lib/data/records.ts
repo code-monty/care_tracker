@@ -116,7 +116,7 @@ export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRec
     const attorney = Array.isArray(client.attorneys) ? client.attorneys[0] : client.attorneys;
     return [{
       id: task.id, clientId: task.client_id, clientName: client.full_name, clientStatus: client.status,
-      attorneyId: client.attorney_id, attorneyName: attorney?.full_name ?? "",
+      attorneyId: client.attorney_id, attorneyName: attorney?.full_name ?? "No current attorney",
       title: task.title, assignedTo: task.assigned_to, assignedName: staffMap.get(task.assigned_to) ?? "Former staff member", assignedRole: roleMap.get(task.assigned_to) ?? null,
       dueDate: task.due_date, status: task.status as TaskStatus, deadlineStatus: task.deadline_status as DeadlineStatus,
       reviewHistory: reviewMap.get(task.id) ?? [],

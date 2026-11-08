@@ -74,7 +74,7 @@ Admin and Secretary book or reschedule appointments using nine one-hour Asia/Man
 
 Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
 
-Admin and Secretary can archive an attorney after all non-archived linked clients have been reassigned or archived. Archived clients keep their attorney link. Only Admin can restore an attorney or client; if both are archived, restore the attorney first.
+Admin and Secretary can archive an attorney after all non-archived linked clients have been reassigned or archived. Archived clients keep their attorney link until restored. When Admin restores a client whose attorney is archived, the client becomes temporarily unassigned and the former link appears in read-only attorney history. Restoring the attorney later does not relink the client. Admin and Secretary can save other client edits while unassigned, then use Edit Client to add a new attorney or select an available one. New clients still require an attorney. Only Admin can restore attorneys or clients.
 
 The Staff interface does not show the Appointments page or Dashboard appointment summary. Direct Staff visits to `/appointments` redirect to `/dashboard`. Admin and Secretary retain both views; database read permissions are unchanged.
 

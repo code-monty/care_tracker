@@ -7,6 +7,7 @@ export default async function AttorneysPage() {
   const counts = new Map<string, number>();
   const activeCounts = new Map<string, number>();
   for (const client of clients) {
+    if (!client.attorney_id) continue;
     counts.set(client.attorney_id, (counts.get(client.attorney_id) ?? 0) + 1);
     if (client.status === "active") activeCounts.set(client.attorney_id, (activeCounts.get(client.attorney_id) ?? 0) + 1);
   }

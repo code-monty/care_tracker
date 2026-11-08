@@ -7,7 +7,7 @@ import { archiveTask, completeTask, deadlinesForPage, reviewTask, saveTask, subm
 import { manilaToday, type DeadlineRecord, type DeadlineStatus } from "@/lib/rules/deadlines";
 import styles from "./deadlines.module.css";
 
-type ClientChoice = { id: string; name: string; attorneyId: string; attorneyName: string };
+type ClientChoice = { id: string; name: string; attorneyId: string | null; attorneyName: string };
 type PersonnelChoice = { id: string; full_name: string };
 const PAGE_SIZE = 10;
 const dateFormatter = new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
@@ -39,7 +39,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const historyDialog = useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const today = manilaToday();
-  const attorneys = useMemo(() => [...new Map(clients.map((client) => [client.attorneyId, { id: client.attorneyId, name: client.attorneyName }])).values()].sort((a, b) => a.name.localeCompare(b.name)), [clients]);
+  const attorneys = useMemo(() => [...new Map(clients.filter((client) => client.attorneyId).map((client) => [client.attorneyId!, { id: client.attorneyId!, name: client.attorneyName }])).values()].sort((a, b) => a.name.localeCompare(b.name)), [clients]);
   const filtered = useMemo(() => tasks.filter((task) => {
     const query = search.trim().toLocaleLowerCase();
     return (!query || `${task.clientName} ${task.title}`.toLocaleLowerCase().includes(query))
