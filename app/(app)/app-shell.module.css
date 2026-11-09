@@ -47,14 +47,13 @@
 .headerDivider img { display: block; flex: none; width: 48px; height: 1px; transform: rotate(90deg); }
 .themeButton, .menuButton { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: .75rem; cursor: pointer; }
 .themeButton { color: var(--surface); background: var(--text); }
-.menuButton:hover, .themeButton:hover { opacity: .8; }
 .menuWrap { position: relative; }
 .profileMenu { position: absolute; top: calc(100% + .65rem); right: 0; z-index: 50; width: min(17rem, calc(100vw - 2rem)); padding: .4rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); box-shadow: 0 16px 32px #00000030; }
 .menuHeading { display: flex; flex-direction: column; overflow-wrap: anywhere; padding: .55rem .7rem .7rem; border-bottom: 1px solid var(--line); font-size: .82rem; font-weight: 700; }
 .menuHeading span { color: var(--muted); font-size: .7rem; font-weight: 400; }
 .menuSection { padding: .65rem .7rem .25rem; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .menuItem { display: flex; align-items: center; gap: .65rem; width: 100%; min-height: 42px; padding: .5rem .7rem; border-radius: .5rem; color: var(--text); font-size: .8rem; text-align: left; cursor: pointer; }
-.menuItem:hover, .menuItem[aria-current="page"] { background: var(--hover); }
+.menuItem[aria-current="page"] { background: var(--hover); }
 .adminMenuLinks { display: grid; }
 .body { display: flex; flex: 1; min-height: 0; }
 .railDock { position: sticky; top: 68px; z-index: 20; align-self: flex-start; flex: none; width: 75px; height: calc(100dvh - 68px); border-right: 1px solid var(--line); background: var(--surface); box-shadow: 2px 0 1px #0000000d; transition: width .2s ease; }
@@ -64,11 +63,9 @@
 .railToggle { position: absolute; top: .5rem; right: -22px; z-index: 1; display: grid; place-items: center; width: 44px; height: 44px; color: var(--text); cursor: pointer; }
 .railToggle::before { position: absolute; inset: 8px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); box-shadow: 0 2px 6px #0000001a; content: ""; }
 .railToggle svg { position: relative; }
-.railToggle:hover::before { background: var(--hover); }
 .railGroup { display: grid; justify-items: center; gap: .65rem; width: 100%; }
 .adminRail { flex: none; gap: .3rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .navLink { display: flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; border-radius: 20px; color: var(--text); }
-.navLink:hover { background: var(--hover); }
 .navLink[aria-current="page"] { color: var(--active-text); background: var(--active); }
 .navLink img { display: block; width: 21px; height: 26px; object-fit: contain; }
 .railNav .navLink svg { width: 20px; height: 20px; }
@@ -83,7 +80,28 @@
 .content { max-width: 90rem; margin: 0 auto; }
 .mobileNav { display: none; }
 .shell :is(button, a):focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .railDock { transition: none; } }
+
+.navLink, .menuItem, .themeButton, .menuButton, .railToggle {
+  transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+.railToggle::before { transition: background-color .18s ease, box-shadow .18s ease; }
+.navLink:focus-visible, .menuItem:focus-visible, .menuButton:focus-visible { background: var(--hover); }
+.navLink[aria-current="page"]:focus-visible { background: var(--active); }
+
+@media (hover: hover) and (pointer: fine) {
+  .navLink:hover, .menuItem:hover, .menuButton:hover { background: var(--hover); box-shadow: 0 6px 14px #0000001a; }
+  .navLink[aria-current="page"]:hover { background: var(--active); }
+  .themeButton:hover { opacity: .9; box-shadow: 0 6px 14px #00000026; }
+  .railToggle:hover::before { background: var(--hover); box-shadow: 0 6px 14px #00000026; }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .navLink:hover, .menuItem:hover, .themeButton:hover, .menuButton:hover, .railToggle:hover { transform: translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .railDock, .navLink, .menuItem, .themeButton, .menuButton, .railToggle, .railToggle::before { transition: none; }
+}
 
 @media (max-width: 767px) {
   .header { height: 60px; padding: 0 .65rem 0 .15rem; }
