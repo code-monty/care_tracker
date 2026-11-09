@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Settings, Moon, Sun, LogOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useAuthTheme } from "../(auth)/auth-theme";
+import { THEME_TRANSITION_MS, ThemeIcon, useAuthTheme } from "../(auth)/auth-theme";
 import { AdminMenuLinks, AppNavigation } from "./navigation";
 import styles from "./app-shell.module.css";
 
@@ -23,6 +23,7 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuCloseTimer = useRef<number | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -48,6 +49,23 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
+  useEffect(() => () => {
+    if (menuCloseTimer.current) window.clearTimeout(menuCloseTimer.current);
+  }, []);
+
+  function toggleMenuTheme() {
+    toggleTheme();
+    if (menuCloseTimer.current) window.clearTimeout(menuCloseTimer.current);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMenuOpen(false);
+    } else {
+      menuCloseTimer.current = window.setTimeout(() => {
+        setMenuOpen(false);
+        menuCloseTimer.current = null;
+      }, THEME_TRANSITION_MS);
+    }
+  }
+
   return (
     <div className={styles.shell} data-theme={theme}>
       <header className={styles.header}>
@@ -64,7 +82,7 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
           </div>
           <span className={styles.headerDivider} aria-hidden="true"><Image src="/auth/shell-divider.svg" alt="" width={59} height={1} /></span>
           <button type="button" className={styles.themeButton} onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
-            {theme === "dark" ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
+            <ThemeIcon theme={theme} />
           </button>
           <div className={styles.menuWrap} ref={menuRef}>
             <button ref={menuButtonRef} type="button" className={styles.menuButton} aria-label="Open profile menu" aria-expanded={menuOpen} aria-controls={menuOpen ? "profile-menu" : undefined} onClick={() => setMenuOpen((open) => !open)} title="Profile menu">
@@ -73,8 +91,8 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
             {menuOpen && (
               <div id="profile-menu" className={styles.profileMenu}>
                 <p className={styles.menuHeading}>{fullName}<span>{roleLabel}</span></p>
-                <button type="button" className={styles.menuItem} onClick={() => { toggleTheme(); setMenuOpen(false); }}>
-                  {theme === "dark" ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
+                <button type="button" className={styles.menuItem} onClick={toggleMenuTheme}>
+                  <ThemeIcon theme={theme} />
                   Switch to {theme === "dark" ? "light" : "dark"} theme
                 </button>
                 {!isAdmin && <Link href="/settings" className={styles.menuItem} onClick={() => setMenuOpen(false)}><Settings aria-hidden="true" size={18} />Settings</Link>}

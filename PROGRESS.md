@@ -322,3 +322,6 @@ Added 1rem of vertical space between Client Information and the Edit client / Ar
 
 ### Attorney detail heading spacing (November 9, 2026)
 Added the same 1rem of vertical space between the attorney name and Edit attorney / Archive attorney buttons on the attorney detail page. The spacing is scoped to the detail heading.
+
+### Light and dark theme switch animation (November 9, 2026)
+Added a 250 ms color fade when a user switches themes across login, MFA, shared auth pages, and the signed-in app. The sun and moon icons now rotate and fade between states; the mobile profile menu stays open until its icon finishes. Saved themes still load immediately, and reduced-motion users receive an immediate switch. Local lint, typecheck, `git diff --check`, and focused Chromium auth and signed-in desktop/mobile flows passed. The browser checks covered both directions, reload persistence, mobile menu timing, and reduced motion. No dependency, backend, or hosted deployment change was made.

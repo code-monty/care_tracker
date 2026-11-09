@@ -13,3 +13,12 @@
 
 .button:hover { border-color: var(--accent); }
 .button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+.icon { position: relative; display: inline-grid; place-items: center; flex: none; width: 18px; height: 18px; }
+.authIcon { width: 24px; height: 24px; }
+.sun, .moon { position: absolute; display: grid; place-items: center; inset: 0; opacity: 1; transform: rotate(0) scale(1); }
+.moon, .icon[data-theme="light"] .sun { opacity: 0; transform: rotate(-45deg) scale(.6); }
+.icon[data-theme="light"] .moon { opacity: 1; transform: rotate(0) scale(1); }
+.icon[data-theme="dark"] .moon { transform: rotate(45deg) scale(.6); }
+:global(html[data-theme-animating]) .sun,
+:global(html[data-theme-animating]) .moon { transition: opacity 250ms ease, transform 250ms ease; }
