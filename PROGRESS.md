@@ -328,3 +328,15 @@ Added a 250 ms color fade when a user switches themes across login, MFA, shared 
 
 ### Navigation and header hover animation (November 9, 2026)
 Added a subtle 180 ms lift and soft highlight to desktop rail links, mouse-hovered mobile navigation, profile menu items, the theme and profile buttons, and the desktop sidebar toggle. Current-page colors and keyboard focus outlines remain visible; the logo and profile display stay still. Hover movement applies only to hover-capable pointers and is removed for reduced-motion users. Local lint, typecheck, `git diff --check`, and a focused authenticated Chromium flow passed for dark and light themes, collapsed and expanded rail, header and menu controls, mobile navigation, focus, and reduced motion. No API, dependency, backend, or hosted deployment change was made.
+
+### Active desktop sidebar indicator (November 9, 2026)
+Added a short, rounded orange line at the far left of the active desktop sidebar item, matching the supplied reference. It follows the existing current-page state in both collapsed and expanded rail layouts, including Admin links, and does not appear in the mobile bar. Local lint, typecheck, `git diff --check`, and the focused authenticated Chromium shell flow passed. No API, dependency, backend, or hosted deployment change was made.
+
+### Theme-aware sidebar indicator color (November 9, 2026)
+Changed the active desktop sidebar line from fixed orange to the shared text color, making it dark in light mode and light in dark mode. Its size and placement remain the same. Local lint, typecheck, and `git diff --check` passed. No browser visual review or hosted deployment was performed.
+
+### Active mobile navigation indicator (November 9, 2026)
+Added the same short vertical line beside the active item in the mobile bottom navigation. It uses the existing current-page state and shared theme text color, with positioning inside each tab's grid slot. Local lint, typecheck, `git diff --check`, and the focused authenticated Chromium shell flow passed. The browser flow covered mobile navigation behavior but did not include a separate visual screenshot review. No API, dependency, backend, or hosted deployment change was made.
+
+### Mobile navigation indicator below label (November 9, 2026)
+Moved the mobile active-page indicator from the left edge of its tab to a short horizontal line centered directly below the page name. Reserved the same label space for every mobile tab so the icon and text do not shift when navigation changes; the desktop indicator remains vertical. Local lint, typecheck, `git diff --check`, and the focused authenticated Chromium shell flow passed. Reviewed mobile screenshots in dark and light themes and removed the temporary captures. No API, dependency, backend, or hosted deployment change was made.

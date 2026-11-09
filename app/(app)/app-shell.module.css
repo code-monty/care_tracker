@@ -67,6 +67,8 @@
 .adminRail { flex: none; gap: .3rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .navLink { display: flex; align-items: center; justify-content: center; flex: none; width: 50px; height: 50px; border-radius: 20px; color: var(--text); }
 .navLink[aria-current="page"] { color: var(--active-text); background: var(--active); }
+.railNav .navLink[aria-current="page"] { position: relative; }
+.railNav .navLink[aria-current="page"]::before { position: absolute; top: 50%; left: -12.5px; width: 5px; height: 28px; border-radius: 0 4px 4px 0; background: var(--text); content: ""; transform: translateY(-50%); pointer-events: none; }
 .navLink img { display: block; width: 21px; height: 26px; object-fit: contain; }
 .railNav .navLink svg { width: 20px; height: 20px; }
 .railNav .navLink img { width: 18px; height: 22px; }
@@ -74,6 +76,7 @@
 .navLabel { display: none; }
 .railNav[data-expanded="true"] .railGroup { justify-items: stretch; }
 .railNav[data-expanded="true"] .navLink { justify-content: flex-start; gap: .85rem; width: 100%; padding: 0 .7rem; border-radius: .75rem; }
+.railNav[data-expanded="true"] .navLink[aria-current="page"]::before { left: -.6rem; }
 .railNav[data-expanded="true"] .navLink svg, .railNav[data-expanded="true"] .navLink img { flex: none; }
 .railNav[data-expanded="true"] .navLabel { display: inline; overflow: hidden; font-size: .85rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .workspace { min-width: 0; flex: 1; background: var(--background); }
@@ -121,5 +124,6 @@
   .mobileNav .navLink { flex-direction: column; gap: .2rem; width: auto; height: auto; min-height: 64px; margin: .25rem .1rem; border-radius: .75rem; }
   .mobileNav .navLink svg { width: 23px; height: 23px; }
   .mobileNav .navLink img { width: 18px; height: 23px; }
-  .mobileNav .navLabel { display: block; max-width: 100%; overflow: hidden; font-size: clamp(.55rem, 2.1vw, .68rem); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+  .mobileNav .navLabel { position: relative; display: block; max-width: 100%; overflow: hidden; padding-bottom: 6px; font-size: clamp(.55rem, 2.1vw, .68rem); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+  .mobileNav .navLink[aria-current="page"] .navLabel::after { position: absolute; bottom: 0; left: 50%; width: 28px; height: 3px; border-radius: 999px; background: var(--text); content: ""; transform: translateX(-50%); pointer-events: none; }
 }
