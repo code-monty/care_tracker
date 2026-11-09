@@ -12,7 +12,7 @@ update public.profiles set role='staff', status='active', full_name='Fake Staff'
 update public.profiles set role='staff', status='disabled', full_name='Fake Disabled' where id='41000000-0000-0000-0000-000000000004';
 update public.profiles set role='staff', status='active', full_name='Fake Other Staff' where id='41000000-0000-0000-0000-000000000005';
 insert into public.attorneys(id,full_name,contact_no,email) values ('42000000-0000-0000-0000-000000000001','Fake Lawyer','0912-345-6789','task-lawyer@example.test');
-insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values ('43000000-0000-0000-0000-000000000001','Fake Task Client','1990-01-01','0912-345-6789','task-client@example.test','Fake address','42000000-0000-0000-0000-000000000001','41000000-0000-0000-0000-000000000001');
+insert into public.clients(id,full_name,birthdate,sex,contact_no,email,address,attorney_id,created_by) values ('43000000-0000-0000-0000-000000000001','Fake Task Client','1990-01-01','Male','0912-345-6789','task-client@example.test','Fake address','42000000-0000-0000-0000-000000000001','41000000-0000-0000-0000-000000000001');
 insert into public.tasks(id,client_id,title,assigned_to,due_date,created_by) values ('44000000-0000-0000-0000-000000000001','43000000-0000-0000-0000-000000000001','Fake report','41000000-0000-0000-0000-000000000002',(now() at time zone 'Asia/Manila')::date + 3,'41000000-0000-0000-0000-000000000001');
 insert into public.tasks(id,client_id,title,assigned_to,due_date,created_by) values ('44000000-0000-0000-0000-000000000002','43000000-0000-0000-0000-000000000001','Fake other report','41000000-0000-0000-0000-000000000005',(now() at time zone 'Asia/Manila')::date + 4,'41000000-0000-0000-0000-000000000001');
 

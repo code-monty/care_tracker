@@ -12,8 +12,8 @@ update public.profiles set role='staff', status='active', full_name='Fake Staff'
 update public.profiles set role='secretary', status='disabled' where id='71000000-0000-0000-0000-000000000004';
 insert into public.attorneys(id,full_name,contact_no,email) values
 ('72000000-0000-0000-0000-000000000001','Fake Secretary Lawyer','0912-345-6789','secretary-lawyer@example.test');
-insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values
-('73000000-0000-0000-0000-000000000001','Fake Secretary Client','1990-01-01','0912-345-6789','secretary-client@example.test','Fake address','72000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000001');
+insert into public.clients(id,full_name,birthdate,sex,contact_no,email,address,attorney_id,created_by) values
+('73000000-0000-0000-0000-000000000001','Fake Secretary Client','1990-01-01','Male','0912-345-6789','secretary-client@example.test','Fake address','72000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000001');
 
 select set_config('role','authenticated',true);
 select set_config('request.jwt.claims','{"sub":"71000000-0000-0000-0000-000000000002","role":"authenticated"}',true);

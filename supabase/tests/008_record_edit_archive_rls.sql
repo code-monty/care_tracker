@@ -11,10 +11,10 @@ insert into public.attorneys(id,full_name,contact_no,email) values
 ('82000000-0000-0000-0000-000000000001','Fake Linked Lawyer','0912-345-6789','linked@example.test'),
 ('82000000-0000-0000-0000-000000000002','Fake Empty Lawyer','0912-345-6789','empty@example.test'),
 ('82000000-0000-0000-0000-000000000003','Fake Reassignment Lawyer','0912-345-6789','reassign@example.test');
-insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values
-('83000000-0000-0000-0000-000000000001','Fake Edit Client','1990-01-01','0912-345-6789','edit@example.test','Fake address','82000000-0000-0000-0000-000000000001','81000000-0000-0000-0000-000000000001');
-insert into public.respondents(client_id,full_name,birthdate,contact_no,email,address) values
-('83000000-0000-0000-0000-000000000001','Fake Respondent','1991-01-01','0912-345-6789','respondent@example.test','Fake address');
+insert into public.clients(id,full_name,birthdate,sex,contact_no,email,address,attorney_id,created_by) values
+('83000000-0000-0000-0000-000000000001','Fake Edit Client','1990-01-01','Male','0912-345-6789','edit@example.test','Fake address','82000000-0000-0000-0000-000000000001','81000000-0000-0000-0000-000000000001');
+insert into public.respondents(client_id,full_name,birthdate,sex,contact_no,email,address) values
+('83000000-0000-0000-0000-000000000001','Fake Respondent','1991-01-01','Female','0912-345-6789','respondent@example.test','Fake address');
 
 select set_config('role','authenticated',true);
 select set_config('request.jwt.claims','{"sub":"81000000-0000-0000-0000-000000000003","role":"authenticated"}',true);

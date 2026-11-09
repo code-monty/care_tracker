@@ -12,8 +12,8 @@ update public.profiles set role='secretary',status='active' where id='91000000-0
 update public.profiles set role='staff',status='disabled' where id='91000000-0000-0000-0000-000000000004';
 insert into public.attorneys(id,full_name,contact_no,email) values
 ('92000000-0000-0000-0000-000000000001','Fake Archive Lawyer','0912-345-6789','archive-lawyer@example.test');
-insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values
-('93000000-0000-0000-0000-000000000001','Fake Archive Client','1990-01-01','0912-345-6789','archive-client@example.test','Fake address','92000000-0000-0000-0000-000000000001','91000000-0000-0000-0000-000000000001');
+insert into public.clients(id,full_name,birthdate,sex,contact_no,email,address,attorney_id,created_by) values
+('93000000-0000-0000-0000-000000000001','Fake Archive Client','1990-01-01','Male','0912-345-6789','archive-client@example.test','Fake address','92000000-0000-0000-0000-000000000001','91000000-0000-0000-0000-000000000001');
 insert into public.tasks(id,client_id,title,assigned_to,due_date,created_by) values
 ('94000000-0000-0000-0000-000000000001','93000000-0000-0000-0000-000000000001','Fake Staff work','91000000-0000-0000-0000-000000000002',current_date - 1,'91000000-0000-0000-0000-000000000001'),
 ('94000000-0000-0000-0000-000000000002','93000000-0000-0000-0000-000000000001','Fake Secretary work','91000000-0000-0000-0000-000000000003',current_date + 1,'91000000-0000-0000-0000-000000000001');

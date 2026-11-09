@@ -11,7 +11,7 @@ update public.profiles set full_name='Fake Pin Secretary',role='secretary',statu
 update public.profiles set full_name='Fake Pin Staff',role='staff',status='active' where id='a1000000-0000-0000-0000-000000000003';
 update public.profiles set role='staff',status='disabled' where id='a1000000-0000-0000-0000-000000000004';
 insert into public.attorneys(id,full_name,contact_no,email) values ('a2000000-0000-0000-0000-000000000001','Fake Pin Lawyer','0912-345-6789','pin-lawyer@example.test');
-insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values ('a3000000-0000-0000-0000-000000000001','Fake Pin Client','1990-01-01','0912-345-6789','pin-client@example.test','Fake address','a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001');
+insert into public.clients(id,full_name,birthdate,sex,contact_no,email,address,attorney_id,created_by) values ('a3000000-0000-0000-0000-000000000001','Fake Pin Client','1990-01-01','Male','0912-345-6789','pin-client@example.test','Fake address','a2000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001');
 
 select set_config('role','authenticated',true);
 select set_config('request.jwt.claims','{"sub":"a1000000-0000-0000-0000-000000000001","role":"authenticated"}',true);

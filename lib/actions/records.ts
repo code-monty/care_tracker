@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { addClientSchema, clientDetailsSchema, type AttorneyChoice, type ClientInput } from "@/lib/validation/client";
+import { addClientSchema, clientDetailsSchema, editClientSchema, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
 import { getDashboardRecords, getDeadlineRecords } from "@/lib/data/records";
 import { APPOINTMENT_SLOTS, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
 
@@ -25,10 +25,10 @@ function refreshPeople(id?: string) {
   if (id) { revalidatePath(`/clients/${id}`); revalidatePath(`/attorneys/${id}`); }
 }
 
-export async function updateClientRecord(id: string, input: ClientInput, choice: AttorneyChoice) {
+export async function updateClientRecord(id: string, input: EditClientInput, choice: AttorneyChoice) {
   const { profile } = await requireActiveUser();
   requireRecordManager(profile.role);
-  const value = choice.mode === "new" ? addClientSchema.parse(input) : clientDetailsSchema.parse(input);
+  const value = choice.mode === "new" ? editClientSchema.parse(input) : clientDetailsSchema.parse(input);
   const db = await createClient();
   const { data, error } = await db.rpc("save_client_record", { p_id: uuid.parse(id), p_client: value, p_attorney_mode: choice.mode, p_attorney_id: choice.mode === "existing" ? uuid.parse(choice.attorneyId) : null });
   if (error) fail(error);

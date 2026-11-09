@@ -188,6 +188,8 @@ On November 8, 2026, the owner approved restoring an archived client without fir
 
 Key relationships: a client has **one** respondent and **one** attorney; an attorney has **many** clients; a client has many appointments, tasks and notes. `profiles.id` equals the Supabase Auth user id.
 
+The petitioner/client and respondent each have a separate `sex` value: Male, Female, Non-Binary, or Prefer not to Say. New records require both selections; pre-existing null values stay null until edited and do not block unrelated edits or restoration. The client detail page labels null as Not recorded. Only Admin and Secretary may edit these fields.
+
 | ID | Rule |
 |---|---|
 | BR-01 | Deadline status is computed in a `deadline_status` view: **Overdue** if due date is before today and not done; **Due Soon** if due within N days (default 3, inclusive, configurable); otherwise **Upcoming**. |

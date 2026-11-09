@@ -11,12 +11,12 @@ update public.profiles set role='staff',status='active' where id='f1000000-0000-
 insert into public.attorneys(id,full_name,contact_no,email) values
 ('f2000000-0000-0000-0000-000000000001','Former Attorney','0912-345-6789','former@example.test'),
 ('f2000000-0000-0000-0000-000000000002','Available Attorney','0912-345-6789','available@example.test');
-insert into public.clients(id,full_name,birthdate,contact_no,email,address,attorney_id,created_by) values
-('f3000000-0000-0000-0000-000000000001','Restored Client','1990-01-01','0912-345-6789','restored@example.test','Fake address','f2000000-0000-0000-0000-000000000001','f1000000-0000-0000-0000-000000000001'),
-('f3000000-0000-0000-0000-000000000002','Other Restored Client','1990-01-02','0912-345-6789','other@example.test','Fake address','f2000000-0000-0000-0000-000000000002','f1000000-0000-0000-0000-000000000001');
-insert into public.respondents(client_id,full_name,birthdate,contact_no,email,address) values
-('f3000000-0000-0000-0000-000000000001','Fake Respondent','1991-01-01','0912-345-6789','respondent@example.test','Fake address'),
-('f3000000-0000-0000-0000-000000000002','Other Respondent','1991-01-02','0912-345-6789','other-respondent@example.test','Fake address');
+insert into public.clients(id,full_name,birthdate,sex,contact_no,email,address,attorney_id,created_by) values
+('f3000000-0000-0000-0000-000000000001','Restored Client','1990-01-01','Male','0912-345-6789','restored@example.test','Fake address','f2000000-0000-0000-0000-000000000001','f1000000-0000-0000-0000-000000000001'),
+('f3000000-0000-0000-0000-000000000002','Other Restored Client','1990-01-02','Female','0912-345-6789','other@example.test','Fake address','f2000000-0000-0000-0000-000000000002','f1000000-0000-0000-0000-000000000001');
+insert into public.respondents(client_id,full_name,birthdate,sex,contact_no,email,address) values
+('f3000000-0000-0000-0000-000000000001','Fake Respondent','1991-01-01','Female','0912-345-6789','respondent@example.test','Fake address'),
+('f3000000-0000-0000-0000-000000000002','Other Respondent','1991-01-02','Male','0912-345-6789','other-respondent@example.test','Fake address');
 select set_config('test.client_payload','{"petitionerName":"Restored Client Edited","petitionerBirthdate":"1990-01-01","petitionerContact":"0912-345-6789","petitionerEmail":"restored@example.test","petitionerAddress":"Fake address","respondentName":"Fake Respondent","respondentBirthdate":"1991-01-01","respondentContact":"0912-345-6789","respondentEmail":"respondent@example.test","respondentAddress":"Fake address","attorneyName":"New Attorney","attorneyContact":"0912-345-6789","attorneyEmail":"new-attorney@example.test"}',true);
 
 select set_config('role','authenticated',true);
@@ -24,7 +24,7 @@ select set_config('request.jwt.claims','{"sub":"f1000000-0000-0000-0000-00000000
 select throws_ok($$select public.save_client_record('f3000000-0000-0000-0000-000000000001',current_setting('test.client_payload')::jsonb,'keep')$$,'P0001','Access denied','Staff cannot call the edit RPC');
 select set_config('request.jwt.claims','{"sub":"f1000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
 select throws_ok($$update public.clients set is_archived=true where id='f3000000-0000-0000-0000-000000000001'$$,'P0001','Only Admin may archive or restore clients','Secretary cannot archive client');
-select throws_ok($$insert into public.clients(full_name,birthdate,contact_no,email,address,created_by) values ('No Attorney','1990-01-01','0912-345-6789','none@example.test','Fake address','f1000000-0000-0000-0000-000000000002')$$,'P0001','Select an available attorney','New client still requires attorney');
+select throws_ok($$insert into public.clients(full_name,birthdate,sex,contact_no,email,address,created_by) values ('No Attorney','1990-01-01','Male','0912-345-6789','none@example.test','Fake address','f1000000-0000-0000-0000-000000000002')$$,'P0001','Select an available attorney','New client still requires attorney');
 
 select set_config('request.jwt.claims','{"sub":"f1000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select lives_ok($$update public.clients set is_archived=true where id='f3000000-0000-0000-0000-000000000001'$$,'Admin archives client');

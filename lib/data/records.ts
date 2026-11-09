@@ -7,7 +7,7 @@ import { sortDeadlines } from "@/lib/rules/deadlines";
 export async function getClients() {
   await requireActiveUser();
   const db = await createClient();
-  const { data, error } = await db.from("clients").select("id,full_name,birthdate,contact_no,email,address,status,attorney_id,attorneys(full_name,contact_no,email),respondents(full_name,birthdate,contact_no,email,address)").eq("is_archived", false).order("full_name");
+  const { data, error } = await db.from("clients").select("id,full_name,birthdate,sex,contact_no,email,address,status,attorney_id,attorneys(full_name,contact_no,email),respondents(full_name,birthdate,sex,contact_no,email,address)").eq("is_archived", false).order("full_name");
   if (error) throw error;
   return data ?? [];
 }

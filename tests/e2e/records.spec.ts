@@ -44,6 +44,11 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.locator("#client-attorneyContact").fill("0912-345-6789");
   await page.locator("#client-attorneyEmail").fill(`attorney-${suffix}@example.test`);
   await page.getByRole("button", { name: "Save Client" }).click();
+  await expect(page.getByRole("dialog", { name: "Add New Client" }).getByRole("alert")).toContainText("Check the highlighted fields");
+  await expect(page.locator("#client-petitionerSex")).toBeFocused();
+  await page.locator("#client-petitionerSex").selectOption("Male");
+  await page.locator("#client-respondentSex").selectOption("Female");
+  await page.getByRole("button", { name: "Save Client" }).click();
   await expect(page.getByRole("dialog", { name: "Add New Client" })).toBeHidden();
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(name);
   await expect(page.getByText(name).first()).toBeVisible();
@@ -60,6 +65,8 @@ test("saved clients and appointments survive reload and appear on dashboard", as
     const secondValue = id === "client-petitionerName" ? secondName : id === "client-petitionerEmail" ? `second-${suffix}@example.test` : value;
     await page.locator(`#${id}`).fill(secondValue);
   }
+  await page.locator("#client-petitionerSex").selectOption("Non-Binary");
+  await page.locator("#client-respondentSex").selectOption("Prefer not to Say");
   await page.getByRole("button", { name: "Existing Attorney" }).click();
   const attorneySearch = page.getByRole("combobox", { name: "Select attorney" });
   await attorneySearch.fill(`No Attorney ${suffix}`);
@@ -129,6 +136,20 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await expect(page.getByRole("table").getByRole("cell", { name: secondName })).toBeVisible();
   await page.getByRole("row", { name: new RegExp(secondName) }).getByRole("link", { name: "View Client" }).click();
   await expect(page.getByRole("heading", { name: "Client Information" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('section[aria-labelledby="petitioner-details-heading"]')).toContainText("Non-Binary");
+  await expect(page.locator('section[aria-labelledby="respondent-details-heading"]')).toContainText("Prefer not to Say");
+  await page.reload();
+  await expect(page.locator('section[aria-labelledby="petitioner-details-heading"]')).toContainText("Non-Binary");
+  await expect(page.locator('section[aria-labelledby="respondent-details-heading"]')).toContainText("Prefer not to Say");
+  await page.getByRole("button", { name: "Edit client" }).click();
+  const editClient = page.getByRole("dialog", { name: "Edit client information" });
+  await editClient.locator("#edit-petitionerSex").selectOption("Female");
+  await editClient.locator("#edit-respondentSex").selectOption("Male");
+  await editClient.getByRole("button", { name: "Save changes" }).click();
+  await expect(editClient).toBeHidden();
+  await page.reload();
+  await expect(page.locator('section[aria-labelledby="petitioner-details-heading"]')).toContainText("Female");
+  await expect(page.locator('section[aria-labelledby="respondent-details-heading"]')).toContainText("Male");
 
   await page.goto("/appointments");
   await page.getByRole("button", { name: "Add Appointment" }).first().click();

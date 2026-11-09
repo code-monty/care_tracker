@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { UserPlus, X } from "lucide-react";
-import { addClientSchema, ageFromBirthdate, clientFieldSchemas, type ClientField, type ClientInput } from "@/lib/validation/client";
+import { addClientSchema, ageFromBirthdate, clientFieldSchemas, sexOptions, type ClientField, type ClientInput } from "@/lib/validation/client";
 import RecordNameSearch from "@/components/record-name-search";
 import type { NameMatch } from "@/lib/actions/records";
 import styles from "./clients.module.css";
@@ -10,7 +10,7 @@ import styles from "./clients.module.css";
 type Values = Record<ClientField, string>;
 const emptyValues = Object.fromEntries(Object.keys(clientFieldSchemas).map((key) => [key, ""])) as Values;
 
-export default function AddClientDialog({ onSave, existingClients, attorneys }: { onSave: (client: ClientInput, attorneyId?: string) => Promise<void>; existingClients: ClientInput[]; attorneys: { id: string; full_name: string; contact_no: string; email: string }[] }) {
+export default function AddClientDialog({ onSave, existingClients, attorneys }: { onSave: (client: ClientInput, attorneyId?: string) => Promise<void>; existingClients: { petitionerName: string; petitionerBirthdate: string }[]; attorneys: { id: string; full_name: string; contact_no: string; email: string }[] }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [values, setValues] = useState<Values>(emptyValues);
   const [touched, setTouched] = useState<Partial<Record<ClientField, boolean>>>({});
@@ -30,7 +30,7 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
       setTouched(Object.fromEntries(Object.keys(clientFieldSchemas).map((key) => [key, true])));
       setFormError("Check the highlighted fields before saving.");
       const invalidFields = new Set(result.error.issues.map((issue) => issue.path[0]));
-      const formOrder: ClientField[] = ["petitionerName", "petitionerBirthdate", "petitionerContact", "petitionerEmail", "petitionerAddress", "respondentName", "respondentBirthdate", "respondentContact", "respondentEmail", "respondentAddress", "attorneyName", "attorneyContact", "attorneyEmail"];
+      const formOrder: ClientField[] = ["petitionerName", "petitionerBirthdate", "petitionerSex", "petitionerContact", "petitionerEmail", "petitionerAddress", "respondentName", "respondentBirthdate", "respondentSex", "respondentContact", "respondentEmail", "respondentAddress", "attorneyName", "attorneyContact", "attorneyEmail"];
       const firstInvalid = formOrder.find((key) => invalidFields.has(key));
       if (typeof firstInvalid === "string") requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>(`#client-${firstInvalid}`)?.focus());
       return;
@@ -68,11 +68,15 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
 
   function person(prefix: "petitioner" | "respondent") {
     const birthdateKey = `${prefix}Birthdate` as ClientField;
+    const sexKey = `${prefix}Sex` as ClientField;
     const age = ageFromBirthdate(values[birthdateKey]);
+    const sexResult = clientFieldSchemas[sexKey].safeParse(values[sexKey]);
+    const sexError = touched[sexKey] && !sexResult.success ? "Select a sex option" : undefined;
     return <div className={styles.formGrid}>
       {field(`${prefix}Name`, "Full name", { placeholder: "Enter full name", autoFocus: prefix === "petitioner" })}
       {field(birthdateKey, "Birthdate", { type: "date" })}
       <div className={styles.formField}><label htmlFor={`${prefix}-age`}>Age</label><input id={`${prefix}-age`} type="text" value={age === null ? "" : String(age)} placeholder="Calculated from birthdate" readOnly aria-readonly="true" /></div>
+      <div className={styles.formField}><label htmlFor={`client-${sexKey}`}>Sex <span aria-hidden="true">*</span></label><select id={`client-${sexKey}`} required value={values[sexKey]} onChange={(event) => { setValues((current) => ({ ...current, [sexKey]: event.target.value })); setFormError(""); }} onBlur={() => setTouched((current) => ({ ...current, [sexKey]: true }))} aria-invalid={Boolean(sexError)} aria-describedby={sexError ? `client-${sexKey}-error` : undefined}><option value="">Select sex</option>{sexOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select>{sexError && <small className={styles.fieldError} id={`client-${sexKey}-error`}>{sexError}</small>}</div>
       {field(`${prefix}Contact`, "Contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}
       {field(`${prefix}Email`, "Email address", { type: "email", placeholder: "name@example.com" })}
       <div className={styles.wide}>{field(`${prefix}Address`, "Full residential address", { multiline: true, placeholder: "Street, Barangay, City, Province" })}</div>
