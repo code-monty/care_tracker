@@ -2,7 +2,7 @@
 .backLink { display: inline-flex; align-items: center; gap: .4rem; margin-bottom: 1rem; color: var(--brand); font-size: .82rem; font-weight: 650; }
 .backLink:hover { text-decoration: underline; }
 .heading { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
-.heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
+.heading h1 { margin-bottom: 1rem; font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
 .addAppointment { display: inline-flex; align-items: center; gap: .4rem; align-self: flex-start; min-height: 2.5rem; padding: .4rem 0; border: 0; color: var(--brand); background: transparent; font-size: .88rem; font-weight: 700; text-decoration: underline; text-underline-offset: .25rem; cursor: pointer; }
 .addAppointment:hover { color: var(--text); }
 .appointmentNotice { margin: -.5rem 0 1.5rem; padding: .75rem 1rem; border-radius: .6rem; color: var(--text); background: var(--hover); font-size: .85rem; }

@@ -316,3 +316,9 @@ Created `MILESTONES_2026-10-19_to_2026-11-08.md` with a daily list of completed 
 
 ### Minimum age for petitioner and respondent (November 9, 2026)
 Add Client now rejects a birthdate that calculates to age 0 in Asia/Manila, shows a field error, and leaves the calculated Age display blank. Edit Client rejects a changed birthdate that calculates to age 0 for either person, while allowing unrelated edits to older records whose under-one birthdates remain unchanged. Shared validation and the Server Action enforce the rule, and a new database trigger guards direct inserts and changed birthdates on clients and respondents. Updated AGENTS.md, README.md, and the local Git-ignored SARD addendum. Applied the migration only to local Supabase. Local lint, typecheck, `git diff --check`, three focused Vitest tests, 53 focused pgTAP assertions, and an authenticated Chromium add/edit flow passed. The tests covered the first Manila birthday, leap-day boundaries, direct database writes, legacy unchanged dates, and browser error states. The browser test archived its fake records and disabled its test account. No hosted migration or deployment was performed.
+
+### Client Information heading spacing (November 9, 2026)
+Added 1rem of vertical space between Client Information and the Edit client / Archive client buttons. This is a CSS-only layout adjustment on the client detail page; no data or permissions changed.
+
+### Attorney detail heading spacing (November 9, 2026)
+Added the same 1rem of vertical space between the attorney name and Edit attorney / Archive attorney buttons on the attorney detail page. The spacing is scoped to the detail heading.
