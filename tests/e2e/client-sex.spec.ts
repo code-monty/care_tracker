@@ -18,6 +18,7 @@ test("client and respondent sex is required, saved, editable, and survives reloa
   const email = `sex-${suffix}@example.test`;
   const password = `Test-${randomUUID()}-aA1!`;
   const names = [`Fake Sex Client A ${suffix}`, `Fake Sex Client B ${suffix}`];
+  const todayInManila = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const { data: created, error: createError } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (createError || !created.user) throw createError ?? new Error("Unable to create test user");
 
@@ -50,6 +51,16 @@ test("client and respondent sex is required, saved, editable, and survives reloa
       await page.locator("#client-attorneyContact").fill("0912-345-6789");
       await page.locator("#client-attorneyEmail").fill(`attorney-${index}-${suffix}@example.test`);
       if (index === 0) {
+        await page.locator("#client-petitionerBirthdate").fill(todayInManila);
+        await expect(page.locator("#petitioner-age")).toHaveValue("");
+        await page.locator("#client-petitionerBirthdate").blur();
+        await expect(page.locator("#client-petitionerBirthdate-error")).toContainText("Age must be at least 1 year old");
+        await page.locator("#client-petitionerBirthdate").fill("1990-01-01");
+        await page.locator("#client-respondentBirthdate").fill(todayInManila);
+        await expect(page.locator("#respondent-age")).toHaveValue("");
+        await page.locator("#client-respondentBirthdate").blur();
+        await expect(page.locator("#client-respondentBirthdate-error")).toContainText("Age must be at least 1 year old");
+        await page.locator("#client-respondentBirthdate").fill("1991-01-01");
         await page.getByRole("button", { name: "Save Client" }).click();
         await expect(page.getByRole("dialog", { name: "Add New Client" }).getByRole("alert")).toContainText("Check the highlighted fields");
         await expect(page.locator("#client-petitionerSex")).toBeFocused();
@@ -70,6 +81,16 @@ test("client and respondent sex is required, saved, editable, and survives reloa
 
     await page.getByRole("button", { name: "Edit client" }).click();
     const edit = page.getByRole("dialog", { name: "Edit client information" });
+    await edit.locator("#edit-petitionerBirthdate").fill(todayInManila);
+    await expect(edit.locator("#edit-petitionerBirthdate-error")).toContainText("Age must be at least 1 year old");
+    await edit.getByRole("button", { name: "Save changes" }).click();
+    await expect(edit).toBeVisible();
+    await edit.locator("#edit-petitionerBirthdate").fill("1990-01-01");
+    await edit.locator("#edit-respondentBirthdate").fill(todayInManila);
+    await expect(edit.locator("#edit-respondentBirthdate-error")).toContainText("Age must be at least 1 year old");
+    await edit.getByRole("button", { name: "Save changes" }).click();
+    await expect(edit).toBeVisible();
+    await edit.locator("#edit-respondentBirthdate").fill("1991-01-01");
     await edit.locator("#edit-petitionerSex").selectOption("Female");
     await edit.locator("#edit-respondentSex").selectOption("Male");
     await edit.getByRole("button", { name: "Save changes" }).click();

@@ -4,14 +4,15 @@ const requiredText = z.string().trim().min(1, "This field is required");
 const mobile = z.string().trim().regex(/^09\d{2}-?\d{3}-?\d{4}$/, "Use a Philippine mobile number (09XX-XXX-XXXX)");
 const email = z.email("Enter a valid email address");
 const todayInManila = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-const birthdate = z.iso.date().refine((value) => value <= todayInManila(), "Birthdate cannot be in the future");
+const existingBirthdate = z.iso.date().refine((value) => value <= todayInManila(), "Birthdate cannot be in the future");
+const newBirthdate = existingBirthdate.refine((value) => birthdateAllowsAgeOne(value), "Age must be at least 1 year old");
 export const sexOptions = ["Male", "Female", "Non-Binary", "Prefer not to Say"] as const;
 const sex = z.enum(sexOptions);
 export type SexOption = z.infer<typeof sex>;
 
 export const clientFieldSchemas = {
   petitionerName: requiredText,
-  petitionerBirthdate: birthdate,
+  petitionerBirthdate: newBirthdate,
   petitionerSex: sex,
   petitionerContact: mobile,
   petitionerEmail: email,
@@ -20,7 +21,7 @@ export const clientFieldSchemas = {
   attorneyContact: mobile,
   attorneyEmail: email,
   respondentName: requiredText,
-  respondentBirthdate: birthdate,
+  respondentBirthdate: newBirthdate,
   respondentSex: sex,
   respondentContact: mobile,
   respondentEmail: email,
@@ -28,7 +29,7 @@ export const clientFieldSchemas = {
 } as const;
 
 export const addClientSchema = z.object(clientFieldSchemas);
-export const editClientSchema = addClientSchema.extend({ petitionerSex: sex.nullable(), respondentSex: sex.nullable() });
+export const editClientSchema = addClientSchema.extend({ petitionerBirthdate: existingBirthdate, respondentBirthdate: existingBirthdate, petitionerSex: sex.nullable(), respondentSex: sex.nullable() });
 export const clientDetailsSchema = editClientSchema.omit({ attorneyName: true, attorneyContact: true, attorneyEmail: true });
 export type ClientField = keyof typeof clientFieldSchemas;
 export type ClientInput = z.infer<typeof addClientSchema>;
@@ -40,4 +41,20 @@ export function ageFromBirthdate(birthdateValue: string, today = todayInManila()
   const [year, month, day] = birthdateValue.split("-").map(Number);
   const [currentYear, currentMonth, currentDay] = today.split("-").map(Number);
   return currentYear - year - (currentMonth < month || (currentMonth === month && currentDay < day) ? 1 : 0);
+}
+
+export function birthdateAllowsAgeOne(birthdateValue: string, today = todayInManila()): boolean {
+  const age = ageFromBirthdate(birthdateValue, today);
+  return age !== null && age >= 1;
+}
+
+export function editedBirthdateIsAllowed(birthdateValue: string, storedBirthdate: string, today = todayInManila()): boolean {
+  return birthdateValue === storedBirthdate || birthdateAllowsAgeOne(birthdateValue, today);
+}
+
+export function latestBirthdateForAgeOne(today = todayInManila()): string {
+  const [year, month, day] = today.split("-").map(Number);
+  const priorYear = year - 1;
+  const lastDayOfMonth = new Date(Date.UTC(priorYear, month, 0)).getUTCDate();
+  return `${priorYear}-${String(month).padStart(2, "0")}-${String(Math.min(day, lastDayOfMonth)).padStart(2, "0")}`;
 }

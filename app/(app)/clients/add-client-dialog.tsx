@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { UserPlus, X } from "lucide-react";
-import { addClientSchema, ageFromBirthdate, clientFieldSchemas, sexOptions, type ClientField, type ClientInput } from "@/lib/validation/client";
+import { addClientSchema, ageFromBirthdate, clientFieldSchemas, latestBirthdateForAgeOne, sexOptions, type ClientField, type ClientInput } from "@/lib/validation/client";
 import RecordNameSearch from "@/components/record-name-search";
 import type { NameMatch } from "@/lib/actions/records";
 import styles from "./clients.module.css";
@@ -61,7 +61,7 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
     };
     return <div className={styles.formField} key={key}>
       <label htmlFor={id}>{label} <span aria-hidden="true">*</span></label>
-      {options.multiline ? <textarea {...shared} rows={2} placeholder={options.placeholder} /> : <input {...shared} type={options.type ?? "text"} placeholder={options.placeholder} autoFocus={options.autoFocus} max={options.type === "date" ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()) : undefined} />}
+      {options.multiline ? <textarea {...shared} rows={2} placeholder={options.placeholder} /> : <input {...shared} type={options.type ?? "text"} placeholder={options.placeholder} autoFocus={options.autoFocus} max={options.type === "date" ? latestBirthdateForAgeOne() : undefined} />}
       {error && <small className={styles.fieldError} id={`${id}-error`}>{error}</small>}
     </div>;
   }
@@ -75,7 +75,7 @@ export default function AddClientDialog({ onSave, existingClients, attorneys }: 
     return <div className={styles.formGrid}>
       {field(`${prefix}Name`, "Full name", { placeholder: "Enter full name", autoFocus: prefix === "petitioner" })}
       {field(birthdateKey, "Birthdate", { type: "date" })}
-      <div className={styles.formField}><label htmlFor={`${prefix}-age`}>Age</label><input id={`${prefix}-age`} type="text" value={age === null ? "" : String(age)} placeholder="Calculated from birthdate" readOnly aria-readonly="true" /></div>
+      <div className={styles.formField}><label htmlFor={`${prefix}-age`}>Age</label><input id={`${prefix}-age`} type="text" value={age === null || age < 1 ? "" : String(age)} placeholder="Calculated from birthdate" readOnly aria-readonly="true" /></div>
       <div className={styles.formField}><label htmlFor={`client-${sexKey}`}>Sex <span aria-hidden="true">*</span></label><select id={`client-${sexKey}`} required value={values[sexKey]} onChange={(event) => { setValues((current) => ({ ...current, [sexKey]: event.target.value })); setFormError(""); }} onBlur={() => setTouched((current) => ({ ...current, [sexKey]: true }))} aria-invalid={Boolean(sexError)} aria-describedby={sexError ? `client-${sexKey}-error` : undefined}><option value="">Select sex</option>{sexOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select>{sexError && <small className={styles.fieldError} id={`client-${sexKey}-error`}>{sexError}</small>}</div>
       {field(`${prefix}Contact`, "Contact number", { type: "tel", placeholder: "09XX-XXX-XXXX" })}
       {field(`${prefix}Email`, "Email address", { type: "email", placeholder: "name@example.com" })}

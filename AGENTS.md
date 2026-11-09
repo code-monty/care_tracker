@@ -195,7 +195,7 @@ The petitioner/client and respondent each have a separate `sex` value: Male, Fem
 | BR-01 | Deadline status is computed in a `deadline_status` view: **Overdue** if due date is before today and not done; **Due Soon** if due within N days (default 3, inclusive, configurable); otherwise **Upcoming**. |
 | BR-02 | Marking a case Completed sets the client Inactive (after confirmation) and removes their open deadlines from the dashboard. |
 | BR-03 | Priority clients and clients with overdue tasks appear first on the dashboard, highlighted in red. |
-| BR-04 | Age is derived from birthdate; birthdates cannot be in the future. |
+| BR-04 | Age is derived from birthdate; birthdates cannot be in the future. New petitioner and respondent records, and changed birthdates, must calculate to at least 1 year old in Asia/Manila. Existing under-one birthdates may remain unchanged during unrelated edits. |
 | BR-05 | One attorney record is reused across clients; editing it updates every linked client. |
 | BR-06 | Staff cannot hard-delete; archiving hides a record; Admin can restore or purge. |
 | BR-07 | Every create, update, status change, archive, export and login event writes an activity-log row. Log rows are never modified. |

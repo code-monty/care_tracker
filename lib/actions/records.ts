@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { addClientSchema, clientDetailsSchema, editClientSchema, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
+import { addClientSchema, clientDetailsSchema, editClientSchema, editedBirthdateIsAllowed, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
 import { getDashboardRecords, getDeadlineRecords } from "@/lib/data/records";
 import { APPOINTMENT_SLOTS, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
 
@@ -30,7 +30,15 @@ export async function updateClientRecord(id: string, input: EditClientInput, cho
   requireRecordManager(profile.role);
   const value = choice.mode === "new" ? editClientSchema.parse(input) : clientDetailsSchema.parse(input);
   const db = await createClient();
-  const { data, error } = await db.rpc("save_client_record", { p_id: uuid.parse(id), p_client: value, p_attorney_mode: choice.mode, p_attorney_id: choice.mode === "existing" ? uuid.parse(choice.attorneyId) : null });
+  const clientId = uuid.parse(id);
+  const { data: stored, error: readError } = await db.from("clients").select("birthdate,respondents(birthdate)").eq("id", clientId).eq("is_archived", false).single();
+  if (readError || !stored) fail(readError);
+  const respondent = Array.isArray(stored.respondents) ? stored.respondents[0] : stored.respondents;
+  if (!respondent) throw new Error("Respondent unavailable");
+  if (!editedBirthdateIsAllowed(value.petitionerBirthdate, stored.birthdate) || !editedBirthdateIsAllowed(value.respondentBirthdate, respondent.birthdate)) {
+    throw new Error("Age must be at least 1 year old");
+  }
+  const { data, error } = await db.rpc("save_client_record", { p_id: clientId, p_client: value, p_attorney_mode: choice.mode, p_attorney_id: choice.mode === "existing" ? uuid.parse(choice.attorneyId) : null });
   if (error) fail(error);
   refreshPeople(id);
   return data as string | null;

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Pencil, X } from "lucide-react";
-import { clientDetailsSchema, editClientSchema, sexOptions, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
+import { ageFromBirthdate, clientDetailsSchema, editClientSchema, editedBirthdateIsAllowed, sexOptions, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
 import RecordNameSearch from "@/components/record-name-search";
 import type { NameMatch } from "@/lib/actions/records";
 import type { ClientRecord } from "../client-store";
@@ -29,6 +29,12 @@ export default function EditClientDialog({ client, attorneys, onSave, onClose }:
     if (attorneyMode === "existing" && !selectedAttorney) { setError("Select an existing attorney from the search results."); return; }
     const parsed = attorneyMode === "new" ? editClientSchema.safeParse(values) : clientDetailsSchema.safeParse(values);
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check the entered information."); return; }
+    const invalidBirthdate = (["petitionerBirthdate", "respondentBirthdate"] as const).find((key) => !editedBirthdateIsAllowed(values[key], client[key]));
+    if (invalidBirthdate) {
+      setError("Age must be at least 1 year old");
+      dialogRef.current?.querySelector<HTMLInputElement>(`#edit-${invalidBirthdate}`)?.focus();
+      return;
+    }
     const choice: AttorneyChoice = attorneyMode === "existing" ? { mode: "existing", attorneyId: selectedAttorney!.id } : { mode: attorneyMode };
     setSaving(true); setError("");
     const saveValues = selectedAttorney && attorneyMode === "existing" ? { ...values, attorneyName: selectedAttorney.name, attorneyContact: selectedAttorney.contact ?? "", attorneyEmail: selectedAttorney.detail } : values;
@@ -41,7 +47,10 @@ export default function EditClientDialog({ client, attorneys, onSave, onClose }:
     <form onSubmit={submit} className={styles.editForm}>
       <div className={formStyles.dialogHeader}><div className={formStyles.dialogTitle}><Pencil size={20} aria-hidden="true" /><h2 id="edit-client-title">Edit client information</h2></div><button className={formStyles.iconButton} type="button" aria-label="Close Edit client information" disabled={saving} onClick={() => dialogRef.current?.close()}><X size={20} aria-hidden="true" /></button></div>
       <div className={formStyles.dialogBody} data-client-dialog-body>
-        {groups.map((group) => <section key={group.title} className={formStyles.formSection}><h3>{group.title}</h3><div className={formStyles.formGrid}>{group.fields.map(([key, label, type]) => <div key={key} className={`${formStyles.formField} ${key.endsWith("Address") ? formStyles.wide : ""}`}><label htmlFor={`edit-${key}`}>{label}</label>{type === "select" ? <select id={`edit-${key}`} value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value || null }))}>{values[key] === null && <option value="">Not recorded</option>}{sexOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input id={`edit-${key}`} required type={type} autoFocus={key === "petitionerName"} value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))} />}</div>)}</div></section>)}
+        {groups.map((group) => <section key={group.title} className={formStyles.formSection}><h3>{group.title}</h3><div className={formStyles.formGrid}>{group.fields.map(([key, label, type]) => {
+          const invalidAge = (key === "petitionerBirthdate" || key === "respondentBirthdate") && values[key] !== client[key] && ageFromBirthdate(values[key]) === 0;
+          return <div key={key} className={`${formStyles.formField} ${key.endsWith("Address") ? formStyles.wide : ""}`}><label htmlFor={`edit-${key}`}>{label}</label>{type === "select" ? <select id={`edit-${key}`} value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value || null }))}>{values[key] === null && <option value="">Not recorded</option>}{sexOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input id={`edit-${key}`} required type={type} autoFocus={key === "petitionerName"} value={values[key] ?? ""} aria-invalid={invalidAge || undefined} aria-describedby={invalidAge ? `edit-${key}-error` : undefined} onChange={(event) => { setValues((current) => ({ ...current, [key]: event.target.value })); setError(""); }} />}{invalidAge && <small className={formStyles.fieldError} id={`edit-${key}-error`}>Age must be at least 1 year old</small>}</div>;
+        })}</div></section>)}
         <section className={formStyles.formSection}><h3>Legal Counsel Information</h3>
           <div className={formStyles.attorneyChoices} role="group" aria-label="Attorney choice">
             <button type="button" className={formStyles.attorneyChoice} aria-pressed={attorneyMode === "keep"} onClick={() => { setAttorneyMode("keep"); setError(""); }}>{client.attorneyId ? "Keep current attorney" : "Keep unassigned"}</button>
