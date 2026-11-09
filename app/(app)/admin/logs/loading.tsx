@@ -1,3 +1,3 @@
-import { LoadingIndicator } from "@/components/loading-indicator";
+import { PageSkeleton } from "../../page-skeleton";
 
-export default function Loading() { return <div data-route-loading><LoadingIndicator message="Loading activity logs…" /></div>; }
+export default function Loading() { return <PageSkeleton kind="logs" label="Loading activity logs" />; }

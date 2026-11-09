@@ -1,5 +1,5 @@
-import { LoadingIndicator } from "@/components/loading-indicator";
+import { PageSkeleton } from "./page-skeleton";
 
 export default function Loading() {
-  return <LoadingIndicator fullScreen message="Loading your workspace…" />;
+  return <PageSkeleton kind="directory" label="Loading your workspace" />;
 }

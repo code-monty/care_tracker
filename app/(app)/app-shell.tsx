@@ -26,20 +26,22 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
   const menuCloseTimer = useRef<number | null>(null);
   const pathname = usePathname();
   const contentRef = useRef<HTMLDivElement>(null);
-  const previousPathname = useRef(pathname);
+  const previousPathname = useRef<string | null>(null);
 
   useLayoutEffect(() => {
-    if (previousPathname.current === pathname) return;
+    const routeChanged = previousPathname.current !== pathname;
     previousPathname.current = pathname;
     const content = contentRef.current;
     if (!content) return;
 
     let clearTimer: number | undefined;
-    const observer = new MutationObserver(() => startAnimation());
+    let frame: number | undefined;
+    let pendingReveal = routeChanged;
+    let loadingVisible = Boolean(content.querySelector("[data-route-loading]"));
 
-    function startAnimation() {
-      if (!content || content.querySelector("[data-route-loading]")) return;
-      observer.disconnect();
+    function reveal() {
+      if (!content || !content.firstElementChild || !pendingReveal || content.querySelector("[data-route-loading]")) return;
+      pendingReveal = false;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       content.removeAttribute("data-route-entering");
       void content.offsetWidth;
@@ -47,13 +49,32 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
       clearTimer = window.setTimeout(() => content.removeAttribute("data-route-entering"), 220);
     }
 
+    const observer = new MutationObserver(() => {
+      const hasLoading = Boolean(content.querySelector("[data-route-loading]"));
+      if (hasLoading) {
+        loadingVisible = true;
+        pendingReveal = true;
+        content.removeAttribute("data-route-entering");
+        return;
+      }
+      if (loadingVisible) {
+        loadingVisible = false;
+        frame = window.requestAnimationFrame(reveal);
+      } else if (pendingReveal) {
+        frame = window.requestAnimationFrame(reveal);
+      }
+    });
+
     observer.observe(content, { childList: true, subtree: true });
-    const frame = window.requestAnimationFrame(startAnimation);
+    if (routeChanged) {
+      frame = window.requestAnimationFrame(reveal);
+    }
     return () => {
       observer.disconnect();
-      window.cancelAnimationFrame(frame);
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
       if (clearTimer !== undefined) window.clearTimeout(clearTimer);
       content.removeAttribute("data-route-entering");
+      previousPathname.current = null;
     };
   }, [pathname]);
 

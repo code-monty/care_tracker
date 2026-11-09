@@ -1,5 +1,5 @@
-import { LoadingIndicator } from "@/components/loading-indicator";
+import { PageSkeleton } from "../page-skeleton";
 
 export default function Loading() {
-  return <div data-route-loading><LoadingIndicator message="Loading administration…" /></div>;
+  return <PageSkeleton kind="users" label="Loading administration" />;
 }

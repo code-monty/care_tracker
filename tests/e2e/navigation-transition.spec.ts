@@ -14,12 +14,17 @@ function localEnvironment() {
 }
 
 async function recordTransitions(page: Page) {
-  await page.evaluate(() => {
-    document.documentElement.dataset.routeTransitionCount = "0";
+  await page.evaluate(() => sessionStorage.setItem("routeTransitionCount", "0"));
+  await page.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.documentElement.dataset.routeTransitionCount = sessionStorage.getItem("routeTransitionCount") ?? "0";
+    }, { once: true });
     document.addEventListener("animationstart", (event) => {
       if (!(event.target instanceof Element) || !event.target.hasAttribute("data-route-entering")) return;
       const root = document.documentElement;
-      root.dataset.routeTransitionCount = String(Number(root.dataset.routeTransitionCount) + 1);
+      const count = Number(sessionStorage.getItem("routeTransitionCount") ?? 0) + 1;
+      sessionStorage.setItem("routeTransitionCount", String(count));
+      root.dataset.routeTransitionCount = String(count);
       root.dataset.lastTransitionPath = window.location.pathname;
       root.dataset.transitionHadLoading = String(Boolean(event.target.querySelector("[data-route-loading]")));
     });
@@ -53,13 +58,13 @@ test("signed-in pages animate on navigation while the shell stays still", async 
     const payload = Buffer.from(JSON.stringify({ userId: created.user.id, verifiedAt: Date.now() })).toString("base64url");
     const signature = createHmac("sha256", env.STEP_UP_SECRET).update(payload).digest("hex");
     await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
-    await page.goto("/dashboard");
     await recordTransitions(page);
-    await expect(page.locator("html")).toHaveAttribute("data-route-transition-count", "0");
+    await page.goto("/dashboard");
+    await expectTransition(page, "/dashboard", 1);
     const header = page.locator("header").first();
     const headerBox = await header.boundingBox();
     const nav = page.getByRole("navigation", { name: "Main navigation" });
-    let count = 0;
+    let count = 1;
     for (const [label, path] of [
       ["Clients", "/clients"], ["Attorneys", "/attorneys"], ["Appointments", "/appointments"],
       ["Deadlines", "/deadlines"], ["Users", "/admin/users"], ["Activity Logs", "/admin/logs"],
@@ -67,6 +72,7 @@ test("signed-in pages animate on navigation while the shell stays still", async 
     ] as const) {
       await nav.getByRole("link", { name: label }).click();
       await expectTransition(page, path, ++count);
+      await expect(page.getByRole("heading", { name: label, exact: true })).toBeVisible();
     }
     expect(await header.boundingBox()).toEqual(headerBox);
 
@@ -109,12 +115,25 @@ test("signed-in pages animate on navigation while the shell stays still", async 
 
     const { error: roleError } = await admin.from("profiles").update({ role: "secretary" }).eq("id", created.user.id);
     if (roleError) throw roleError;
+    await page.evaluate(() => sessionStorage.setItem("routeTransitionCount", "0"));
     await page.goto("/dashboard");
-    await recordTransitions(page);
+    await expectTransition(page, "/dashboard", 1);
     await page.getByRole("button", { name: "Open profile menu" }).click();
     await page.getByRole("link", { name: "Settings" }).click();
-    await expectTransition(page, "/settings", 1);
+    await expectTransition(page, "/settings", 2);
     await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+
+    await page.evaluate(() => {
+      const content = document.querySelector('[class*="app-shell-module"][class*="content"]');
+      const fallback = document.createElement("div");
+      fallback.dataset.routeLoading = "";
+      fallback.setAttribute("role", "status");
+      fallback.textContent = "Loading settings";
+      content?.prepend(fallback);
+    });
+    await expect(page.locator("[data-route-loading]")).toBeVisible();
+    await page.locator("[data-route-loading]").evaluate((fallback) => fallback.remove());
+    await expectTransition(page, "/settings", 3);
   } finally {
     await admin.auth.admin.deleteUser(created.user.id);
   }
