@@ -81,6 +81,8 @@
 .railNav[data-expanded="true"] .navLabel { display: inline; overflow: hidden; font-size: .85rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .workspace { min-width: 0; flex: 1; background: var(--background); }
 .content { max-width: 90rem; margin: 0 auto; }
+.content[data-route-entering] { animation: routeEnter 220ms ease-out both; }
+@keyframes routeEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .mobileNav { display: none; }
 .shell :is(button, a):focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 
@@ -104,6 +106,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .railDock, .navLink, .menuItem, .themeButton, .menuButton, .railToggle, .railToggle::before { transition: none; }
+  .content[data-route-entering] { animation: none; }
 }
 
 @media (max-width: 767px) {

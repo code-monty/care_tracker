@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
@@ -25,6 +25,37 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuCloseTimer = useRef<number | null>(null);
   const pathname = usePathname();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previousPathname = useRef(pathname);
+
+  useLayoutEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    const content = contentRef.current;
+    if (!content) return;
+
+    let clearTimer: number | undefined;
+    const observer = new MutationObserver(() => startAnimation());
+
+    function startAnimation() {
+      if (!content || content.querySelector("[data-route-loading]")) return;
+      observer.disconnect();
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      content.removeAttribute("data-route-entering");
+      void content.offsetWidth;
+      content.setAttribute("data-route-entering", "");
+      clearTimer = window.setTimeout(() => content.removeAttribute("data-route-entering"), 220);
+    }
+
+    observer.observe(content, { childList: true, subtree: true });
+    const frame = window.requestAnimationFrame(startAnimation);
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+      if (clearTimer !== undefined) window.clearTimeout(clearTimer);
+      content.removeAttribute("data-route-entering");
+    };
+  }, [pathname]);
 
   useEffect(() => {
     function closeOnOutside(event: PointerEvent) {
@@ -111,7 +142,7 @@ export function AppShell({ children, fullName, avatarVersion, role, signOut }: {
             {sidebarOpen ? <ChevronLeft aria-hidden="true" size={16} /> : <ChevronRight aria-hidden="true" size={16} />}
           </button>
         </div>
-        <div className={styles.workspace}><div className={styles.content}>{children}</div></div>
+        <div className={styles.workspace}><div ref={contentRef} className={styles.content}>{children}</div></div>
       </div>
       <AppNavigation variant="mobile" isAdmin={isAdmin} isStaff={role === "staff"} />
     </div>
