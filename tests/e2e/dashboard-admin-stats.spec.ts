@@ -33,7 +33,7 @@ test("Admin task cards count active work and stay hidden from Secretary and Staf
   const suffix = randomUUID().slice(0, 8);
   const password = `Test-${randomUUID()}-aA1!`;
   const users = await Promise.all((["admin", "secretary", "staff"] as const).map(async (role) => {
-    const email = `dashboard-${role}-${suffix}@example.test`;
+    const email = `dashboard-${role}-${suffix}@example.com`;
     const created = await db.auth.admin.createUser({ email, password, email_confirm: true });
     if (created.error || !created.data.user) throw created.error ?? new Error("Unable to create dashboard test user");
     const id = created.data.user.id;
@@ -94,7 +94,10 @@ test("Admin task cards count active work and stay hidden from Secretary and Staf
     await expect.poll(() => count("Due Soon Tasks")).toBe(baseline.dueSoon + 1);
     await expect.poll(() => count("Overdue Tasks")).toBe(baseline.overdue + 1);
     await expect.poll(() => count("Approval Waiting by Staff")).toBe(baseline.approval + 1);
-    await expect(page.getByRole("link", { name: "View current active clients" }).locator("svg")).toHaveCount(1);
+    await expect(page.getByRole("link", { name: "View current active clients" }).locator("svg")).toHaveCount(2);
+    for (const name of ["Upcoming / Ongoing Tasks", "Due Soon Tasks", "Overdue Tasks", "Approval Waiting by Staff"]) {
+      await expect(stats.getByRole("heading", { name }).locator("svg")).toHaveCount(1);
+    }
     await page.getByRole("button", { name: "Next day" }).click();
     await expect.poll(() => count("Upcoming / Ongoing Tasks")).toBe(baseline.upcoming + 1);
     await expect.poll(() => count("Approval Waiting by Staff")).toBe(baseline.approval + 1);

@@ -29,16 +29,22 @@
 .clientCard:hover { border-color: var(--brand); }
 .statsGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .statCard { display: flex; min-width: 0; min-height: 8.25rem; flex-direction: column; align-items: flex-start; padding: 1.15rem 1.25rem; border: 1px solid var(--dash-line); border-radius: .75rem; background: var(--dash-surface); box-shadow: 0 1px 2px #0000000d; }
-.statCard h2 { min-height: 2.2rem; font-size: .85rem; font-weight: 650; line-height: 1.3; }
+.statCard h2 { display: flex; align-items: flex-start; gap: .5rem; min-height: 2.2rem; font-size: .85rem; font-weight: 650; line-height: 1.3; }
+.statCard h2 svg { flex: none; color: var(--brand); }
 .statCard strong { margin-top: .3rem; font-size: 2.4rem; font-variant-numeric: tabular-nums; line-height: 1; }
 .statCard p { margin-top: auto; padding-top: .55rem; color: var(--dash-muted); font-size: .72rem; line-height: 1.35; }
 .statUpcoming strong { color: var(--brand); }
 .statDueSoon strong { color: #d99a37; }
+.statDueSoon h2 svg { color: #d99a37; }
 .statOverdue { border-color: color-mix(in srgb, #ef7777 42%, var(--dash-line)); }
 .statOverdue strong { color: #ef7777; }
+.statOverdue h2 svg { color: #ef7777; }
 .statApproval strong { color: var(--dash-blue); }
+.statApproval h2 svg { color: var(--dash-blue); }
 :global([data-theme="light"]) .statDueSoon strong { color: #8a5500; }
+:global([data-theme="light"]) .statDueSoon h2 svg { color: #8a5500; }
 :global([data-theme="light"]) .statOverdue strong { color: #b42332; }
+:global([data-theme="light"]) .statOverdue h2 svg { color: #b42332; }
 .panel { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--dash-line); border-radius: .75rem; background: var(--dash-surface); box-shadow: 0 1px 2px #0000000d; }
 .panelHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-height: 5rem; padding: 1.35rem 1.5rem 1rem; border-bottom: 1px solid var(--dash-line); }
 .headingTitle { display: flex; align-items: center; gap: .55rem; }
@@ -64,7 +70,8 @@
 .upcoming { color: #065f46; background: #d1fae5; }
 .summaryIcon { display: grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem; border-radius: .75rem; color: var(--dash-blue); background: color-mix(in srgb, var(--dash-blue) 12%, transparent); }
 .summaryText { display: grid; min-width: 0; gap: .15rem; }
-.summaryLabel { color: var(--dash-muted); font-size: .875rem; }
+.summaryLabel { display: inline-flex; align-items: center; gap: .5rem; color: var(--dash-muted); font-size: .875rem; }
+.summaryLabel svg { flex: none; color: var(--brand); }
 .summaryCount { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem; font-size: 2.5rem; font-weight: 700; line-height: 1; }
 .summaryCount span { align-self: center; padding: .25rem .45rem; border-radius: .25rem; color: var(--dash-blue); background: color-mix(in srgb, var(--dash-blue) 12%, transparent); font-size: .65rem; font-weight: 700; line-height: 1.3; text-transform: uppercase; letter-spacing: .04em; }
 .summaryDescription { color: var(--dash-muted); font-size: .75rem; line-height: 1.4; }
