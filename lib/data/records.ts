@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveUser } from "@/lib/auth/session";
 import type { DeadlineRecord, DeadlineStatus, TaskReviewEvent, TaskStatus } from "@/lib/rules/deadlines";
-import { sortDeadlines } from "@/lib/rules/deadlines";
+import { dashboardTaskStats, sortDeadlines } from "@/lib/rules/deadlines";
 
 export async function getClients() {
   await requireActiveUser();
@@ -57,7 +57,7 @@ export async function getAppointments() {
 }
 
 export async function getDashboardRecords(date: string) {
-  await requireActiveUser();
+  const { profile } = await requireActiveUser();
   const db = await createClient();
   const start = new Date(`${date}T00:00:00+08:00`);
   const end = new Date(start.getTime() + 86400000);
@@ -69,7 +69,7 @@ export async function getDashboardRecords(date: string) {
   if (appointments.error) throw appointments.error;
   const deadlines = await getDeadlineRecords();
   const openDeadlines = deadlines.filter((task) => task.status !== "done" && task.clientStatus === "active");
-  return { activeClients: clients.count ?? 0, appointments: (appointments.data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived), deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length };
+  return { activeClients: clients.count ?? 0, appointments: (appointments.data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived), deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length, taskStats: profile.role === "admin" ? dashboardTaskStats(openDeadlines) : null };
 }
 
 export async function getActivePersonnel() {

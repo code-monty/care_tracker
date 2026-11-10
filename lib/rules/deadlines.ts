@@ -19,6 +19,20 @@ export type DeadlineRecord = {
   reviewHistory: TaskReviewEvent[];
 };
 
+export type DashboardTaskStats = { upcoming: number; dueSoon: number; overdue: number; awaitingApproval: number };
+
+export function dashboardTaskStats(tasks: Pick<DeadlineRecord, "status" | "deadlineStatus" | "clientStatus">[]): DashboardTaskStats {
+  const stats = { upcoming: 0, dueSoon: 0, overdue: 0, awaitingApproval: 0 };
+  for (const task of tasks) {
+    if (task.clientStatus !== "active" || task.status === "done") continue;
+    if (task.deadlineStatus === "Upcoming") stats.upcoming++;
+    if (task.deadlineStatus === "Due Soon") stats.dueSoon++;
+    if (task.deadlineStatus === "Overdue") stats.overdue++;
+    if (task.status === "awaiting_approval") stats.awaitingApproval++;
+  }
+  return stats;
+}
+
 export function deadlineStatus(dueDate: string, status: TaskStatus, today: string): DeadlineStatus {
   if (status === "done") return "Done";
   if (dueDate < today) return "Overdue";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deadlineStatus, manilaToday } from "./deadlines";
+import { dashboardTaskStats, deadlineStatus, manilaToday } from "./deadlines";
 
 describe("deadline status", () => {
   it("uses a three-day inclusive window and preserves done tasks", () => {
@@ -14,5 +14,19 @@ describe("deadline status", () => {
   it("switches dates at Manila midnight", () => {
     expect(manilaToday(new Date("2026-10-25T15:59:59Z"))).toBe("2026-10-25");
     expect(manilaToday(new Date("2026-10-25T16:00:00Z"))).toBe("2026-10-26");
+  });
+});
+
+describe("Admin dashboard task statistics", () => {
+  it("counts current deadline states and Staff approvals without counting done or inactive-client tasks", () => {
+    expect(dashboardTaskStats([
+      { status: "open", deadlineStatus: "Upcoming", clientStatus: "active" },
+      { status: "needs_changes", deadlineStatus: "Due Soon", clientStatus: "active" },
+      { status: "open", deadlineStatus: "Overdue", clientStatus: "active" },
+      { status: "awaiting_approval", deadlineStatus: "Overdue", clientStatus: "active" },
+      { status: "awaiting_approval", deadlineStatus: "Upcoming", clientStatus: "active" },
+      { status: "done", deadlineStatus: "Done", clientStatus: "active" },
+      { status: "open", deadlineStatus: "Overdue", clientStatus: "inactive" },
+    ])).toEqual({ upcoming: 2, dueSoon: 1, overdue: 2, awaitingApproval: 2 });
   });
 });

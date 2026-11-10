@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, CalendarClock, ChevronLeft, ChevronRight, Gavel, Users } from "lucide-react";
 import styles from "./dashboard.module.css";
 import type { DeadlineRecord } from "@/lib/rules/deadlines";
+import type { DashboardTaskStats } from "@/lib/rules/deadlines";
 
 function shiftDate(value: string, days: number) {
   const date = new Date(`${value}T12:00:00Z`);
@@ -13,15 +14,16 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, showAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; showAppointments: boolean }) {
+export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, initialTaskStats, showAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; initialTaskStats: DashboardTaskStats | null; showAppointments: boolean }) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
   const [deadlines, setDeadlines] = useState(initialDeadlines);
   const [deadlineCount, setDeadlineCount] = useState(initialDeadlineCount);
+  const [taskStats, setTaskStats] = useState(initialTaskStats);
   const [loadError, setLoadError] = useState(false);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  async function selectDate(date: string) { setSelectedDate(date); setLoadError(false); try { const result = await dashboardForDate(date); setAppointments(result.appointments); setDeadlines(result.deadlines); setDeadlineCount(result.deadlineCount); } catch { setLoadError(true); } }
+  async function selectDate(date: string) { setSelectedDate(date); setLoadError(false); try { const result = await dashboardForDate(date); setAppointments(result.appointments); setDeadlines(result.deadlines); setDeadlineCount(result.deadlineCount); setTaskStats(result.taskStats); } catch { setLoadError(true); } }
 
   return (
     <main className={styles.dashboard}>
@@ -31,7 +33,7 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
       </div>
 
       <Link href="/clients" className={styles.clientCard} aria-label="View current active clients">
-        <span className={styles.summaryIcon}><Users aria-hidden="true" size={26} /></span>
+        {!taskStats && <span className={styles.summaryIcon}><Users aria-hidden="true" size={26} /></span>}
         <span className={styles.summaryText}>
           <span className={styles.summaryLabel}>Current Active Clients</span>
           <span className={styles.summaryCount}>{activeCount} <span>active clients</span></span>
@@ -39,6 +41,13 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
         </span>
         <span className={styles.summaryArrow}><ArrowRight aria-hidden="true" size={20} /></span>
       </Link>
+
+      {taskStats && <div className={styles.statsGrid} role="region" aria-label="Admin task statistics">
+        <section className={`${styles.statCard} ${styles.statUpcoming}`} aria-labelledby="stat-upcoming"><h2 id="stat-upcoming">Upcoming / Ongoing Tasks</h2><strong>{taskStats.upcoming}</strong><p>Tasks with upcoming deadlines</p></section>
+        <section className={`${styles.statCard} ${styles.statDueSoon}`} aria-labelledby="stat-due-soon"><h2 id="stat-due-soon">Due Soon Tasks</h2><strong>{taskStats.dueSoon}</strong><p>Due today or within 3 days</p></section>
+        <section className={`${styles.statCard} ${styles.statOverdue}`} aria-labelledby="stat-overdue"><h2 id="stat-overdue">Overdue Tasks</h2><strong>{taskStats.overdue}</strong><p>Tasks past their due date</p></section>
+        <section className={`${styles.statCard} ${styles.statApproval}`} aria-labelledby="stat-approval"><h2 id="stat-approval">Approval Waiting by Staff</h2><strong>{taskStats.awaitingApproval}</strong><p>Staff submissions awaiting Admin review</p></section>
+      </div>}
 
       <div className={styles.columns}>
         {showAppointments && <section className={styles.panel} aria-labelledby="appointments-heading">
