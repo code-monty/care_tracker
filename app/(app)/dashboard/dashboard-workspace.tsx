@@ -14,7 +14,7 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, initialTaskStats, showAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; initialTaskStats: DashboardTaskStats | null; showAppointments: boolean }) {
+export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, initialTaskStats, role, showAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; initialTaskStats: DashboardTaskStats; role: "admin" | "secretary" | "staff"; showAppointments: boolean }) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
@@ -33,21 +33,21 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
       </div>
 
       <Link href="/clients" className={styles.clientCard} aria-label="View current active clients">
-        {!taskStats && <span className={styles.summaryIcon}><Users aria-hidden="true" size={26} /></span>}
+        {role !== "admin" && <span className={styles.summaryIcon}><Users aria-hidden="true" size={26} /></span>}
         <span className={styles.summaryText}>
-          <span className={styles.summaryLabel}>{taskStats && <Users aria-hidden="true" size={18} />}Current Active Clients</span>
+          <span className={styles.summaryLabel}>{role === "admin" && <Users aria-hidden="true" size={18} />}Current Active Clients</span>
           <span className={styles.summaryCount}>{activeCount} <span>active clients</span></span>
           <span className={styles.summaryDescription}>View client records</span>
         </span>
         <span className={styles.summaryArrow}><ArrowRight aria-hidden="true" size={20} /></span>
       </Link>
 
-      {taskStats && <div className={styles.statsGrid} role="region" aria-label="Admin task statistics">
+      <div className={`${styles.statsGrid} ${role === "secretary" ? styles.statsGridThree : ""}`} role="region" aria-label={`${role === "admin" ? "Admin" : "My"} task statistics`}>
         <section className={`${styles.statCard} ${styles.statUpcoming}`} aria-labelledby="stat-upcoming"><h2 id="stat-upcoming"><ListTodo aria-hidden="true" size={18} />Upcoming / Ongoing Tasks</h2><strong>{taskStats.upcoming}</strong><p>Tasks with upcoming deadlines</p></section>
         <section className={`${styles.statCard} ${styles.statDueSoon}`} aria-labelledby="stat-due-soon"><h2 id="stat-due-soon"><Clock3 aria-hidden="true" size={18} />Due Soon Tasks</h2><strong>{taskStats.dueSoon}</strong><p>Due today or within 3 days</p></section>
         <section className={`${styles.statCard} ${styles.statOverdue}`} aria-labelledby="stat-overdue"><h2 id="stat-overdue"><TriangleAlert aria-hidden="true" size={18} />Overdue Tasks</h2><strong>{taskStats.overdue}</strong><p>Tasks past their due date</p></section>
-        <section className={`${styles.statCard} ${styles.statApproval}`} aria-labelledby="stat-approval"><h2 id="stat-approval"><ClipboardCheck aria-hidden="true" size={18} />Approval Waiting by Staff</h2><strong>{taskStats.awaitingApproval}</strong><p>Staff submissions awaiting Admin review</p></section>
-      </div>}
+        {role !== "secretary" && <section className={`${styles.statCard} ${styles.statApproval}`} aria-labelledby="stat-approval"><h2 id="stat-approval"><ClipboardCheck aria-hidden="true" size={18} />{role === "admin" ? "Approval Waiting by Staff" : "Awaiting Admin Approval"}</h2><strong>{taskStats.awaitingApproval}</strong><p>{role === "admin" ? "Staff submissions awaiting Admin review" : "Your submissions awaiting Admin review"}</p></section>}
+      </div>
 
       <div className={styles.columns}>
         {showAppointments && <section className={styles.panel} aria-labelledby="appointments-heading">

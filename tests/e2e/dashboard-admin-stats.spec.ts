@@ -26,14 +26,14 @@ async function signIn(page: Page, email: string, password: string, userId: strin
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 }
 
-test("Admin task cards count active work and stay hidden from Secretary and Staff", async ({ page, browser }) => {
-  test.setTimeout(180_000);
+test("Dashboard task cards show clinic totals to Admin and assigned work to Staff and Secretary", async ({ page, browser }) => {
+  test.setTimeout(240_000);
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Dashboard E2E requires local Supabase");
   const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const suffix = randomUUID().slice(0, 8);
   const password = `Test-${randomUUID()}-aA1!`;
-  const users = await Promise.all((["admin", "secretary", "staff"] as const).map(async (role) => {
-    const email = `dashboard-${role}-${suffix}@example.com`;
+  const users = await Promise.all((["admin", "secretary", "staff", "staff"] as const).map(async (role, index) => {
+    const email = `dashboard-${role}-${index}-${suffix}@example.com`;
     const created = await db.auth.admin.createUser({ email, password, email_confirm: true });
     if (created.error || !created.data.user) throw created.error ?? new Error("Unable to create dashboard test user");
     const id = created.data.user.id;
@@ -48,7 +48,6 @@ test("Admin task cards count active work and stay hidden from Secretary and Staf
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const stats = page.getByRole("region", { name: "Admin task statistics" });
   const count = async (name: string) => Number(await stats.getByRole("region", { name }).locator("strong").textContent());
-  const otherContexts = [];
   try {
     await signIn(page, admin.email, password, admin.id);
     const baseline = {
@@ -74,6 +73,9 @@ test("Admin task cards count active work and stay hidden from Secretary and Staf
       { id: doneTaskId, client_id: activeClientId, title: `Fake Done ${suffix}`, assigned_to: users[1].id, due_date: today, status: "open", created_by: admin.id },
       { id: archivedTaskId, client_id: activeClientId, title: `Fake Archived ${suffix}`, assigned_to: users[2].id, due_date: shiftDate(today, 4), status: "open", created_by: admin.id },
       { id: randomUUID(), client_id: inactiveClientId, title: `Fake Inactive ${suffix}`, assigned_to: users[2].id, due_date: shiftDate(today, -1), status: "open", created_by: admin.id },
+      { id: randomUUID(), client_id: activeClientId, title: `Fake Other Staff Upcoming ${suffix}`, assigned_to: users[3].id, due_date: shiftDate(today, 5), status: "open", created_by: admin.id },
+      { id: randomUUID(), client_id: activeClientId, title: `Fake Other Staff Overdue ${suffix}`, assigned_to: users[3].id, due_date: shiftDate(today, -2), status: "open", created_by: admin.id },
+      { id: randomUUID(), client_id: activeClientId, title: `Fake Secretary Due Soon ${suffix}`, assigned_to: users[1].id, due_date: shiftDate(today, 3), status: "open", created_by: admin.id },
     ];
     const { error: taskError } = await db.from("tasks").insert(tasks);
     if (taskError) throw taskError;
@@ -90,16 +92,16 @@ test("Admin task cards count active work and stay hidden from Secretary and Staf
 
     await page.reload();
     await expect(stats.getByRole("region")).toHaveCount(4);
-    await expect.poll(() => count("Upcoming / Ongoing Tasks")).toBe(baseline.upcoming + 1);
-    await expect.poll(() => count("Due Soon Tasks")).toBe(baseline.dueSoon + 1);
-    await expect.poll(() => count("Overdue Tasks")).toBe(baseline.overdue + 1);
+    await expect.poll(() => count("Upcoming / Ongoing Tasks")).toBe(baseline.upcoming + 2);
+    await expect.poll(() => count("Due Soon Tasks")).toBe(baseline.dueSoon + 2);
+    await expect.poll(() => count("Overdue Tasks")).toBe(baseline.overdue + 2);
     await expect.poll(() => count("Approval Waiting by Staff")).toBe(baseline.approval + 1);
     await expect(page.getByRole("link", { name: "View current active clients" }).locator("svg")).toHaveCount(2);
     for (const name of ["Upcoming / Ongoing Tasks", "Due Soon Tasks", "Overdue Tasks", "Approval Waiting by Staff"]) {
       await expect(stats.getByRole("heading", { name }).locator("svg")).toHaveCount(1);
     }
     await page.getByRole("button", { name: "Next day" }).click();
-    await expect.poll(() => count("Upcoming / Ongoing Tasks")).toBe(baseline.upcoming + 1);
+    await expect.poll(() => count("Upcoming / Ongoing Tasks")).toBe(baseline.upcoming + 2);
     await expect.poll(() => count("Approval Waiting by Staff")).toBe(baseline.approval + 1);
 
     for (const width of [1280, 390]) {
@@ -110,16 +112,33 @@ test("Admin task cards count active work and stay hidden from Secretary and Staf
     await page.setViewportSize({ width: 1280, height: 844 });
     await page.getByRole("button", { name: "Switch to light theme" }).click();
     await expect(stats).toBeVisible();
-    for (const person of users.slice(1)) {
+    for (const [index, person] of users.entries()) {
+      if (index === 0) continue;
       const context = await browser.newContext();
-      otherContexts.push(context);
       const otherPage = await context.newPage();
       await signIn(otherPage, person.email, password, person.id);
       await expect(otherPage.getByRole("region", { name: "Admin task statistics" })).toHaveCount(0);
+      const myStats = otherPage.getByRole("region", { name: "My task statistics" });
+      const myCount = async (name: string) => Number(await myStats.getByRole("region", { name }).locator("strong").textContent());
+      await expect(myStats.getByRole("region")).toHaveCount(person.role === "secretary" ? 3 : 4);
+      await expect.poll(() => myCount("Upcoming / Ongoing Tasks")).toBe(index === 2 || index === 3 ? 1 : 0);
+      await expect.poll(() => myCount("Due Soon Tasks")).toBe(index === 1 || index === 2 ? 1 : 0);
+      await expect.poll(() => myCount("Overdue Tasks")).toBe(index === 2 || index === 3 ? 1 : 0);
+      if (person.role === "staff") await expect.poll(() => myCount("Awaiting Admin Approval")).toBe(index === 2 ? 1 : 0);
+      else await expect(myStats.getByRole("heading", { name: "Awaiting Admin Approval" })).toHaveCount(0);
+      if (person.role === "secretary") {
+        await otherPage.getByRole("button", { name: "Next day" }).click();
+        await expect.poll(() => myCount("Due Soon Tasks")).toBe(1);
+      }
+      for (const width of [1280, 390]) {
+        await otherPage.setViewportSize({ width, height: 844 });
+        expect(await myStats.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+      }
+      await otherPage.getByRole("button", { name: "Switch to light theme" }).click();
+      await expect(myStats).toBeVisible();
       await expect(otherPage.getByRole("link", { name: "View current active clients" }).locator("svg")).toHaveCount(2);
     }
   } finally {
-    for (const context of otherContexts) await context.close();
     await db.from("clients").update({ is_archived: true }).in("id", [activeClientId, inactiveClientId]);
     await db.from("attorneys").update({ is_archived: true }).eq("id", attorneyId);
     await db.from("profiles").update({ status: "disabled" }).in("id", users.map((user) => user.id));

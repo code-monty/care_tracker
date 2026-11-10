@@ -33,6 +33,10 @@ export function dashboardTaskStats(tasks: Pick<DeadlineRecord, "status" | "deadl
   return stats;
 }
 
+export function assignedDashboardTaskStats(tasks: readonly Pick<DeadlineRecord, "assignedTo" | "status" | "deadlineStatus" | "clientStatus">[], assigneeId: string): DashboardTaskStats {
+  return dashboardTaskStats(tasks.filter((task) => task.assignedTo === assigneeId));
+}
+
 export function deadlineStatus(dueDate: string, status: TaskStatus, today: string): DeadlineStatus {
   if (status === "done") return "Done";
   if (dueDate < today) return "Overdue";
