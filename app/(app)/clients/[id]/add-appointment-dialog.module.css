@@ -1,6 +1,11 @@
 .dialog { position: fixed; inset: 0; width: min(34rem, calc(100vw - 2rem)); max-width: none; max-height: calc(100dvh - 2rem); margin: auto; padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 1rem; color: var(--text); background: var(--surface); box-shadow: 0 25px 50px -12px #00000066; --soft: color-mix(in srgb, var(--brand) 8%, var(--surface)); }
 .dialog:not([open]) { display: none; }
 .dialog::backdrop { background: #0f172a99; backdrop-filter: blur(4px); }
+.dialog[open] { animation: dialogEnter 220ms ease-out both; }
+.dialog[open]::backdrop { animation: backdropEnter 220ms ease-out both; }
+@keyframes dialogEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes backdropEnter { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dialog[open], .dialog[open]::backdrop { animation: none; } }
 .header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 4.5rem; padding: .8rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--surface); }
 .title { display: flex; align-items: center; gap: .6rem; }
 .title svg { color: var(--brand); }

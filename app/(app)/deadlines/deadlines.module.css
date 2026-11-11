@@ -65,6 +65,11 @@
 .historyDialog { width: min(58rem, calc(100vw - 1rem)); }
 .dialog:not([open]) { display: none; }
 .dialog::backdrop { background: #061321b8; }
+.dialog[open] { animation: dialogEnter 220ms ease-out both; }
+.dialog[open]::backdrop { animation: backdropEnter 220ms ease-out both; }
+@keyframes dialogEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes backdropEnter { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dialog[open], .dialog[open]::backdrop { animation: none; } }
 .dialogHeading { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
 .dialogHeading h2 { font-size: 1.1rem; font-weight: 700; }
 .dialogHeading button { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: .4rem; }

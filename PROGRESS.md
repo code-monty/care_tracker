@@ -367,3 +367,6 @@ The Deadlines page now shows all tasks to Admin and only tasks assigned to the s
 
 ### Settings profile-picture file picker (November 11, 2026)
 Styled the Choose File control in personal Settings as a distinct teal button with a hover state and pointer cursor, while keeping the selected filename visible. The shared control appears on Admin, Secretary, and Staff personal Settings pages. No upload behavior or backend permissions changed.
+
+### Add dialogs and profile menu opening animation (November 11, 2026)
+Added a subtle fade and upward entrance when opening Add Clients, Add Appointment from the appointments page or client detail, and Add Task. Their backdrops fade in with the dialogs. The top-right settings gear now opens its profile menu with a shorter fade and downward reveal. Motion is disabled when reduced motion is requested. This is a CSS-only change; local lint, typecheck, and `git diff --check` passed. Browser interaction and visual checks were not run, and no backend or hosted deployment change was made.

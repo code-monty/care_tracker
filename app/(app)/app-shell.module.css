@@ -49,6 +49,8 @@
 .themeButton { color: var(--surface); background: var(--text); }
 .menuWrap { position: relative; }
 .profileMenu { position: absolute; top: calc(100% + .65rem); right: 0; z-index: 50; width: min(17rem, calc(100vw - 2rem)); padding: .4rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); box-shadow: 0 16px 32px #00000030; }
+.profileMenu { animation: menuEnter 180ms ease-out both; }
+@keyframes menuEnter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 .menuHeading { display: flex; flex-direction: column; overflow-wrap: anywhere; padding: .55rem .7rem .7rem; border-bottom: 1px solid var(--line); font-size: .82rem; font-weight: 700; }
 .menuHeading span { color: var(--muted); font-size: .7rem; font-weight: 400; }
 .menuSection { padding: .65rem .7rem .25rem; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
@@ -107,6 +109,7 @@
 @media (prefers-reduced-motion: reduce) {
   .railDock, .navLink, .menuItem, .themeButton, .menuButton, .railToggle, .railToggle::before { transition: none; }
   .content[data-route-entering] { animation: none; }
+  .profileMenu { animation: none; }
 }
 
 @media (max-width: 767px) {

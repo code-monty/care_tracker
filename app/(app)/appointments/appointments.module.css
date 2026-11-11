@@ -89,6 +89,10 @@
 .dialogBackdrop { position: absolute; inset: 0; background: #0f172a99; backdrop-filter: blur(4px); }
 .dialogPosition { position: relative; width: min(34rem, 100%); }
 .dialogCard { width: min(34rem, 100%); max-height: calc(100dvh - 2rem); margin: auto; overflow-y: auto; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface); box-shadow: 0 25px 50px -12px #00000066; }
+.dialogBackdrop { animation: backdropEnter 220ms ease-out both; }
+.dialogPosition { animation: dialogEnter 220ms ease-out both; }
+@keyframes dialogEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes backdropEnter { from { opacity: 0; } to { opacity: 1; } }
 .dialogHeader { position: sticky; top: 0; z-index: 1; justify-content: space-between; min-height: 4.5rem; padding: .8rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--surface); }
 .dialogHeader h2 { font-family: var(--font-app-heading), Arial, sans-serif; font-size: 1.15rem; font-weight: 650; }
 .form { display: grid; gap: 1rem; padding: 1.25rem; }
@@ -157,4 +161,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dialog::backdrop { backdrop-filter: none; }
+  .dialogBackdrop, .dialogPosition { animation: none; }
 }
