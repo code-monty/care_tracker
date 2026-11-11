@@ -358,3 +358,6 @@ Added the existing Upcoming / Ongoing, Due Soon, and Overdue task cards to Staff
 
 ### Dashboard Deadlines wording and assigned personnel (November 11, 2026)
 Changed the description below Deadlines to "Track client tasks and assignments." The table's Attorney column is now Assigned personnel and displays each task's existing assignee name. Updated FR-DASH-05 in the local, Git-ignored SARD to reflect the approved requirement. Local lint, typecheck, and `git diff --check` passed. The rendered dashboard was not browser-verified. No API, database, or hosted deployment change was made.
+
+### Dashboard Deadlines assigned-task visibility (November 11, 2026)
+The Dashboard Deadlines panel now keeps Admin's clinic-wide view while limiting Secretary and Staff rows and the tracked count to tasks assigned to the signed-in user. Filtering happens in the shared server data path before the five-row limit, so it applies to initial page loads and date refreshes. The separate Deadlines page is unchanged. Updated FR-DASH-05 in the local, Git-ignored SARD. Local lint, typecheck, `git diff --check`, and five focused Vitest assertions passed. The expanded authenticated Chromium dashboard test timed out after four minutes without an assertion failure, so browser role checks remain unverified. No schema, RLS, or hosted deployment change was made.

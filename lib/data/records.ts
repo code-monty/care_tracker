@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveUser } from "@/lib/auth/session";
 import type { DeadlineRecord, DeadlineStatus, TaskReviewEvent, TaskStatus } from "@/lib/rules/deadlines";
-import { assignedDashboardTaskStats, dashboardTaskStats, sortDeadlines } from "@/lib/rules/deadlines";
+import { assignedDashboardTaskStats, dashboardDeadlinesForUser, dashboardTaskStats, sortDeadlines } from "@/lib/rules/deadlines";
 
 export async function getClients() {
   await requireActiveUser();
@@ -70,7 +70,7 @@ export async function getDashboardRecords(date: string) {
   const deadlines = await getDeadlineRecords();
   const openDeadlines = deadlines.filter((task) => task.status !== "done" && task.clientStatus === "active");
   const taskStats = profile.role === "admin" ? dashboardTaskStats(openDeadlines) : assignedDashboardTaskStats(openDeadlines, profile.id);
-  return { activeClients: clients.count ?? 0, appointments: (appointments.data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived), deadlines: openDeadlines.slice(0, 5), deadlineCount: openDeadlines.length, taskStats };
+  return { activeClients: clients.count ?? 0, appointments: (appointments.data ?? []).filter((row) => !row.clients || !(Array.isArray(row.clients) ? row.clients[0] : row.clients)?.is_archived), ...dashboardDeadlinesForUser(openDeadlines, profile.role, profile.id), taskStats };
 }
 
 export async function getActivePersonnel() {

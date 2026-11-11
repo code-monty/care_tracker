@@ -52,3 +52,8 @@ export function manilaToday(now = new Date()) {
 export function sortDeadlines(a: DeadlineRecord, b: DeadlineRecord) {
   return a.dueDate.localeCompare(b.dueDate) || a.clientName.localeCompare(b.clientName) || a.title.localeCompare(b.title);
 }
+
+export function dashboardDeadlinesForUser<T extends Pick<DeadlineRecord, "assignedTo">>(tasks: readonly T[], role: "admin" | "secretary" | "staff", userId: string) {
+  const visible = role === "admin" ? tasks : tasks.filter((task) => task.assignedTo === userId);
+  return { deadlines: visible.slice(0, 5), deadlineCount: visible.length };
+}

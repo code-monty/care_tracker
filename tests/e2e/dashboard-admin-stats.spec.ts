@@ -32,7 +32,7 @@ test("Dashboard task cards show clinic totals to Admin and assigned work to Staf
   const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const suffix = randomUUID().slice(0, 8);
   const password = `Test-${randomUUID()}-aA1!`;
-  const users = await Promise.all((["admin", "secretary", "staff", "staff"] as const).map(async (role, index) => {
+  const users = await Promise.all((["admin", "secretary", "staff", "staff", "staff"] as const).map(async (role, index) => {
     const email = `dashboard-${role}-${index}-${suffix}@example.com`;
     const created = await db.auth.admin.createUser({ email, password, email_confirm: true });
     if (created.error || !created.data.user) throw created.error ?? new Error("Unable to create dashboard test user");
@@ -47,6 +47,7 @@ test("Dashboard task cards show clinic totals to Admin and assigned work to Staf
   const inactiveClientId = randomUUID();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const stats = page.getByRole("region", { name: "Admin task statistics" });
+  const adminDeadlines = page.getByRole("region", { name: "Deadlines" });
   const count = async (name: string) => Number(await stats.getByRole("region", { name }).locator("strong").textContent());
   try {
     await signIn(page, admin.email, password, admin.id);
@@ -56,6 +57,7 @@ test("Dashboard task cards show clinic totals to Admin and assigned work to Staf
       overdue: await count("Overdue Tasks"),
       approval: await count("Approval Waiting by Staff"),
     };
+    const baselineDeadlines = Number((await adminDeadlines.locator("span").filter({ hasText: /^\d+ tracked$/ }).textContent())?.split(" ")[0]);
     const { error: attorneyError } = await db.from("attorneys").insert({ id: attorneyId, full_name: `Fake Dashboard Lawyer ${suffix}`, contact_no: "0912-345-6789", email: `dashboard-lawyer-${suffix}@example.test` });
     if (attorneyError) throw attorneyError;
     const { error: clientError } = await db.from("clients").insert([
@@ -96,6 +98,7 @@ test("Dashboard task cards show clinic totals to Admin and assigned work to Staf
     await expect.poll(() => count("Due Soon Tasks")).toBe(baseline.dueSoon + 2);
     await expect.poll(() => count("Overdue Tasks")).toBe(baseline.overdue + 2);
     await expect.poll(() => count("Approval Waiting by Staff")).toBe(baseline.approval + 1);
+    await expect(adminDeadlines.getByText(`${baselineDeadlines + 6} tracked`)).toBeVisible();
     await expect(page.getByRole("link", { name: "View current active clients" }).locator("svg")).toHaveCount(2);
     for (const name of ["Upcoming / Ongoing Tasks", "Due Soon Tasks", "Overdue Tasks", "Approval Waiting by Staff"]) {
       await expect(stats.getByRole("heading", { name }).locator("svg")).toHaveCount(1);
@@ -119,17 +122,27 @@ test("Dashboard task cards show clinic totals to Admin and assigned work to Staf
       await signIn(otherPage, person.email, password, person.id);
       await expect(otherPage.getByRole("region", { name: "Admin task statistics" })).toHaveCount(0);
       const myStats = otherPage.getByRole("region", { name: "My task statistics" });
+      const myDeadlines = otherPage.getByRole("region", { name: "Deadlines" });
       const myCount = async (name: string) => Number(await myStats.getByRole("region", { name }).locator("strong").textContent());
+      const assignedTitles = index === 1 ? [`Fake Secretary Due Soon ${suffix}`]
+        : index === 2 ? [`Fake Approval ${suffix}`, `Fake Due Soon ${suffix}`, `Fake Upcoming ${suffix}`]
+          : index === 3 ? [`Fake Other Staff Overdue ${suffix}`, `Fake Other Staff Upcoming ${suffix}`] : [];
+      await expect(myDeadlines.getByText(`${assignedTitles.length} tracked`)).toBeVisible();
+      const rows = myDeadlines.locator("tbody tr");
+      await expect(rows).toHaveCount(assignedTitles.length);
+      for (const [position, title] of assignedTitles.entries()) await expect(rows.nth(position)).toContainText(title);
+      if (!assignedTitles.length) await expect(myDeadlines.getByText("No deadlines to show")).toBeVisible();
+      await expect(myDeadlines.getByText(`Fake Other Staff Upcoming ${suffix}`)).toHaveCount(index === 3 ? 1 : 0);
       await expect(myStats.getByRole("region")).toHaveCount(person.role === "secretary" ? 3 : 4);
       await expect.poll(() => myCount("Upcoming / Ongoing Tasks")).toBe(index === 2 || index === 3 ? 1 : 0);
       await expect.poll(() => myCount("Due Soon Tasks")).toBe(index === 1 || index === 2 ? 1 : 0);
       await expect.poll(() => myCount("Overdue Tasks")).toBe(index === 2 || index === 3 ? 1 : 0);
       if (person.role === "staff") await expect.poll(() => myCount("Awaiting Admin Approval")).toBe(index === 2 ? 1 : 0);
       else await expect(myStats.getByRole("heading", { name: "Awaiting Admin Approval" })).toHaveCount(0);
-      if (person.role === "secretary") {
-        await otherPage.getByRole("button", { name: "Next day" }).click();
-        await expect.poll(() => myCount("Due Soon Tasks")).toBe(1);
-      }
+      await otherPage.getByRole("button", { name: "Next day" }).click();
+      await expect(myDeadlines.getByText(`${assignedTitles.length} tracked`)).toBeVisible();
+      await expect(rows).toHaveCount(assignedTitles.length);
+      if (person.role === "secretary") await expect.poll(() => myCount("Due Soon Tasks")).toBe(1);
       for (const width of [1280, 390]) {
         await otherPage.setViewportSize({ width, height: 844 });
         expect(await myStats.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);

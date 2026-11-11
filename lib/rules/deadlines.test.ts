@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assignedDashboardTaskStats, dashboardTaskStats, deadlineStatus, manilaToday } from "./deadlines";
+import { assignedDashboardTaskStats, dashboardDeadlinesForUser, dashboardTaskStats, deadlineStatus, manilaToday } from "./deadlines";
 
 describe("deadline status", () => {
   it("uses a three-day inclusive window and preserves done tasks", () => {
@@ -44,5 +44,24 @@ describe("Assigned dashboard task statistics", () => {
     expect(assignedDashboardTaskStats(tasks, "staff-a")).toEqual({ upcoming: 1, dueSoon: 0, overdue: 1, awaitingApproval: 1 });
     expect(assignedDashboardTaskStats(tasks, "staff-b")).toEqual({ upcoming: 0, dueSoon: 1, overdue: 0, awaitingApproval: 0 });
     expect(assignedDashboardTaskStats(tasks, "secretary")).toEqual({ upcoming: 0, dueSoon: 0, overdue: 1, awaitingApproval: 0 });
+  });
+});
+
+describe("Dashboard deadline rows", () => {
+  it("keeps Admin's clinic view and shows each assignee only their first five sorted tasks", () => {
+    const tasks = [
+      { title: "first", assignedTo: "other" },
+      { title: "second", assignedTo: "staff" },
+      { title: "third", assignedTo: "staff" },
+      { title: "fourth", assignedTo: "secretary" },
+      { title: "fifth", assignedTo: "staff" },
+      { title: "sixth", assignedTo: "staff" },
+      { title: "seventh", assignedTo: "staff" },
+      { title: "eighth", assignedTo: "staff" },
+    ];
+    expect(dashboardDeadlinesForUser(tasks, "admin", "admin")).toEqual({ deadlines: tasks.slice(0, 5), deadlineCount: 8 });
+    expect(dashboardDeadlinesForUser(tasks, "staff", "staff")).toEqual({ deadlines: [tasks[1], tasks[2], tasks[4], tasks[5], tasks[6]], deadlineCount: 6 });
+    expect(dashboardDeadlinesForUser(tasks, "secretary", "secretary")).toEqual({ deadlines: [tasks[3]], deadlineCount: 1 });
+    expect(dashboardDeadlinesForUser(tasks, "staff", "unassigned")).toEqual({ deadlines: [], deadlineCount: 0 });
   });
 });
