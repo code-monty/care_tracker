@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { addClientSchema, clientDetailsSchema, editClientSchema, editedBirthdateIsAllowed, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
-import { getDashboardRecords, getDeadlineRecords } from "@/lib/data/records";
+import { getDashboardRecords, getDeadlineRecords, getDeadlinesPageRecords } from "@/lib/data/records";
 import { APPOINTMENT_SLOTS, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
 
 const uuid = z.uuid();
@@ -271,7 +271,7 @@ export async function clientTasksForClient(id: string) {
 }
 
 export async function deadlinesForPage() {
-  return getDeadlineRecords();
+  return getDeadlinesPageRecords();
 }
 
 export type NameMatch = { id: string; name: string; detail: string; contact?: string };

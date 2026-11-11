@@ -81,6 +81,12 @@ export async function getActivePersonnel() {
   return (data ?? []) as { id: string; full_name: string }[];
 }
 
+export async function getDeadlinesPageRecords(): Promise<DeadlineRecord[]> {
+  const { profile } = await requireActiveUser();
+  const tasks = await getDeadlineRecords();
+  return profile.role === "admin" ? tasks : tasks.filter((task) => task.assignedTo === profile.id);
+}
+
 export async function getDeadlineRecords(clientId?: string): Promise<DeadlineRecord[]> {
   const { profile } = await requireActiveUser();
   const db = await createClient();

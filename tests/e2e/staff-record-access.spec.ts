@@ -28,12 +28,10 @@ test("Staff can view records and submit only an assigned task", async ({ page })
     if (profilesError) throw profilesError;
     const { error: attorneyError } = await admin.from("attorneys").insert({ id: attorneyId, full_name: `Fake Lawyer ${suffix}`, contact_no: "0912-345-6789", email: `lawyer-${suffix}@example.test` });
     if (attorneyError) throw attorneyError;
-    const { error: clientError } = await admin.from("clients").insert({ id: clientId, full_name: clientName, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `client-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: staffId });
+    const { error: clientError } = await admin.from("clients").insert({ id: clientId, full_name: clientName, birthdate: "1990-01-01", sex: "Female", contact_no: "0912-345-6789", email: `client-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: staffId });
     if (clientError) throw clientError;
-    const { error: respondentError } = await admin.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `respondent-${suffix}@example.test`, address: "Fake address" });
+    const { error: respondentError } = await admin.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", sex: "Male", contact_no: "0912-345-6789", email: `respondent-${suffix}@example.test`, address: "Fake address" });
     if (respondentError) throw respondentError;
-    const { error: appointmentError } = await admin.from("appointments").insert({ client_id: clientId, scheduled_at: "2026-11-01T10:00:00+08:00", reason: `Fake Assessment ${suffix}`, created_by: staffId });
-    if (appointmentError) throw appointmentError;
     const { error: tasksError } = await admin.from("tasks").insert([
       { id: myTaskId, client_id: clientId, title: myTask, assigned_to: staffId, due_date: "2026-11-01", created_by: staffId },
       { id: otherTaskId, client_id: clientId, title: otherTask, assigned_to: otherId, due_date: "2026-11-01", created_by: staffId },
@@ -57,6 +55,7 @@ test("Staff can view records and submit only an assigned task", async ({ page })
     await expect(page.getByLabel("Client status")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "View Deadlines" })).toBeVisible();
     await page.goto("/attorneys");
+    await page.getByRole("searchbox", { name: "Search attorneys" }).fill(`Fake Lawyer ${suffix}`);
     await expect(page.getByText(`Fake Lawyer ${suffix}`)).toBeVisible();
     await page.goto("/appointments");
     await expect(page).toHaveURL(/\/dashboard/);
@@ -67,7 +66,8 @@ test("Staff can view records and submit only an assigned task", async ({ page })
     const mine = page.getByRole("row", { name: new RegExp(myTask) });
     const others = page.getByRole("row", { name: new RegExp(otherTask) });
     await expect(mine.getByRole("button", { name: "Submit for approval" })).toBeVisible();
-    await expect(others.getByRole("button", { name: "Submit for approval" })).toHaveCount(0);
+    await expect(others).toHaveCount(0);
+    await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
     await expect(page.getByRole("button", { name: `Edit ${myTask}` })).toHaveCount(0);
     page.once("dialog", (confirmation) => confirmation.accept());
     await mine.getByRole("button", { name: "Submit for approval" }).click();

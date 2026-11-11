@@ -18,17 +18,24 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
   const email = `secretary-${suffix}@example.test`;
   const password = `Test-${randomUUID()}-aA1!`;
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: `Fake Secretary ${suffix}` } });
-  if (created.error || !created.data.user) throw created.error ?? new Error("Secretary fixture failed");
+  const other = await admin.auth.admin.createUser({ email: `secretary-other-${suffix}@example.test`, password, email_confirm: true });
+  if (created.error || !created.data.user || other.error || !other.data.user) throw created.error ?? other.error ?? new Error("Secretary fixture failed");
   const secretaryId = created.data.user.id;
+  const otherId = other.data.user.id;
   const attorneyId = randomUUID();
   const clientId = randomUUID();
   try {
     const { error: activationError } = await admin.from("profiles").update({ role: "secretary", status: "active" }).eq("id", secretaryId);
     if (activationError) throw activationError;
+    const { error: otherActivationError } = await admin.from("profiles").update({ role: "staff", status: "active", full_name: `Fake Other Staff ${suffix}` }).eq("id", otherId);
+    if (otherActivationError) throw otherActivationError;
     const { error: attorneyError } = await admin.from("attorneys").insert({ id: attorneyId, full_name: `Fake Secretary Lawyer ${suffix}`, contact_no: "0912-345-6789", email: `secretary-lawyer-${suffix}@example.test` });
     if (attorneyError) throw attorneyError;
-    const { error: clientError } = await admin.from("clients").insert({ id: clientId, full_name: `Fake Secretary Client ${suffix}`, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `secretary-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: secretaryId });
+    const { error: clientError } = await admin.from("clients").insert({ id: clientId, full_name: `Fake Secretary Client ${suffix}`, birthdate: "1990-01-01", sex: "Female", contact_no: "0912-345-6789", email: `secretary-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: secretaryId });
     if (clientError) throw clientError;
+    const otherTask = `Fake Other Personnel Task ${suffix}`;
+    const { error: otherTaskError } = await admin.from("tasks").insert({ client_id: clientId, title: otherTask, assigned_to: otherId, due_date: "2026-11-11", created_by: secretaryId });
+    if (otherTaskError) throw otherTaskError;
 
     await page.goto("/login");
     await page.getByLabel("Email address").fill(email);
@@ -44,6 +51,8 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     await expect(page.getByRole("link", { name: "Users" })).toHaveCount(0);
     await page.goto("/deadlines?client=" + clientId);
     await expect(page.getByRole("heading", { name: "Deadlines" })).toBeVisible();
+    await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
+    await expect(page.getByText("Showing 0 of 0 tasks")).toBeVisible();
     await expect(page.getByLabel("Assigned personnel")).toContainText(`Fake Secretary ${suffix}`);
     await page.getByRole("button", { name: "Add Task" }).click();
     const dialog = page.getByRole("dialog");
@@ -54,6 +63,8 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     await dialog.getByLabel("Deadline (Date)").fill(due);
     await dialog.getByRole("button", { name: "Save Task" }).click();
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary task ${suffix}`) })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
+    await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary task ${suffix}`) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
 
     for (const path of ["/admin/users", "/admin/logs", "/admin/settings", "/admin/backup"]) {
@@ -64,6 +75,6 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     expect(exportResponse.status()).toBe(403);
   } finally {
     await admin.from("clients").update({ is_archived: true }).eq("id", clientId);
-    await admin.from("profiles").update({ status: "disabled" }).eq("id", secretaryId);
+    await admin.from("profiles").update({ status: "disabled" }).in("id", [secretaryId, otherId]);
   }
 });
