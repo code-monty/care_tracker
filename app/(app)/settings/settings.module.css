@@ -9,7 +9,9 @@
 .form + .form { padding-top: 1.3rem; border-top: 1px solid var(--line); }
 .form label { font-size: .85rem; font-weight: 650; }
 .form input { width: 100%; min-height: 2.7rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .55rem; color: var(--text); background: var(--surface); font: inherit; }
-.form input[type="file"] { padding: .55rem; font-size: .8rem; }
+.form input[type="file"] { padding: .4rem; font-size: .8rem; cursor: pointer; }
+.form input[type="file"]::file-selector-button { margin-right: .75rem; padding: .45rem .8rem; border: 0; border-radius: .4rem; color: #fff; background: #006948; font: inherit; font-weight: 650; cursor: pointer; }
+.form input[type="file"]:hover::file-selector-button { background: #00543a; }
 .form input[readonly] { color: var(--muted); }
 .form button { justify-self: start; min-height: 2.7rem; padding: .55rem 1rem; border-radius: .55rem; color: #fff; background: #006948; font-weight: 650; cursor: pointer; }
 .form button:disabled { opacity: .6; cursor: not-allowed; }

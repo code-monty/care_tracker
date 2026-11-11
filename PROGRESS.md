@@ -364,3 +364,6 @@ The Dashboard Deadlines panel now keeps Admin's clinic-wide view while limiting 
 
 ### Deadlines page assigned-task visibility (November 11, 2026)
 The Deadlines page now shows all tasks to Admin and only tasks assigned to the signed-in Secretary or Staff member to those roles. The initial page load and post-action refresh use the same server-side scope, so search, filters, counts, and pagination operate on the visible list. Secretary can still add a task for another person; it leaves Secretary's list after saving. Shared task reads on client and attorney detail pages are unchanged. Updated FR-TSK-04 in the local, Git-ignored SARD. Local lint, typecheck, `git diff --check`, and focused authenticated Chromium Secretary and Staff flows passed. The test fixtures were updated for required sex fields and attorney-directory pagination; an unused appointment fixture was removed after it conflicted with an existing local booking. No schema, RLS, or hosted deployment change was made.
+
+### Settings profile-picture file picker (November 11, 2026)
+Styled the Choose File control in personal Settings as a distinct teal button with a hover state and pointer cursor, while keeping the selected filename visible. The shared control appears on Admin, Secretary, and Staff personal Settings pages. No upload behavior or backend permissions changed.
