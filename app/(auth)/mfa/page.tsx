@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import packageInfo from "../../../package.json";
 import { MfaExperience } from "./mfa-experience";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-login-body" });
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-login-heading" });
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-login" });
 
 /**
  * DEV-02 (AGENTS.md Section 8/15): shown after password sign-in, before
@@ -32,6 +31,6 @@ export default async function MfaPage() {
     redirect("/login");
   }
 
-  return <div className={`${inter.variable} ${jakarta.variable}`}><MfaExperience email={user.email ?? "your email address"} version={packageInfo.version} /></div>;
+  return <div className={montserrat.variable}><MfaExperience email={user.email ?? "your email address"} version={packageInfo.version} /></div>;
 }
 

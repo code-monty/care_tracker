@@ -1,20 +1,21 @@
-.page { padding: 1.5rem 1.5rem 5rem; color: var(--text); }
+.page { padding: 1.5rem 1.5rem 5rem; color: var(--text); font-family: var(--font-app-montserrat), Arial, Helvetica, sans-serif; }
+.page button { font-family: inherit; }
 .heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
 .heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
-.primary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.7rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-weight: 650; cursor: pointer; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.7rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-weight: 700; cursor: pointer; }
 .primary:hover { background: #00543a; }
 .primary:disabled { opacity: .6; cursor: progress; }
 .panel { overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 1px 2px #0000000d; }
 .filters { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--line); }
-.filters label { display: grid; gap: .3rem; color: var(--muted); font-size: .78rem; font-weight: 650; }
+.filters label { display: grid; gap: .3rem; color: var(--muted); font-size: .78rem; font-weight: 600; }
 .filters input, .filters select { min-height: 2.7rem; padding: .55rem .75rem; border: 1px solid var(--line); border-radius: .55rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
 .filters select { min-width: 9rem; color-scheme: light dark; }
 .filters .search { display: flex; align-items: center; gap: .5rem; min-width: min(100%, 20rem); min-height: 2.7rem; padding-left: .75rem; border: 1px solid var(--line); border-radius: .55rem; }
 .search input { width: 100%; min-width: 0; border: 0; outline: 0; }
 .tableScroll { overflow-x: auto; }
 .tableScroll table { width: 100%; min-width: 850px; border-collapse: collapse; text-align: left; }
-.tableScroll th { padding: .85rem 1rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
+.tableScroll th { padding: .85rem 1rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 600; white-space: nowrap; }
 .tableScroll td { padding: .85rem 1rem; border-bottom: 1px solid var(--line); font-size: .83rem; vertical-align: middle; }
 .tableScroll td:nth-child(2) { overflow-wrap: anywhere; }
 .tableScroll tr:last-child td { border-bottom: 0; }
@@ -25,7 +26,7 @@
 .disabled { color: #9a3030; background: #ffe2e2; }
 .passwordFlag { display: block; margin-top: .35rem; color: var(--muted); font-size: .72rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .35rem; }
-.actions button, .copy { padding: .42rem .55rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--brand); font-size: .78rem; font-weight: 650; white-space: nowrap; cursor: pointer; }
+.actions button, .copy { padding: .42rem .55rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--brand); font-size: .78rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .actions button:hover, .copy:hover { background: var(--hover); }
 .actions button:disabled { opacity: .45; cursor: not-allowed; }
 .empty { height: 13rem; text-align: center; color: var(--muted); }
@@ -45,7 +46,7 @@
 .dialog footer { justify-content: flex-end; border-top: 1px solid var(--line); }
 .dialog footer button:not(.primary) { padding: .5rem .75rem; cursor: pointer; }
 .fields { display: grid; gap: 1rem; padding: 1.25rem; }
-.fields label { display: grid; gap: .35rem; font-size: .8rem; font-weight: 650; }
+.fields label { display: grid; gap: .35rem; font-size: .8rem; font-weight: 600; }
 .fields input, .fields select { width: 100%; min-height: 2.7rem; padding: .6rem .75rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
 .fields select { color-scheme: light dark; }
 .fields p { color: var(--muted); font-size: .83rem; line-height: 1.5; }

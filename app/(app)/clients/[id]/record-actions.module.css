@@ -2,7 +2,7 @@
 .editForm > :nth-child(2) { flex: 1 1 auto; min-height: 0; }
 .editForm > :first-child, .editForm > :last-child { flex: none; }
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
-.recordButton, .dangerButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; padding: .5rem .9rem; border-radius: .55rem; font-size: .82rem; font-weight: 650; cursor: pointer; }
+.recordButton, .dangerButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; padding: .5rem .9rem; border-radius: .55rem; font-size: .82rem; font-weight: 600; cursor: pointer; }
 .recordButton { color: #fff; background: #006948; box-shadow: 0 4px 14px #00694830; }
 .recordButton:hover { background: #00543a; }
 .dangerButton { border: 1px solid #d04b4b; color: #e36060; background: var(--surface); }

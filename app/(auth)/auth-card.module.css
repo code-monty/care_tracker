@@ -15,7 +15,9 @@
   padding: 24px;
   color: var(--text);
   background: var(--field);
+  font-family: var(--font-legal, Arial, Helvetica, sans-serif);
 }
+.page button { font-family: inherit; }
 
 .page[data-theme="light"] {
   --panel: #f8f9ff;

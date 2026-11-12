@@ -1,4 +1,5 @@
-.page { padding: 1.5rem 1.5rem 4rem; color: var(--text); }
+.page { padding: 1.5rem 1.5rem 4rem; color: var(--text); font-family: var(--font-app-montserrat), Arial, Helvetica, sans-serif; }
+.page :is(button, input, select, textarea) { font-family: inherit; }
 .heading { margin-bottom: 1.5rem; }
 .heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
 .detailHeading h1 { margin-bottom: 1rem; }
@@ -10,14 +11,14 @@
 .searchField input::placeholder { color: var(--muted); }
 .filterButton { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--text); background: var(--surface); font-size: .875rem; cursor: pointer; }
 .filterButton:hover { background: var(--hover); }
-.filterButton[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); background: var(--hover); font-weight: 650; }
+.filterButton[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); background: var(--hover); font-weight: 600; }
 .directory { list-style: none; }
 .directory li + li { border-top: 1px solid var(--line); }
 .attorneyRow { display: flex; align-items: center; gap: 1rem; min-height: 5.5rem; padding: 1rem 1.5rem; }
 .attorneyRow:hover { background: var(--hover); }
 .avatar { display: grid; flex: none; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: .65rem; color: var(--brand); background: var(--hover); }
 .attorneyInfo { display: grid; min-width: 0; flex: 1; gap: .15rem; }
-.attorneyInfo strong { font-size: .9rem; font-weight: 650; }
+.attorneyInfo strong { font-size: .9rem; font-weight: 600; }
 .attorneyInfo span { overflow-wrap: anywhere; color: var(--muted); font-size: .8rem; }
 .clientCount { flex: none; color: var(--muted); font-size: .82rem; }
 .chevron { flex: none; color: var(--brand); }
@@ -32,7 +33,7 @@
 .pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .pagination span { color: var(--text); background: var(--hover); }
 .message { padding: 1.5rem; color: var(--muted); font-size: .875rem; }
-.backLink { display: inline-flex; align-items: center; gap: .35rem; margin-bottom: 1rem; color: var(--brand); font-size: .85rem; font-weight: 650; }
+.backLink { display: inline-flex; align-items: center; gap: .35rem; margin-bottom: 1rem; color: var(--brand); font-size: .85rem; font-weight: 600; }
 .sectionHeader { display: flex; align-items: center; gap: .65rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--line); color: var(--brand); }
 .sectionHeader h2 { color: var(--text); font-size: 1rem; font-weight: 700; }
 .sectionHeader h2 span { color: var(--muted); font-weight: 500; }
@@ -41,12 +42,12 @@
 .details dd { overflow-wrap: anywhere; font-size: .9rem; }
 .tableScroll { overflow-x: auto; }
 .tableScroll table { width: 100%; min-width: 620px; border-collapse: collapse; text-align: left; }
-.tableScroll th { padding: .9rem 1.5rem; color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; }
+.tableScroll th { padding: .9rem 1.5rem; color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 600; }
 .tableScroll td { padding: .85rem 1.5rem; border-top: 1px solid var(--line); font-size: .85rem; }
-.activeBadge, .inactiveBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; background: var(--hover); font-size: .75rem; font-weight: 650; }
+.activeBadge, .inactiveBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; background: var(--hover); font-size: .75rem; font-weight: 600; }
 .activeBadge { color: var(--brand); }
 .inactiveBadge, .pendingDeadline { color: var(--muted); }
-.detailsButton { display: inline-flex; align-items: center; min-height: 2.25rem; padding: .35rem .65rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--brand); font-size: .8rem; font-weight: 650; white-space: nowrap; }
+.detailsButton { display: inline-flex; align-items: center; min-height: 2.25rem; padding: .35rem .65rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--brand); font-size: .8rem; font-weight: 600; white-space: nowrap; }
 .detailsButton:hover { background: var(--hover); }
 .page :is(a, button, input):focus-visible, .searchField:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

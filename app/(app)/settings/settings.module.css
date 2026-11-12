@@ -1,4 +1,4 @@
-.page { max-width: 70rem; padding: 1.5rem 1.5rem 5rem; color: var(--text); }
+.page { max-width: 70rem; padding: 1.5rem 1.5rem 5rem; color: var(--text); font-family: var(--font-app-montserrat), Arial, Helvetica, sans-serif; }
 .heading { margin-bottom: 1.5rem; }
 .heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); font-weight: 700; letter-spacing: -.035em; }
 .heading p, .form p { color: var(--muted); font-size: .84rem; line-height: 1.5; }
@@ -7,13 +7,13 @@
 .panel h2 { margin-bottom: 1.2rem; font-size: 1.1rem; font-weight: 700; }
 .form { display: grid; gap: .65rem; margin-top: 1.1rem; }
 .form + .form { padding-top: 1.3rem; border-top: 1px solid var(--line); }
-.form label { font-size: .85rem; font-weight: 650; }
+.form label { font-size: .85rem; font-weight: 600; }
 .form input { width: 100%; min-height: 2.7rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .55rem; color: var(--text); background: var(--surface); font: inherit; }
 .form input[type="file"] { padding: .4rem; font-size: .8rem; cursor: pointer; }
-.form input[type="file"]::file-selector-button { margin-right: .75rem; padding: .45rem .8rem; border: 0; border-radius: .4rem; color: #fff; background: #006948; font: inherit; font-weight: 650; cursor: pointer; }
+.form input[type="file"]::file-selector-button { margin-right: .75rem; padding: .45rem .8rem; border: 0; border-radius: .4rem; color: #fff; background: #006948; font: inherit; font-weight: 600; cursor: pointer; }
 .form input[type="file"]:hover::file-selector-button { background: #00543a; }
 .form input[readonly] { color: var(--muted); }
-.form button { justify-self: start; min-height: 2.7rem; padding: .55rem 1rem; border-radius: .55rem; color: #fff; background: #006948; font-weight: 650; cursor: pointer; }
+.form button { justify-self: start; min-height: 2.7rem; padding: .55rem 1rem; border-radius: .55rem; color: #fff; background: #006948; font-family: inherit; font-weight: 700; cursor: pointer; }
 .form button:disabled { opacity: .6; cursor: not-allowed; }
 .form button:hover:not(:disabled) { background: #00543a; }
 .pictureRow { display: flex; align-items: center; gap: 1rem; }

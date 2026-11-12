@@ -1,13 +1,14 @@
-.page { padding: 1.5rem 1.5rem 4rem; color: var(--text); }
+.page { padding: 1.5rem 1.5rem 4rem; color: var(--text); font-family: var(--font-app-montserrat), Arial, Helvetica, sans-serif; }
+.page :is(button, input, select, textarea), .dialog :is(button, input, select, textarea) { font-family: inherit; }
 .heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .heading h1 { font-size: clamp(1.7rem, 3vw, 2rem); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; }
 .heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
 .headingActions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
-.headingActions a { color: var(--brand); font-size: .85rem; font-weight: 650; }
+.headingActions a { color: var(--brand); font-size: .85rem; font-weight: 600; }
 .headingActions a:hover { text-decoration: underline; }
 .backLink { display: inline-block; margin-bottom: 1rem; color: var(--brand); font-size: .85rem; }
 .backLink:hover { text-decoration: underline; }
-.primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-size: .875rem; font-weight: 650; cursor: pointer; }
+.primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-size: .875rem; font-weight: 600; cursor: pointer; }
 .primaryButton:hover { background: #00543a; }
 .primaryButton:disabled { opacity: .55; cursor: not-allowed; }
 .context, .notice { margin: -.5rem 0 1rem; color: var(--muted); font-size: .83rem; }
@@ -33,10 +34,10 @@
 .archiveTable th:nth-child(1), .archiveTable th:nth-child(2), .archiveTable th:nth-child(3), .archiveTable th:nth-child(4) { width: 25%; }
 .archiveTable th:nth-child(4) { text-align: center; }
 .archiveError { margin: 1rem 1.2rem 0; color: #b91c1c; font-size: .85rem; }
-.tableScroll th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 650; white-space: nowrap; }
+.tableScroll th { padding: .9rem 1.2rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 600; white-space: nowrap; }
 .tableScroll td { padding: .85rem 1.2rem; border-bottom: 1px solid var(--line); font-size: .85rem; vertical-align: middle; overflow-wrap: anywhere; }
 .tableScroll tr:last-child td { border-bottom: 0; }
-.clientLink, .taskButton { color: var(--brand); font-weight: 650; text-align: left; }
+.clientLink, .taskButton { color: var(--brand); font-weight: 600; text-align: left; }
 .clientLink:hover, .taskButton:hover { text-decoration: underline; }
 .dateCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .statusCell { display: grid; gap: .45rem; }
@@ -50,7 +51,7 @@
 .awaiting { color: #854d0e; background: #fef3c7; }
 .changes { color: #9f1b1b; background: #fee2e2; }
 .feedback { color: var(--text); font-size: .78rem; white-space: normal; }
-.doneButton { min-height: 2rem; padding: .25rem .5rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--brand); font-size: .75rem; font-weight: 650; white-space: nowrap; }
+.doneButton { min-height: 2rem; padding: .25rem .5rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--brand); font-size: .75rem; font-weight: 600; white-space: nowrap; }
 .doneButton:hover { background: var(--hover); }
 .doneButton:disabled { opacity: .5; }
 .empty { display: flex; min-height: 17rem; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; color: var(--muted); text-align: center; font-size: .8rem; }
@@ -61,7 +62,7 @@
 .pagination button, .pagination span { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: .5rem; }
 .pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .pagination span { color: var(--text); background: var(--hover); }
-.dialog { width: min(32rem, calc(100vw - 1rem)); max-width: none; max-height: 90dvh; margin: auto; padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: .85rem; color: var(--text); background: var(--surface); box-shadow: 0 24px 70px #0008; }
+.dialog { width: min(32rem, calc(100vw - 1rem)); max-width: none; max-height: 90dvh; margin: auto; padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: .85rem; color: var(--text); background: var(--surface); font-family: var(--font-app-montserrat), Arial, Helvetica, sans-serif; box-shadow: 0 24px 70px #0008; }
 .historyDialog { width: min(58rem, calc(100vw - 1rem)); }
 .dialog:not([open]) { display: none; }
 .dialog::backdrop { background: #061321b8; }
@@ -75,7 +76,7 @@
 .dialogHeading button { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: .4rem; }
 .dialogHeading button:hover { background: var(--hover); }
 .form { display: grid; gap: 1rem; padding: 1.25rem; }
-.form label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 650; }
+.form label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 600; }
 .form :is(input, select) { width: 100%; min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; }
 .commentInput { width: 100%; min-height: 6rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--surface); font: inherit; font-size: .85rem; resize: vertical; }
 .commentInput[aria-invalid="true"] { border-color: #b91c1c; outline: 2px solid #b91c1c; outline-offset: 1px; }
