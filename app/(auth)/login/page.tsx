@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { LoginExperience } from "./login-experience";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-login-body" });
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-login-heading" });
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-login" });
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const supabase = await createClient();
@@ -21,5 +20,5 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   }
 
   const { error } = await searchParams;
-  return <div className={`${inter.variable} ${jakarta.variable}`}><LoginExperience googleError={error === "google"} /></div>;
+  return <div className={montserrat.variable}><LoginExperience googleError={error === "google"} /></div>;
 }

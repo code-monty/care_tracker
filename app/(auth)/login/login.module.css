@@ -16,8 +16,10 @@
   min-height: 100dvh;
   color: var(--text);
   background: var(--panel);
-  font-family: var(--font-login-body), Arial, Helvetica, sans-serif;
+  font-family: var(--font-login), Arial, Helvetica, sans-serif;
 }
+
+.page button { font-family: inherit; }
 
 .page[data-theme="light"] {
   --panel: #f8f9ff;
@@ -41,7 +43,7 @@
 .logoFrame { position: relative; flex: none; width: 173px; height: 172px; }
 .logo { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brandEyebrow { margin: 0 0 7px; color: #34d399; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.brandTitle { margin: 0; font-family: var(--font-login-heading), Arial, sans-serif; font-size: clamp(34px, 3.3vw, 48px); font-weight: 700; line-height: 1.05; letter-spacing: -.025em; white-space: nowrap; }
+.brandTitle { margin: 0; font-size: clamp(32px, 3.3vw, 46px); font-weight: 700; line-height: 1.1; letter-spacing: -.035em; white-space: nowrap; }
 .brandDescription { margin: 8px 0 0; color: #cbd5e1; font-size: 14px; white-space: nowrap; }
 .page[data-theme="light"] .brand { border-color: #dce9ff; background: #f8f9ff; }
 .page[data-theme="light"] .brandPhoto { filter: blur(1.25px) grayscale(.25) brightness(1.2); }
@@ -56,13 +58,13 @@
 .panelTop { display: flex; align-items: center; justify-content: flex-end; min-height: 42px; }
 .formArea { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
 .formInner { width: min(100%, 448px); }
-.heading { margin: 0; color: var(--text); font-family: var(--font-login-heading), Arial, sans-serif; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -.025em; }
+.heading { margin: 0; color: var(--text); font-size: 30px; line-height: 38px; font-weight: 700; letter-spacing: -.035em; }
 .intro { margin: 7px 0 0; color: var(--muted); font-size: 14px; line-height: 21px; }
 .form { display: flex; flex-direction: column; gap: 17px; margin-top: 26px; }
 .field { display: flex; flex-direction: column; gap: 7px; }
 .labelRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.label { color: var(--label); font-size: 12px; font-weight: 700; letter-spacing: .055em; text-transform: uppercase; }
-.forgotButton { border: 0; padding: 0; color: var(--link); background: transparent; font-size: 12px; cursor: pointer; }
+.label { color: var(--label); font-size: 12px; font-weight: 600; letter-spacing: .055em; text-transform: uppercase; }
+.forgotButton { border: 0; padding: 0; color: var(--link); background: transparent; font-size: 12px; font-weight: 600; cursor: pointer; }
 .forgotButton:hover { text-decoration: underline; }
 .inputWrap { position: relative; display: flex; align-items: center; }
 .inputIcon { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
@@ -74,7 +76,7 @@
 .visibilityButton { position: absolute; right: 2px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
 .visibilityButton:hover { color: var(--text); }
 .rememberRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 1px; }
-.rememberLabel { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; cursor: pointer; }
+.rememberLabel { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
 .rememberLabel input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
 .comingSoon { flex: none; color: var(--muted); font-size: 11px; }
 .error { margin: 0; padding: 10px 12px; border: 1px solid #f87171; border-radius: 7px; color: #fecaca; background: rgba(153, 27, 27, .18); font-size: 13px; line-height: 19px; }
@@ -98,13 +100,13 @@
 @media (prefers-reduced-motion: reduce) { .buttonSpinner { animation: none; border-right-color: currentColor; } }
 .footer { flex: none; border-top: 1px solid var(--fine-line); padding-top: 16px; text-align: center; color: var(--muted); font-size: 12px; }
 .footer nav { display: flex; justify-content: center; gap: 12px; }
-.footer a { color: inherit; text-decoration: none; }
+.footer a { color: inherit; font-weight: 600; text-decoration: none; }
 .footer a:hover { color: var(--link); text-decoration: underline; }
 .footer p { margin: 8px 0 0; }
-.dialog { width: min(calc(100% - 32px), 390px); margin: auto; border: 1px solid var(--line); border-radius: 16px; padding: 24px; color: var(--text); background: var(--panel); box-shadow: 0 25px 50px rgba(0, 0, 0, .3); }
+.dialog { width: min(calc(100% - 32px), 390px); margin: auto; border: 1px solid var(--line); border-radius: 16px; padding: 24px; color: var(--text); background: var(--panel); font-family: inherit; box-shadow: 0 25px 50px rgba(0, 0, 0, .3); }
 .dialog::backdrop { background: rgba(10, 15, 29, .7); backdrop-filter: blur(3px); }
 .page[data-theme="light"] .dialog::backdrop { background: rgba(71, 85, 105, .35); }
-.dialog h2 { margin: 0; font-size: 21px; }
+.dialog h2 { margin: 0; font-size: 21px; font-weight: 700; }
 .dialog p { margin: 12px 0 24px; color: var(--muted); font-size: 14px; line-height: 21px; }
 .dialog form { display: flex; justify-content: flex-end; }
 .dialogButton { min-width: 88px; min-height: 44px; border: 0; border-radius: 8px; color: var(--accent-text); background: var(--accent); font-weight: 700; cursor: pointer; }
