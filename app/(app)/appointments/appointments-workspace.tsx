@@ -51,7 +51,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canCreate, 
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("month");
+  const [dateFilter, setDateFilter] = useState("today");
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "all">("all");
   const [sort, setSort] = useState<{ key: SortKey; direction: "asc" | "desc" }>({ key: "date", direction: "asc" });
   const [page, setPage] = useState(1);

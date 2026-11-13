@@ -7,7 +7,7 @@ import { archiveTask, completeTask, deadlinesForPage, reviewTask, saveTask, subm
 import { manilaToday, type DeadlineRecord, type DeadlineStatus } from "@/lib/rules/deadlines";
 import styles from "./deadlines.module.css";
 
-type ClientChoice = { id: string; name: string; attorneyId: string | null; attorneyName: string };
+type ClientChoice = { id: string; name: string };
 type PersonnelChoice = { id: string; full_name: string };
 const PAGE_SIZE = 10;
 const dateFormatter = new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
@@ -18,7 +18,6 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const [tasks, setTasks] = useState(initialTasks);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<DeadlineStatus | "Open" | "Awaiting approval" | "Needs changes" | "All">("Open");
-  const [attorneyId, setAttorneyId] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<DeadlineRecord | null>(null);
@@ -39,14 +38,12 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   const historyDialog = useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const today = manilaToday();
-  const attorneys = useMemo(() => [...new Map(clients.filter((client) => client.attorneyId).map((client) => [client.attorneyId!, { id: client.attorneyId!, name: client.attorneyName }])).values()].sort((a, b) => a.name.localeCompare(b.name)), [clients]);
   const filtered = useMemo(() => tasks.filter((task) => {
     const query = search.trim().toLocaleLowerCase();
     return (!query || `${task.clientName} ${task.title}`.toLocaleLowerCase().includes(query))
       && (status === "All" || (status === "Open" ? task.status !== "done" : status === "Awaiting approval" ? task.status === "awaiting_approval" : status === "Needs changes" ? task.status === "needs_changes" : task.deadlineStatus === status))
-      && (!attorneyId || task.attorneyId === attorneyId)
       && (!assignedTo || task.assignedTo === assignedTo);
-  }), [tasks, search, status, attorneyId, assignedTo]);
+  }), [tasks, search, status, assignedTo]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -116,7 +113,6 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
       <div className={styles.toolbar}>
         <label className={styles.search}><Search size={17} aria-hidden="true" /><span className={styles.srOnly}>Search client or task</span><input type="search" placeholder="Search client or task" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></label>
         <label className={styles.filter}>Status<select value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }}><option>Open</option><option>Overdue</option><option>Due Soon</option><option>Upcoming</option>{role === "admin" && <option>Awaiting approval</option>}<option>Needs changes</option><option>Done</option><option>All</option></select></label>
-        <label className={styles.filter}>Attorney<select value={attorneyId} onChange={(event) => { setAttorneyId(event.target.value); setPage(1); }}><option value="">All</option>{attorneys.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>
         <label className={styles.filter}>Assigned personnel<select value={assignedTo} onChange={(event) => { setAssignedTo(event.target.value); setPage(1); }}><option value="">All</option>{staff.map((person) => <option key={person.id} value={person.id}>{person.full_name}</option>)}</select></label>
       </div>
       <div className={styles.tableScroll}><table><thead><tr><th scope="col">Client Name</th><th scope="col">Task Name</th><th scope="col">Assign Personnel</th><th scope="col">Deadline (Date)</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead><tbody>

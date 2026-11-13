@@ -20,7 +20,7 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   if (attorneyError || !attorney) throw attorneyError ?? new Error("Unable to create test attorney");
   const { data: clients, error: clientsError } = await admin.from("clients").insert(Array.from({ length: 22 }, (_, index) => ({
     full_name: `Fake Picker ${suffix} ${String(index).padStart(2, "0")}`,
-    birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `picker-${suffix}-${index}@example.test`,
+    birthdate: "1990-01-01", sex: "Female", contact_no: "0912-345-6789", email: `picker-${suffix}-${index}@example.test`,
     address: "Fake address", attorney_id: attorney.id, created_by: created.user.id,
   }))).select("id,full_name");
   if (clientsError || clients?.length !== 22) throw clientsError ?? new Error("Unable to create test clients");
@@ -91,7 +91,7 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   await add.getByRole("textbox", { name: "Reason" }).fill("Fake custom reason");
   await add.getByRole("button", { name: "Add appointment" }).click();
   await expect(page.getByText("Appointment saved, but it is outside the current filters.")).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Filter by date" })).toHaveValue("month");
+  await expect(page.getByRole("combobox", { name: "Filter by date" })).toHaveValue("today");
   await page.getByRole("button", { name: "View appointment" }).click();
   await expect(page.getByRole("combobox", { name: "Filter by date" })).toHaveValue("all");
   await page.getByRole("textbox", { name: "Search appointments" }).fill(clients[21].full_name);
@@ -128,13 +128,15 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   await expect(page.getByRole("row", { name: new RegExp(clients[21].full_name) })).toBeVisible();
   await expect(page.getByText(/Page [2-9] of/)).toBeVisible();
 
+  const { error: promoteError } = await admin.from("profiles").update({ role: "admin" }).eq("id", created.user.id);
+  if (promoteError) throw promoteError;
   const cleanup = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const { error: signInError } = await cleanup.auth.signInWithPassword({ email, password });
   if (signInError) throw signInError;
-  const { data: fixtureClients, error: fixtureClientsError } = await cleanup.from("clients").select("id").ilike("full_name", "Fake Picker %").eq("is_archived", false);
-  if (fixtureClientsError) throw fixtureClientsError;
-  if (fixtureClients?.length) {
-    const { error: archiveError } = await cleanup.from("clients").update({ is_archived: true }).in("id", fixtureClients.map((item) => item.id));
-    if (archiveError) throw archiveError;
-  }
+  const { error: archiveError } = await cleanup.from("clients").update({ is_archived: true }).in("id", clients.map((client) => client.id));
+  if (archiveError) throw archiveError;
+  const { error: archiveAttorneyError } = await cleanup.from("attorneys").update({ is_archived: true }).eq("id", attorney.id);
+  if (archiveAttorneyError) throw archiveAttorneyError;
+  const { error: disableError } = await admin.from("profiles").update({ status: "disabled" }).eq("id", created.user.id);
+  if (disableError) throw disableError;
 });

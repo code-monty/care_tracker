@@ -42,6 +42,7 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     if (taskError) throw taskError;
     await page.goto(`/deadlines?client=${clientId}`);
     await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
+    await expect(page.getByRole("combobox", { name: "Attorney" })).toHaveCount(0);
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(title) })).toBeVisible();
     await page.reload();
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(title) })).toBeVisible();
