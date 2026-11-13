@@ -36,6 +36,9 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     const otherTask = `Fake Other Personnel Task ${suffix}`;
     const { error: otherTaskError } = await admin.from("tasks").insert({ client_id: clientId, title: otherTask, assigned_to: otherId, due_date: "2026-11-11", created_by: secretaryId });
     if (otherTaskError) throw otherTaskError;
+    const ownTask = `Fake Secretary task ${suffix}`;
+    const { error: ownTaskError } = await admin.from("tasks").insert({ client_id: clientId, title: ownTask, assigned_to: secretaryId, due_date: "2026-11-12", created_by: secretaryId });
+    if (ownTaskError) throw ownTaskError;
 
     await page.goto("/login");
     await page.getByLabel("Email address").fill(email);
@@ -52,20 +55,17 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     await page.goto("/deadlines?client=" + clientId);
     await expect(page.getByRole("heading", { name: "Deadlines" })).toBeVisible();
     await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
-    await expect(page.getByText("Showing 0 of 0 tasks")).toBeVisible();
+    await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
     await expect(page.getByLabel("Assigned personnel")).toContainText(`Fake Secretary ${suffix}`);
-    await page.getByRole("button", { name: "Add Task" }).click();
+    await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
+    await page.getByRole("button", { name: `Edit ${ownTask}` }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByLabel("Client Name").selectOption(clientId);
-    await dialog.getByLabel("Task Name").fill(`Fake Secretary task ${suffix}`);
-    await dialog.getByLabel("Assign Personnel").selectOption(secretaryId);
-    const due = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-    await dialog.getByLabel("Deadline (Date)").fill(due);
+    await dialog.getByLabel("Task Name").fill(`Fake Secretary edited task ${suffix}`);
     await dialog.getByRole("button", { name: "Save Task" }).click();
-    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary task ${suffix}`) })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary edited task ${suffix}`) })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
     await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
-    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary task ${suffix}`) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
+    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary edited task ${suffix}`) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
 
     for (const path of ["/admin/users", "/admin/logs", "/admin/settings", "/admin/backup"]) {
       await page.goto(path);

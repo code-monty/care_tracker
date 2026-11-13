@@ -23,10 +23,10 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     if (activateError) throw activateError;
     const { data: attorney, error: attorneyError } = await admin.from("attorneys").insert({ full_name: `Fake Lawyer ${suffix}`, contact_no: "0912-345-6789", email: `lawyer-${suffix}@example.test` }).select("id").single();
     if (attorneyError || !attorney) throw attorneyError ?? new Error("Unable to create attorney");
-    const { data: client, error: clientError } = await admin.from("clients").insert({ full_name: clientName, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `client-${suffix}@example.test`, address: "Fake address", attorney_id: attorney.id, created_by: userId }).select("id").single();
+    const { data: client, error: clientError } = await admin.from("clients").insert({ full_name: clientName, birthdate: "1990-01-01", sex: "Female", contact_no: "0912-345-6789", email: `client-${suffix}@example.test`, address: "Fake address", attorney_id: attorney.id, created_by: userId }).select("id").single();
     if (clientError || !client) throw clientError ?? new Error("Unable to create client");
     clientId = client.id;
-    await admin.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `respondent-${suffix}@example.test`, address: "Fake address" });
+    await admin.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", sex: "Male", contact_no: "0912-345-6789", email: `respondent-${suffix}@example.test`, address: "Fake address" });
 
     await page.goto("/login");
     await page.getByLabel("Email address").fill(email);
@@ -37,15 +37,11 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     const signature = createHmac("sha256", env.STEP_UP_SECRET).update(payload).digest("hex");
     await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
 
-    await page.goto(`/deadlines?client=${clientId}`);
-    await page.getByRole("button", { name: "Add Task" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.locator('select[name="clientId"]')).toHaveValue(client.id);
-    await dialog.locator('input[name="title"]').fill(title);
-    await dialog.locator('select[name="assignedTo"]').selectOption(userId);
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-    await dialog.locator('input[name="dueDate"]').fill(today);
-    await dialog.getByRole("button", { name: "Save Task" }).click();
+    const { error: taskError } = await admin.from("tasks").insert({ client_id: clientId, title, assigned_to: userId, due_date: today, created_by: userId });
+    if (taskError) throw taskError;
+    await page.goto(`/deadlines?client=${clientId}`);
+    await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(title) })).toBeVisible();
     await page.reload();
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(title) })).toBeVisible();
@@ -57,12 +53,12 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     await page.goto(`/clients/${clientId}`);
     await expect(page.getByRole("heading", { name: "Tasks / Assignments" })).toBeVisible();
     await expect(page.getByText(title)).toBeVisible();
-    await page.getByRole("link", { name: "Add Task / View Deadlines" }).click();
+    await page.getByRole("link", { name: "View Deadlines" }).click();
     await expect(page).toHaveURL(new RegExp(`/deadlines\\?client=${clientId}`));
     const taskRow = page.getByRole("row", { name: new RegExp(title) });
-    await expect(taskRow.getByRole("cell").nth(1).getByRole("button")).toHaveCount(0);
-    await expect(taskRow.getByRole("button").last()).toHaveAccessibleName(`Edit ${title}`);
+    await expect(taskRow.getByRole("cell").nth(1).getByRole("button")).toHaveCount(1);
     await taskRow.getByRole("button", { name: `Edit ${title}` }).click();
+    const dialog = page.getByRole("dialog");
     await dialog.locator('input[name="title"]').fill(editedTitle);
     await dialog.getByRole("button", { name: "Save Task" }).click();
     await expect(page.getByRole("button", { name: `Edit ${editedTitle}` })).toBeVisible();

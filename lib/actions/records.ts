@@ -126,7 +126,7 @@ export async function setClientStatus(id: string, status: string) {
 
 export async function saveAppointment(input: z.infer<typeof appointmentSchema>, id?: string) {
   const { user, profile } = await requireActiveUser();
-  requireRecordManager(profile.role);
+  if (id ? profile.role !== "admin" && profile.role !== "secretary" : profile.role !== "secretary") throw new Error("Access denied");
   const value = appointmentSchema.parse(input);
   const db = await createClient();
   const appointmentId = id ? uuid.parse(id) : undefined;
@@ -180,7 +180,7 @@ export async function dashboardForDate(date: string) {
 
 export async function saveTask(input: z.infer<typeof taskSchema>, id?: string) {
   const { user, profile } = await requireActiveUser();
-  requireRecordManager(profile.role);
+  if (id ? profile.role !== "admin" && profile.role !== "secretary" : profile.role !== "admin") throw new Error("Access denied");
   const value = taskSchema.parse(input);
   const db = await createClient();
   const [client, personnel] = await Promise.all([

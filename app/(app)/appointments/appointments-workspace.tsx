@@ -46,7 +46,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
-export default function AppointmentsWorkspace({ initialAppointments, canManage }: { initialAppointments: Appointment[]; canManage: boolean }) {
+export default function AppointmentsWorkspace({ initialAppointments, canCreate, canEdit }: { initialAppointments: Appointment[]; canCreate: boolean; canEdit: boolean }) {
   const [today] = useState(() => todayInManila());
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -169,7 +169,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
 
   function actions(appointment: Appointment) {
     const openEdit = () => { setEditClient(appointment.clientId ? { id: appointment.clientId, name: appointment.clientName, detail: appointment.clientEmail ?? "", contact: appointment.clientContact } : null); setEditManual(!appointment.clientId); setClientError(""); setSlotError(""); setEditing(appointment); };
-    return <div className={styles.rowActions}><button type="button" className={styles.detailsButton} onClick={() => setSelected(appointment)}><Eye aria-hidden="true" size={17} /> View details</button>{canManage && <details className={styles.actionMenu}><summary aria-label={`More actions for ${appointment.clientName}`}><MoreVertical aria-hidden="true" size={20} /></summary><div><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); openEdit(); }}>Edit appointment</button><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); openEdit(); }}>Change status</button></div></details>}</div>;
+    return <div className={styles.rowActions}><button type="button" className={styles.detailsButton} onClick={() => setSelected(appointment)}><Eye aria-hidden="true" size={17} /> View details</button>{canEdit && <details className={styles.actionMenu}><summary aria-label={`More actions for ${appointment.clientName}`}><MoreVertical aria-hidden="true" size={20} /></summary><div><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); openEdit(); }}>Edit appointment</button><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); openEdit(); }}>Change status</button></div></details>}</div>;
   }
 
   const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
@@ -179,7 +179,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
     <main className={styles.appointments}>
       <header className={styles.pageHeader}>
         <div><h1>Appointments</h1><p>Review and organize client appointments across list and calendar views.</p></div>
-        {canManage && <button type="button" className={styles.primaryButton} onClick={() => { setSlotError(""); setAdding(true); }}><Plus aria-hidden="true" size={18} /> Add Appointment</button>}
+        {canCreate && <button type="button" className={styles.primaryButton} onClick={() => { setSlotError(""); setAdding(true); }}><Plus aria-hidden="true" size={18} /> Add Appointment</button>}
       </header>
 
       {notice && <div className={styles.notice} role="status"><span>{notice.message}</span>{notice.hiddenAppointment && <button type="button" className={styles.noticeAction} onClick={() => { if (notice.hiddenAppointment) showSavedAppointment(notice.hiddenAppointment); }}>View appointment</button>}<button type="button" onClick={() => setNotice(null)} aria-label="Dismiss message"><X aria-hidden="true" size={17} /></button></div>}
@@ -201,11 +201,11 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
               </tr></thead>
               <tbody>{paged.map((appointment) => <tr key={appointment.id}><td><strong>{appointment.clientName}</strong></td><td><span className={styles.dateValue}>{formatDate(appointment.date)}</span><span className={styles.timeValue}>{formatTime(appointment.time)}</span></td><td>{appointment.reason}</td><td><span className={`${styles.status} ${styles[appointment.status.toLowerCase()]}`}>{appointment.status}</span></td><td>{actions(appointment)}</td></tr>)}</tbody>
             </table>
-            {paged.length === 0 && <EmptyState filtered={appointments.length > 0} canManage={canManage} onAdd={() => setAdding(true)} />}
+            {paged.length === 0 && <EmptyState filtered={appointments.length > 0} canManage={canCreate} onAdd={() => setAdding(true)} />}
           </div>
           <div className={styles.mobileList}>
             {paged.map((appointment) => <article key={appointment.id} className={styles.mobileCard}><div className={styles.cardTop}><strong>{appointment.clientName}</strong><span className={`${styles.status} ${styles[appointment.status.toLowerCase()]}`}>{appointment.status}</span></div><dl><div><dt>Date</dt><dd>{formatDate(appointment.date)}</dd></div><div><dt>Time</dt><dd>{formatTime(appointment.time)}</dd></div><div><dt>Reason</dt><dd>{appointment.reason}</dd></div></dl>{actions(appointment)}</article>)}
-            {paged.length === 0 && <EmptyState filtered={appointments.length > 0} canManage={canManage} onAdd={() => setAdding(true)} />}
+            {paged.length === 0 && <EmptyState filtered={appointments.length > 0} canManage={canCreate} onAdd={() => setAdding(true)} />}
           </div>
           <footer className={styles.pagination}><p>Showing {rangeStart} to {rangeEnd} of {filtered.length} appointments</p><div><button type="button" disabled={currentPage === 1} onClick={() => setPage((value) => value - 1)} aria-label="Previous page"><ChevronLeft size={17} /></button><span>Page {currentPage} of {totalPages}</span><button type="button" disabled={currentPage === totalPages} onClick={() => setPage((value) => value + 1)} aria-label="Next page"><ChevronRight size={17} /></button></div></footer>
         </> : <div className={styles.calendarView}>
@@ -216,7 +216,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
         </div>}
       </section>
 
-      {canManage && adding && <Modal title="Add appointment" onClose={() => { setAdding(false); setReasonChoice("Follow-up"); }}>
+      {canCreate && adding && <Modal title="Add appointment" onClose={() => { setAdding(false); setReasonChoice("Follow-up"); }}>
         <form className={styles.form} onSubmit={addAppointment}>
           <p className={styles.formIntro}>Select a saved client or enter a guest name to schedule an appointment.</p>
           <div className={styles.entryMode}><button type="button" aria-pressed={!addManual} onClick={() => { setAddManual(false); setClientError(""); }}>Saved client</button><button type="button" aria-pressed={addManual} onClick={() => { setAddManual(true); setClientError(""); }}>Enter name manually</button></div>
@@ -228,7 +228,7 @@ export default function AppointmentsWorkspace({ initialAppointments, canManage }
         </form>
       </Modal>}
 
-      {canManage && editing && <Modal title="Edit appointment" onClose={() => setEditing(null)}><form className={styles.form} onSubmit={updateAppointment}>
+      {canEdit && editing && <Modal title="Edit appointment" onClose={() => setEditing(null)}><form className={styles.form} onSubmit={updateAppointment}>
         <p className={styles.formIntro}>Update appointment details and status.</p>
         <div className={styles.entryMode}><button type="button" aria-pressed={!editManual} onClick={() => { setEditManual(false); setClientError(""); }}>Saved client</button><button type="button" aria-pressed={editManual} onClick={() => { setEditManual(true); setClientError(""); }}>Enter name manually</button></div>
         {editManual ? <label><span>Guest name <b aria-hidden="true">*</b></span><input name="guestName" defaultValue={editing.clientId ? "" : editing.clientName} required maxLength={120} />{clientError && <small role="alert">{clientError}</small>}</label> : <AppointmentClientPicker value={editClient} onChange={(item) => { setEditClient(item); setClientError(""); }} errorMessage={clientError} />}

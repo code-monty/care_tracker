@@ -70,9 +70,9 @@ Active Admin, Secretary, and Staff accounts can change their own name and passwo
 
 ## Staff record access
 
-Admin and Secretary book or reschedule appointments using nine one-hour Asia/Manila slots from 8:00 AM to 5:00 PM. Each date allows one active appointment per overlapping slot; cancelled appointments free their time. Existing appointments with other start times remain at their saved time until rescheduled. Past appointments still prompt for confirmation.
+Only Secretary books appointments; Admin and Secretary can reschedule them using nine one-hour Asia/Manila slots from 8:00 AM to 5:00 PM. Each date allows one active appointment per overlapping slot; cancelled appointments free their time. Existing appointments with other start times remain at their saved time until rescheduled. Past appointments still prompt for confirmation.
 
-Staff can view shared clients, attorneys, appointments, and tasks. Only Admin and Secretary can add or edit these records or change client and appointment status. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
+Staff can view shared clients, attorneys, appointments, and tasks. Admin and Secretary can add or edit clients and attorneys, edit existing appointments and tasks, and change client and appointment status. Only Secretary can add appointments; only Admin can add tasks. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
 
 Add Client records separate Sex values for the petitioner and respondent. Both require Male, Female, Non-Binary, or Prefer not to Say. Existing records with no value show Not recorded and remain editable; Admin and Secretary can fill these values later in Edit Client.
 
@@ -82,7 +82,7 @@ Admin and Secretary can archive an attorney after all non-archived linked client
 
 The Staff interface does not show the Appointments page or Dashboard appointment summary. Direct Staff visits to `/appointments` redirect to `/dashboard`. Admin and Secretary retain both views; database read permissions are unchanged.
 
-Secretary can create, edit, and assign tasks but cannot submit, review, or complete them. Staff submit their own assigned tasks from Deadlines. Admin checks the document outside CareTracker, then uses **Awaiting Approval** to approve and mark a task Done, or return it with a required comment. Returned tasks show **Needs changes** and can be resubmitted. Submissions remain in open deadline counts and overdue tracking until approval. Admin may mark an open or returned task Done directly. Task details are locked while awaiting review; review history is visible to Admin and the assigned Staff member. Approval comments stay in CareTracker, without email or case-document uploads.
+Secretary can edit and assign existing tasks but cannot create, submit, review, or complete them. Staff submit their own assigned tasks from Deadlines. Admin checks the document outside CareTracker, then uses **Awaiting Approval** to approve and mark a task Done, or return it with a required comment. Returned tasks show **Needs changes** and can be resubmitted. Submissions remain in open deadline counts and overdue tracking until approval. Admin may mark an open or returned task Done directly. Task details are locked while awaiting review; review history is visible to Admin and the assigned Staff member. Approval comments stay in CareTracker, without email or case-document uploads.
 
 When resubmitting a returned task, Staff must describe the changes made. Admin sees the latest explanation in the Review task dialog, and each explanation remains in Review history. The first submission does not require a comment. Staff explanations are visible only to Admin and the assigned Staff member and do not appear in Activity Logs.
 

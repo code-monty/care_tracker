@@ -2,7 +2,7 @@ begin;
 select plan(9);
 
 insert into auth.users(id,email) values ('a1000000-0000-0000-0000-000000000001','slot-admin@example.test');
-update public.profiles set role='admin',status='active' where id='a1000000-0000-0000-0000-000000000001';
+update public.profiles set role='secretary',status='active' where id='a1000000-0000-0000-0000-000000000001';
 select set_config('role','authenticated',true);
 select set_config('request.jwt.claims','{"sub":"a1000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 

@@ -14,5 +14,5 @@ export default async function AppointmentsPage() {
     const part = (name: string) => parts.find((item) => item.type === name)?.value ?? "";
     return { id: row.id, clientId: row.client_id ?? undefined, clientName: client?.full_name ?? row.guest_name ?? "", clientContact: client?.contact_no, clientEmail: client?.email, date: `${part("year")}-${part("month")}-${part("day")}`, time: `${part("hour")}:${part("minute")}`, reason: row.reason, status: (row.status[0].toUpperCase() + row.status.slice(1)) as AppointmentStatus };
   });
-  return <AppointmentsWorkspace initialAppointments={appointments} canManage={profile.role !== "staff"} />;
+  return <AppointmentsWorkspace initialAppointments={appointments} canCreate={profile.role === "secretary"} canEdit={profile.role !== "staff"} />;
 }

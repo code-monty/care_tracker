@@ -108,10 +108,10 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
   }
 
   return <main className={styles.page}>
-    <div className={styles.heading}><div><h1>Deadlines</h1><p>Track client tasks and assignments.</p></div><div className={styles.headingActions}>{role === "admin" && <Link href="/deadlines/archived">View archived tasks</Link>}{canManage && <button className={styles.primaryButton} type="button" onClick={openAdd} disabled={!clients.length || !staff.length}><Plus size={18} aria-hidden="true" /> Add Task</button>}</div></div>
-    {initialClientId && <p className={styles.context}>{canManage ? "Adding a task for" : "Viewing deadlines for"} <Link href={`/clients/${initialClientId}`}>{clients.find((client) => client.id === initialClientId)?.name}</Link>.</p>}
+    <div className={styles.heading}><div><h1>Deadlines</h1><p>Track client tasks and assignments.</p></div><div className={styles.headingActions}>{role === "admin" && <Link href="/deadlines/archived">View archived tasks</Link>}{role === "admin" && <button className={styles.primaryButton} type="button" onClick={openAdd} disabled={!clients.length || !staff.length}><Plus size={18} aria-hidden="true" /> Add Task</button>}</div></div>
+    {initialClientId && <p className={styles.context}>{role === "admin" ? "Adding a task for" : "Viewing deadlines for"} <Link href={`/clients/${initialClientId}`}>{clients.find((client) => client.id === initialClientId)?.name}</Link>.</p>}
     {notice && <p className={styles.notice} role="status">{notice}</p>}
-    {canManage && !staff.length && <p className={styles.notice} role="alert">An active Staff or Secretary account is needed before tasks can be assigned.</p>}
+    {role === "admin" && !staff.length && <p className={styles.notice} role="alert">An active Staff or Secretary account is needed before tasks can be assigned.</p>}
     <section className={styles.panel} aria-label="Deadline list">
       <div className={styles.toolbar}>
         <label className={styles.search}><Search size={17} aria-hidden="true" /><span className={styles.srOnly}>Search client or task</span><input type="search" placeholder="Search client or task" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></label>
@@ -137,7 +137,7 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
             {role === "admin" && task.status !== "awaiting_approval" && <button type="button" className={styles.doneButton} onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}>Edit</button>}
           </div></td>
         </tr>)}
-        {!visible.length && <tr><td colSpan={6}><div className={styles.empty}><ClipboardList size={28} aria-hidden="true" /><strong>{tasks.length ? "No matching deadlines" : "No tasks yet"}</strong><p>{tasks.length ? "Try another search or filter." : canManage ? "Add a task to start tracking deadlines." : "Tasks will appear here when assigned."}</p></div></td></tr>}
+        {!visible.length && <tr><td colSpan={6}><div className={styles.empty}><ClipboardList size={28} aria-hidden="true" /><strong>{tasks.length ? "No matching deadlines" : "No tasks yet"}</strong><p>{tasks.length ? "Try another search or filter." : role === "admin" ? "Add a task to start tracking deadlines." : "Tasks will appear here when assigned."}</p></div></td></tr>}
       </tbody></table></div>
       <div className={styles.footer}><span>{filtered.length ? `Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} of ${filtered.length} tasks` : "Showing 0 of 0 tasks"}</span><nav aria-label="Deadline pages" className={styles.pagination}><button type="button" aria-label="Previous page" disabled={currentPage === 1} onClick={() => setPage((value) => value - 1)}><ChevronLeft size={17} /></button><span aria-current="page">{currentPage}</span><button type="button" aria-label="Next page" disabled={currentPage === pageCount} onClick={() => setPage((value) => value + 1)}><ChevronRight size={17} /></button></nav></div>
     </section>

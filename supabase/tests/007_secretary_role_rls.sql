@@ -1,5 +1,5 @@
 begin;
-select plan(21);
+select plan(22);
 
 insert into auth.users(id,email) values
 ('71000000-0000-0000-0000-000000000001','secretary-admin@example.test'),
@@ -25,8 +25,12 @@ select is((select count(*) from public.clients where id='73000000-0000-0000-0000
 select is((select count(*) from public.active_personnel_directory() where id='71000000-0000-0000-0000-000000000002')::int,1,'Active Secretary appears as task assignee');
 select is((select count(*) from public.active_personnel_directory() where id='71000000-0000-0000-0000-000000000003')::int,1,'Active Staff remains a task assignee');
 select is((select count(*) from public.active_personnel_directory() where id='71000000-0000-0000-0000-000000000004')::int,0,'Disabled Secretary is not assignable');
+select throws_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values
+('73000000-0000-0000-0000-000000000001','Rejected Secretary task','71000000-0000-0000-0000-000000000002',current_date + 7,'71000000-0000-0000-0000-000000000002')$$,'42501','new row violates row-level security policy for table "tasks"','Secretary cannot create tasks');
+select set_config('request.jwt.claims','{"sub":"71000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select lives_ok($$insert into public.tasks(client_id,title,assigned_to,due_date,created_by) values
-('73000000-0000-0000-0000-000000000001','Fake Secretary task','71000000-0000-0000-0000-000000000002',current_date + 7,'71000000-0000-0000-0000-000000000002')$$,'Secretary can create a task assigned to Secretary');
+('73000000-0000-0000-0000-000000000001','Fake Secretary task','71000000-0000-0000-0000-000000000002',current_date + 7,'71000000-0000-0000-0000-000000000001')$$,'Admin can create a task assigned to Secretary');
+select set_config('request.jwt.claims','{"sub":"71000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
 select lives_ok($$update public.tasks set title='Fake Secretary edited task' where title='Fake Secretary task'$$,'Secretary can edit task details');
 select throws_ok($$update public.tasks set status='done' where title='Fake Secretary edited task'$$,'Secretary cannot change task review','Secretary cannot complete a task');
 select is((select status from public.tasks where title='Fake Secretary edited task'),'open','Rejected completion leaves task open');

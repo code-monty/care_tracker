@@ -14,7 +14,7 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   const password = `Test-${randomUUID()}-aA1!`;
   const { data: created, error: createError } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (createError || !created.user) throw createError ?? new Error("Unable to create test user");
-  const { error: activateError } = await admin.from("profiles").update({ role: "admin", status: "active" }).eq("id", created.user.id);
+  const { error: activateError } = await admin.from("profiles").update({ role: "secretary", status: "active" }).eq("id", created.user.id);
   if (activateError) throw activateError;
   const { data: attorney, error: attorneyError } = await admin.from("attorneys").insert({ full_name: `Fake Picker Attorney ${suffix}`, contact_no: "0912-345-6789", email: `picker-attorney-${suffix}@example.test` }).select("id").single();
   if (attorneyError || !attorney) throw attorneyError ?? new Error("Unable to create test attorney");

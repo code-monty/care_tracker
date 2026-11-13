@@ -145,7 +145,10 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 | Personal settings: change own name and profile picture | ✅ | ✅ | ✅ |
 | View dashboard, appointments, clients, attorneys | ✅ | ✅ | ✅ |
 | Add/edit clients and attorneys; change client status | ✅ | ✅ | ❌ |
-| Add/edit/cancel appointments; add/edit tasks and deadlines | ✅ | ✅ | ❌ |
+| Add appointments | ❌ | ✅ | ❌ |
+| Edit/cancel appointments | ✅ | ✅ | ❌ |
+| Add tasks and deadlines | ✅ | ❌ | ❌ |
+| Edit tasks and deadlines | ✅ | ✅ | ❌ |
 | Submit an assigned task for Admin review | ❌ | ❌ | ✅ (own assigned task only) |
 | Approve or return a submitted task; directly complete open work | ✅ | ❌ | ❌ |
 | Archive and restore tasks | ✅ | ❌ | ❌ |
@@ -159,6 +162,8 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 | System settings, backup status/restore, rotate queue token | ✅ | ❌ | ❌ |
 
 The Secretary role and its permissions were approved October 29, 2026. Only Admin can assign or change a user's role. The SARD v1.2 addendum records this approved change to its original two-role assumption and FR-AUTH-02.
+
+On November 12, 2026, the owner restricted creation by role: only Secretary may add appointments, and only Admin may add tasks. Admin and Secretary may still edit existing appointments and tasks under the prior workflow rules. Staff permissions are unchanged. This supersedes the shared creation permissions in the table above and earlier text below.
 
 The owner subsequently restricted Staff record access on October 29, 2026. Staff can view shared clients, attorneys, appointments, and tasks, but cannot create or edit those records or change client or appointment status. Staff can submit only their own assigned open or returned tasks for Admin review. Admin and Secretary retain their existing daily record access; other Staff capabilities in this table are unchanged.
 

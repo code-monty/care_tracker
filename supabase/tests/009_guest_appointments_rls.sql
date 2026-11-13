@@ -1,5 +1,5 @@
 begin;
-select plan(9);
+select plan(10);
 
 insert into auth.users(id,email) values
 ('90000000-0000-0000-0000-000000000001','guest-admin@example.test'),
@@ -11,14 +11,17 @@ update public.profiles set role='staff',status='active' where id='90000000-0000-
 
 select set_config('role','authenticated',true);
 select set_config('request.jwt.claims','{"sub":"90000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
-select lives_ok($$insert into public.appointments(guest_name,scheduled_at,reason,created_by) values ('Fake Guest Admin','2040-11-01T10:00:00+08:00','Consultation','90000000-0000-0000-0000-000000000001')$$,'admin can book a guest');
-select throws_ok($$insert into public.appointments(scheduled_at,reason,created_by) values ('2040-11-01T12:00:00+08:00','Consultation','90000000-0000-0000-0000-000000000001')$$,'23514','new row for relation "appointments" violates check constraint "appointments_client_or_guest_check"','appointment requires a name or client');
-select throws_ok($$insert into public.appointments(client_id,guest_name,scheduled_at,reason,created_by) values ('90000000-0000-0000-0000-000000000001','Fake Both','2040-11-01T13:00:00+08:00','Consultation','90000000-0000-0000-0000-000000000001')$$,'23514','new row for relation "appointments" violates check constraint "appointments_client_or_guest_check"','appointment cannot have both identities');
-select lives_ok($$update public.appointments set guest_name='Fake Guest Changed',status='confirmed' where guest_name='Fake Guest Admin'$$,'admin can edit guest');
+select throws_ok($$insert into public.appointments(guest_name,scheduled_at,reason,created_by) values ('Rejected Guest Admin','2040-11-01T10:00:00+08:00','Consultation','90000000-0000-0000-0000-000000000001')$$,'42501','new row violates row-level security policy for table "appointments"','admin cannot book a guest');
 select set_config('request.jwt.claims','{"sub":"90000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
 select lives_ok($$insert into public.appointments(guest_name,scheduled_at,reason,created_by) values ('Fake Guest Secretary','2040-11-02T10:00:00+08:00','Assessment','90000000-0000-0000-0000-000000000002')$$,'secretary can book a guest');
+select throws_ok($$insert into public.appointments(scheduled_at,reason,created_by) values ('2040-11-02T12:00:00+08:00','Consultation','90000000-0000-0000-0000-000000000002')$$,'23514','new row for relation "appointments" violates check constraint "appointments_client_or_guest_check"','appointment requires a name or client');
+select throws_ok($$insert into public.appointments(client_id,guest_name,scheduled_at,reason,created_by) values ('90000000-0000-0000-0000-000000000001','Fake Both','2040-11-02T13:00:00+08:00','Consultation','90000000-0000-0000-0000-000000000002')$$,'23514','new row for relation "appointments" violates check constraint "appointments_client_or_guest_check"','appointment cannot have both identities');
+select set_config('request.jwt.claims','{"sub":"90000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select lives_ok($$update public.appointments set guest_name='Fake Guest Changed',status='confirmed' where guest_name='Fake Guest Secretary'$$,'admin can edit guest');
+select set_config('request.jwt.claims','{"sub":"90000000-0000-0000-0000-000000000002","role":"authenticated"}',true);
+select lives_ok($$update public.appointments set reason='Follow-up' where guest_name='Fake Guest Changed'$$,'secretary can edit guest');
 select set_config('request.jwt.claims','{"sub":"90000000-0000-0000-0000-000000000003","role":"authenticated"}',true);
-select is((select count(*) from public.appointments where guest_name like 'Fake Guest%')::int,2,'staff can read guests');
+select is((select count(*) from public.appointments where guest_name = 'Fake Guest Changed')::int,1,'staff can read guest appointments');
 select throws_ok($$insert into public.appointments(guest_name,scheduled_at,reason,created_by) values ('Fake Guest Staff','2040-11-03T10:00:00+08:00','Assessment','90000000-0000-0000-0000-000000000003')$$,'42501','new row violates row-level security policy for table "appointments"','staff cannot book a guest');
 select lives_ok($$update public.appointments set status='cancelled' where guest_name='Fake Guest Changed'$$,'staff update affects no rows');
 select is((select status from public.appointments where guest_name='Fake Guest Changed'),'confirmed','staff cannot change guest status');

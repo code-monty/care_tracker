@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("client detail books a fixed-client appointment for Admin and Secretary only", async ({ page }) => {
+test("client detail books a fixed-client appointment for Secretary only", async ({ page }) => {
   test.setTimeout(180_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const index = line.indexOf("="); return [line.slice(0, index), line.slice(index + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Client appointment E2E requires local Supabase");
@@ -27,9 +27,9 @@ test("client detail books a fixed-client appointment for Admin and Secretary onl
     }
     const { error: attorneyError } = await db.from("attorneys").insert({ id: attorneyId, full_name: `Fake Appointment Attorney ${suffix}`, contact_no: "0912-345-6789", email: `client-appointment-lawyer-${suffix}@example.test` });
     if (attorneyError) throw attorneyError;
-    const { error: clientError } = await db.from("clients").insert({ id: clientId, full_name: clientName, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `client-appointment-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: users[0].id });
+    const { error: clientError } = await db.from("clients").insert({ id: clientId, full_name: clientName, birthdate: "1990-01-01", sex: "Female", contact_no: "0912-345-6789", email: `client-appointment-${suffix}@example.test`, address: "Fake address", attorney_id: attorneyId, created_by: users[0].id });
     if (clientError) throw clientError;
-    const { error: respondentError } = await db.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `respondent-${suffix}@example.test`, address: "Fake address" });
+    const { error: respondentError } = await db.from("respondents").insert({ client_id: clientId, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", sex: "Male", contact_no: "0912-345-6789", email: `respondent-${suffix}@example.test`, address: "Fake address" });
     if (respondentError) throw respondentError;
 
     for (const [index, user] of users.entries()) {
@@ -44,9 +44,16 @@ test("client detail books a fixed-client appointment for Admin and Secretary onl
       await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
       await page.goto(`/clients/${clientId}`);
       await expect(page.getByRole("heading", { name: "Client Information" })).toBeVisible();
-      await expect(page.getByRole("link", { name: user.role === "staff" ? "View Deadlines" : "Add Task / View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
+      await expect(page.getByRole("link", { name: user.role === "admin" ? "Add Task / View Deadlines" : "View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
       const open = page.getByRole("button", { name: "Add Appointment" });
-      if (user.role === "staff") { await expect(open).toHaveCount(0); continue; }
+      if (user.role !== "secretary") {
+        await expect(open).toHaveCount(0);
+        if (user.role === "admin") {
+          await page.goto("/appointments");
+          await expect(page.getByRole("button", { name: "Add Appointment" })).toHaveCount(0);
+        }
+        continue;
+      }
 
       await expect(open).toBeVisible();
       await expect(open).toHaveCSS("border-top-style", "none");
@@ -60,8 +67,7 @@ test("client detail books a fixed-client appointment for Admin and Secretary onl
       await form.locator('input[name="date"]').fill(date);
       const time = form.getByRole("combobox", { name: "Appointment time" });
       await expect(time).toBeEnabled({ timeout: 20_000 });
-      if (index === 1) await expect(time.locator('option[value="08:00"]')).toHaveAttribute("disabled", "");
-      await time.selectOption(index === 0 ? "08:00" : "09:00");
+      await time.selectOption("08:00");
       if (index === 1) {
         await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
         await expect(form).toBeVisible();
@@ -75,8 +81,8 @@ test("client detail books a fixed-client appointment for Admin and Secretary onl
 
     const { data: bookings, error: bookingError } = await db.from("appointments").select("client_id,scheduled_at").eq("client_id", clientId);
     if (bookingError) throw bookingError;
-    expect(bookings).toHaveLength(2);
-    expect(bookings?.map((booking) => new Date(booking.scheduled_at).toISOString()).sort()).toEqual(["08:00", "09:00"].map((time) => new Date(`${date}T${time}:00+08:00`).toISOString()));
+    expect(bookings).toHaveLength(1);
+    expect(bookings?.map((booking) => new Date(booking.scheduled_at).toISOString())).toEqual([new Date(`${date}T08:00:00+08:00`).toISOString()]);
   } finally {
     await db.from("clients").update({ is_archived: true }).eq("id", clientId);
     if (users.length) await db.from("profiles").update({ status: "disabled" }).in("id", users.map((user) => user.id));
