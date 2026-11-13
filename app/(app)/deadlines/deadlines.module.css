@@ -8,9 +8,9 @@
 .headingActions a:hover { text-decoration: underline; }
 .backLink { display: inline-block; margin-bottom: 1rem; color: var(--brand); font-size: .85rem; }
 .backLink:hover { text-decoration: underline; }
-.primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; font-size: .875rem; font-weight: 600; cursor: pointer; }
+.primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; box-shadow: 0 4px 14px #00694830; font-size: .875rem; font-weight: 600; cursor: pointer; }
 .primaryButton:hover { background: #00543a; }
-.primaryButton:disabled { opacity: .55; cursor: not-allowed; }
+.primaryButton:disabled { opacity: .55; box-shadow: none; cursor: not-allowed; }
 .context, .notice { margin: -.5rem 0 1rem; color: var(--muted); font-size: .83rem; }
 .context a { color: var(--brand); text-decoration: underline; }
 .notice { margin-top: 0; }

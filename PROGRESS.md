@@ -386,3 +386,7 @@ Applied Montserrat to Users, Activity Logs, Admin and personal Settings, Backup,
 ### Role-specific appointment and task creation (November 12, 2026)
 
 Restricted new appointment creation to Secretary and new task creation to Admin. Kept Admin and Secretary editing rights, Staff task submission, and Admin review unchanged. Removed the disallowed Add controls from Appointments, client details, and Deadlines, and adjusted the client task link for Secretary. Server Actions check the role separately for insert and update; a local-only Supabase migration now enforces the same creation rules with RLS. Updated AGENTS.md, README.md, the local requirements document, and affected pgTAP and browser tests. The migration applied to local Supabase; focused pgTAP suites passed (41 assertions). Lint, typecheck, and diff checks passed. Three focused Chromium flows passed for Secretary task editing and the role-specific client appointment control and booking. Hosted deployment was not run.
+
+### Primary action button shadows (November 13, 2026)
+
+Added the existing soft green primary-button shadow to Add Clients, Add Task, the Admin Users page's Add user button, and the Admin Activity Logs page's Export to CSV link. The Add Task shadow is removed when the button is disabled, and the Users dialog buttons keep their existing style. The shadow color is fixed across light and dark themes. Local lint, typecheck, and `git diff --check` passed. A rendered browser review was not run. No behavior, backend, dependency, or hosted deployment change was made.
