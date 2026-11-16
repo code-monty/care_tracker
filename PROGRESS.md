@@ -394,3 +394,7 @@ Added the existing soft green primary-button shadow to Add Clients, Add Task, th
 ### Deadlines attorney filter removal and Appointments Today default (November 13, 2026)
 
 Removed the Attorney filter from the Deadlines toolbar and its client-side task filtering, while retaining search, status, and assigned-personnel filters. Appointments now opens with Today selected in the date filter; This month remains available. Updated FR-APT-02 and FR-TSK-04 in the local, Git-ignored requirements document and adjusted the focused browser assertions. The appointment browser fixture now supplies required client sex values and cleans up its fake records using Admin permissions. Local lint, typecheck, three appointment unit tests, `git diff --check`, and focused Chromium Deadlines and Appointments flows passed. The first Appointments flow reached its final UI assertions but failed on its former Secretary-only cleanup; the corrected cleanup passed on rerun. Its leftover fake records were archived and its test account disabled. No schema, dependency, or hosted deployment change was made.
+
+### MFA status-row removal (November 16, 2026)
+
+Removed the `v0.1.0 | Secure sign-in` status row from the MFA page and its now-unused package-version plumbing. The theme toggle, identity-verification flow, and HLT branding remain unchanged. Local lint, typecheck, and `git diff --check` passed. No browser review, backend, data, permission, or hosted deployment change was made.

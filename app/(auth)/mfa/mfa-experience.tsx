@@ -7,7 +7,7 @@ import { StepUpForm } from "./step-up-form";
 import styles from "../login/login.module.css";
 import mfaStyles from "./mfa.module.css";
 
-export function MfaExperience({ email, version }: { email: string; version: string }) {
+export function MfaExperience({ email }: { email: string }) {
   const { theme, toggleTheme } = useAuthTheme();
 
   return (
@@ -29,11 +29,6 @@ export function MfaExperience({ email, version }: { email: string; version: stri
 
       <section className={styles.panel} aria-label="Identity verification">
         <header className={styles.panelTop}>
-          <div className={styles.statusLine}>
-            <span className={styles.version}>v{version}</span>
-            <span className={styles.statusDivider} aria-hidden="true">|</span>
-            <span className={styles.secureStatus}><Image src="/auth/secure.svg" alt="" width={12} height={12} /> Secure sign-in</span>
-          </div>
           <AuthThemeToggle theme={theme} onToggle={toggleTheme} />
         </header>
 

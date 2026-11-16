@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
-import packageInfo from "../../../package.json";
 import { MfaExperience } from "./mfa-experience";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-login" });
@@ -31,6 +30,6 @@ export default async function MfaPage() {
     redirect("/login");
   }
 
-  return <div className={montserrat.variable}><MfaExperience email={user.email ?? "your email address"} version={packageInfo.version} /></div>;
+  return <div className={montserrat.variable}><MfaExperience email={user.email ?? "your email address"} /></div>;
 }
 
