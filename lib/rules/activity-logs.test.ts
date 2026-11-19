@@ -3,9 +3,10 @@ import { activityDescription, formatLogDateTime, logActorRole } from "./activity
 
 describe("activity log presentation", () => {
   it("describes a task status event without copying task details", () => {
-    expect(activityDescription({ action: "complete", entity_type: "tasks", entity_id: "aaaaaaaa-0000-0000-0000-000000000000" })).toBe("Completed task #aaaaaaaa");
-    expect(activityDescription({ action: "update", entity_type: "notes", entity_id: "bbbbbbbb-0000-0000-0000-000000000000" })).toBe("Updated note #bbbbbbbb");
-    expect(activityDescription({ action: "delete", entity_type: "note_replies", entity_id: "cccccccc-0000-0000-0000-000000000000" })).toBe("Deleted note reply #cccccccc");
+    expect(activityDescription({ action: "complete", entity_type: "tasks" })).toBe("Completed task");
+    expect(activityDescription({ action: "assign", entity_type: "tasks" })).toBe("Assigned task");
+    expect(activityDescription({ action: "update", entity_type: "notes" })).toBe("Updated note");
+    expect(activityDescription({ action: "delete", entity_type: "note_replies" })).toBe("Deleted note reply");
   });
   it("shows Manila time in 12-hour format without seconds", () => {
     expect(formatLogDateTime("2026-10-28T05:53:03.123Z").time).toBe("1:53 PM");
