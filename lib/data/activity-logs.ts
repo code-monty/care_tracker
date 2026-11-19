@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 export const LOG_PAGE_SIZE = 25;
 export type LogFilters = { from: string; to: string; user: string; activity: string };
 export type LogRow = { id: number; actor_id: string | null; action: string; entity_type: string | null; entity_id: string | null; created_at: string; profiles: { full_name: string | null; role: string | null } | null };
-export const LOG_ACTIONS = ["login", "logout", "failed_login", "create", "update", "complete", "assign", "status_change", "archive", "restore", "approve", "role_change", "deactivate", "reactivate", "email_change", "password_reset", "password_change", "export"];
+export const LOG_ACTIONS = ["login", "logout", "failed_login", "create", "update", "delete", "pin", "unpin", "complete", "assign", "status_change", "archive", "restore", "approve", "role_change", "deactivate", "reactivate", "email_change", "password_reset", "password_change", "export"];
 
 export function parseLogFilters(params: URLSearchParams): LogFilters {
   const date = (value: string | null) => value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) ? value : "";

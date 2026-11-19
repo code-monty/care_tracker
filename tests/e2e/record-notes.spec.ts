@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("Staff can add separate client and attorney notes with local date and time", async ({ page }) => {
+test("Staff can add, edit, and delete separate client and attorney notes and replies", async ({ page }) => {
   test.setTimeout(360_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const split = line.indexOf("="); return [line.slice(0, split), line.slice(split + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Local Supabase required");
@@ -18,10 +18,12 @@ test("Staff can add separate client and attorney notes with local date and time"
   if (profileError) throw profileError;
   const { data: attorney, error: attorneyError } = await db.from("attorneys").insert({ full_name: `Fake Notes Attorney ${suffix}`, contact_no: "0912-345-6789", email: `notes-lawyer-${suffix}@example.test` }).select("id").single();
   if (attorneyError || !attorney) throw attorneyError ?? new Error("Unable to seed fake attorney");
-  const { data: client, error: clientError } = await db.from("clients").insert({ full_name: `Fake Notes Client ${suffix}`, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `notes-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorney.id, created_by: userId }).select("id").single();
+  const { data: client, error: clientError } = await db.from("clients").insert({ full_name: `Fake Notes Client ${suffix}`, birthdate: "1990-01-01", sex: "Male", contact_no: "0912-345-6789", email: `notes-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorney.id, created_by: userId }).select("id").single();
   if (clientError || !client) throw clientError ?? new Error("Unable to seed fake client");
-  const { error: respondentError } = await db.from("respondents").insert({ client_id: client.id, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `notes-respondent-${suffix}@example.test`, address: "Fake address" });
+  const { error: respondentError } = await db.from("respondents").insert({ client_id: client.id, full_name: `Fake Respondent ${suffix}`, birthdate: "1991-01-01", sex: "Female", contact_no: "0912-345-6789", email: `notes-respondent-${suffix}@example.test`, address: "Fake address" });
   if (respondentError) throw respondentError;
+
+  page.on("dialog", (dialog) => dialog.accept());
 
   await page.goto("/login");
   await page.getByLabel("Email address").fill(email);
@@ -46,30 +48,45 @@ test("Staff can add separate client and attorney notes with local date and time"
   const clientTime = await clientNotes.locator("time").first().innerText();
   expect(clientTime.split("\n").filter(Boolean)).toHaveLength(2);
   expect(clientTime).not.toMatch(/\.\d{3}/);
-  const firstClientCard = clientNotes.locator("article").filter({ hasText: `Fake client note ${suffix}` });
+
+  let firstClientCard = clientNotes.locator("article").filter({ hasText: `Fake client note ${suffix}` });
+  await firstClientCard.getByRole("button", { name: "Edit note" }).click();
+  await firstClientCard.getByRole("textbox", { name: "Edit note" }).fill(`Fake client note edited ${suffix}`);
+  await firstClientCard.getByRole("button", { name: "Save changes" }).click();
+  await expect(clientNotes.getByText(`Fake client note edited ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  firstClientCard = clientNotes.locator("article").filter({ hasText: `Fake client note edited ${suffix}` });
+
   await firstClientCard.getByRole("button", { name: "Pin note" }).click();
   await expect(firstClientCard.getByText("Pinned")).toBeVisible({ timeout: 30_000 });
   await clientNotes.getByRole("button", { name: "Add Note" }).click();
   await clientNotes.getByRole("textbox", { name: "Note" }).fill(`Fake second client note ${suffix}`);
   await clientNotes.getByRole("button", { name: "Save note" }).click();
   await expect(clientNotes.getByRole("textbox", { name: "Note" })).toBeHidden({ timeout: 30_000 });
-  await expect(clientNotes.locator("article").first()).toContainText(`Fake client note ${suffix}`);
+  await expect(clientNotes.locator("article").first()).toContainText(`Fake client note edited ${suffix}`);
   const secondClientCard = clientNotes.locator("article").filter({ hasText: `Fake second client note ${suffix}` });
   await secondClientCard.getByRole("button", { name: "Pin note" }).click();
   await expect(clientNotes.locator("article").first()).toContainText(`Fake second client note ${suffix}`, { timeout: 30_000 });
   await secondClientCard.getByRole("button", { name: "Unpin note" }).click();
-  await expect(clientNotes.locator("article").first()).toContainText(`Fake client note ${suffix}`, { timeout: 30_000 });
+  await expect(clientNotes.locator("article").first()).toContainText(`Fake client note edited ${suffix}`, { timeout: 30_000 });
+  await secondClientCard.getByRole("button", { name: "Delete note" }).click();
+  await expect(clientNotes.getByText(`Fake second client note ${suffix}`)).toHaveCount(0, { timeout: 30_000 });
+
   await firstClientCard.getByRole("button", { name: `Reply to note by Fake Notes Staff ${suffix}` }).click();
   await firstClientCard.getByRole("textbox", { name: "Reply" }).fill(`Fake client reply ${suffix}`);
   await firstClientCard.getByRole("button", { name: "Save reply" }).click();
   await expect(firstClientCard.getByRole("textbox", { name: "Reply" })).toBeHidden({ timeout: 30_000 });
   await expect(firstClientCard.getByText(`Fake client reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  await expect(firstClientCard.getByRole("button", { name: "Delete note" })).toBeDisabled();
+  await firstClientCard.getByRole("button", { name: "Edit reply" }).click();
+  await firstClientCard.getByRole("textbox", { name: "Edit reply" }).fill(`Fake client reply edited ${suffix}`);
+  await firstClientCard.getByRole("button", { name: "Save changes" }).click();
+  await expect(firstClientCard.getByText(`Fake client reply edited ${suffix}`)).toBeVisible({ timeout: 30_000 });
   await page.reload();
-  await expect(clientNotes.getByText(`Fake client reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  await expect(clientNotes.getByText(`Fake client reply edited ${suffix}`)).toBeVisible({ timeout: 30_000 });
 
   await page.goto(`/attorneys/${attorney.id}`);
   const attorneyNotes = page.getByRole("region", { name: "Notes" });
-  await expect(attorneyNotes.getByText(`Fake client note ${suffix}`)).toHaveCount(0);
+  await expect(attorneyNotes.getByText(`Fake client note edited ${suffix}`)).toHaveCount(0);
   await attorneyNotes.getByRole("button", { name: "Add Note" }).click();
   await attorneyNotes.getByRole("textbox", { name: "Note" }).fill(`Fake attorney note ${suffix}`);
   await attorneyNotes.getByRole("button", { name: "Save note" }).click();
@@ -88,8 +105,10 @@ test("Staff can add separate client and attorney notes with local date and time"
   await attorneyCard.getByRole("button", { name: "Save reply" }).click();
   await expect(attorneyCard.getByRole("textbox", { name: "Reply" })).toBeHidden({ timeout: 30_000 });
   await expect(attorneyCard.getByText(`Fake attorney reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
-  await page.reload();
-  await expect(attorneyNotes.getByText(`Fake attorney reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  await expect(attorneyCard.getByRole("button", { name: "Delete note" })).toBeDisabled();
+  await attorneyCard.getByRole("button", { name: "Delete reply" }).click();
+  await expect(attorneyCard.getByText(`Fake attorney reply ${suffix}`)).toHaveCount(0, { timeout: 30_000 });
+  await expect(attorneyCard.getByRole("button", { name: "Delete note" })).toBeEnabled();
 
   await page.setViewportSize({ width: 390, height: 680 });
   await expect(attorneyNotes.getByRole("button", { name: "Unpin note" })).toBeVisible();

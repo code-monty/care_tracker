@@ -128,7 +128,7 @@ next.config.ts                   # includes allowedDevOrigins for LAN dev access
 5. **Passwords** are handled entirely by Supabase Auth. Never store, hash or log passwords in our code.
 6. **Audit log is written by database triggers** so the UI cannot skip it. It is **append-only**: update and delete rights are revoked.
 7. **Archive, never hard-delete.** Staff cannot delete. Only Admin can restore or purge. User accounts are deactivated, never deleted.
-8. **Notes are insert-only** (author + timestamp, no edit or delete).
+8. **Notes and replies retain immutable attribution** (author + creation timestamp); active users may edit or delete their own notes and replies, active Admins may edit or delete any note or reply, and top-level notes with replies cannot be deleted until their replies are removed.
 9. **Migrations only.** Never change the schema by hand in the Supabase dashboard; every schema change is a migration committed to Git.
 
 ### Access model (Decision D-01, interim Option B)
@@ -152,7 +152,7 @@ The **clinic-IP allowlist is deferred, not cancelled.** Build it behind `ENFORCE
 | Submit an assigned task for Admin review | ❌ | ❌ | ✅ (own assigned task only) |
 | Approve or return a submitted task; directly complete open work | ✅ | ❌ | ❌ |
 | Archive and restore tasks | ✅ | ❌ | ❌ |
-| Add notes | ✅ | ✅ | ✅ |
+| Add notes; edit/delete own notes and replies (Admin: any; top-level notes only when no replies exist) | ✅ | ✅ | ✅ |
 | Be assigned tasks and deadlines | ❌ | ✅ | ✅ |
 | Export client info to text (always logged) | ✅ | ✅ | ✅ |
 | Operate queue (check-in, call next, done) | ✅ | ✅ | ✅ |
@@ -182,6 +182,8 @@ On November 6, 2026, the owner approved nine one-hour Manila appointment slots f
 On November 7, 2026, the owner approved archiving an attorney when no non-archived client remains linked. Archived clients retain their attorney link for history and do not block attorney archiving. Admin must restore the attorney before restoring one of those clients. Admin and Secretary may archive attorneys; only Admin may restore attorneys or clients. This supersedes the earlier rule that archived clients block attorney archiving.
 
 On November 8, 2026, the owner approved restoring an archived client without first restoring its archived attorney. That restore clears the current attorney link and records the former link in read-only history; restoring the attorney later never relinks the client. An attorney still linked and available remains assigned on client restore. Admin and Secretary can edit an unassigned client without assigning an attorney, or use Edit Client to add a new attorney or select an available one. New clients still require an attorney. This supersedes the November 7 client-restore ordering rule.
+
+On November 19, 2026, the owner approved editing and deleting client and attorney notes and replies. Active Admin, Secretary, and Staff users may edit or delete their own top-level notes and replies, and active Admins may edit or delete any note or reply. Top-level notes that have replies cannot be deleted until their replies are removed; deleting a reply-free top-level note removes any pin on that note. Author attribution and creation timestamps remain immutable, and note or reply edits and deletions write metadata-only Activity Log events. This supersedes the earlier insert-only note restriction.
 
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 

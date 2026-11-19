@@ -1,5 +1,5 @@
 begin;
-select plan(17);
+select plan(25);
 
 insert into auth.users(id,email) values
 ('91000000-0000-0000-0000-000000000001','notes-admin@example.test'),
@@ -26,11 +26,28 @@ select set_config('request.jwt.claims','{"sub":"91000000-0000-0000-0000-00000000
 select lives_ok($$insert into public.notes(attorney_id,body,author_id,author_name,author_role) values ('92000000-0000-0000-0000-000000000001','Fake secretary note','91000000-0000-0000-0000-000000000002','','staff')$$,'Secretary can add attorney note');
 select is((select author_role from public.notes where body='Fake secretary note'),'secretary','Secretary role is saved');
 select set_config('request.jwt.claims','{"sub":"91000000-0000-0000-0000-000000000003","role":"authenticated"}',true);
-select lives_ok($$insert into public.notes(client_id,body,author_id,author_name,author_role) values ('93000000-0000-0000-0000-000000000001','Fake staff note','91000000-0000-0000-0000-000000000003','','staff')$$,'Staff can add client note');
+select lives_ok($$insert into public.notes(id,client_id,body,author_id,author_name,author_role) values ('94000000-0000-0000-0000-000000000001','93000000-0000-0000-0000-000000000001','Fake staff note','91000000-0000-0000-0000-000000000003','','staff')$$,'Staff can add client note');
 select is((select count(*) from public.notes where client_id='93000000-0000-0000-0000-000000000001')::int,2,'Client notes stay on client');
 select is((select count(*) from public.notes where attorney_id='92000000-0000-0000-0000-000000000001')::int,1,'Attorney notes stay on attorney');
-select throws_ok($$update public.notes set body='Changed' where body='Fake staff note'$$,'42501',null,'Notes cannot be updated');
-select throws_ok($$delete from public.notes where body='Fake staff note'$$,'42501',null,'Notes cannot be deleted');
+
+-- Staff can edit own note, but cannot edit or delete Secretary's note
+select lives_ok($$update public.notes set body=' Fake staff note edited ' where id='94000000-0000-0000-0000-000000000001'$$,'Staff can edit own note');
+select is((select body from public.notes where id='94000000-0000-0000-0000-000000000001'),'Fake staff note edited','Edited note body is trimmed and saved');
+update public.notes set body='Forbidden edit' where body='Fake secretary note';
+select is((select count(*) from public.notes where body='Forbidden edit')::int,0,'Staff cannot edit another user note');
+delete from public.notes where body='Fake secretary note';
+select is((select count(*) from public.notes where body='Fake secretary note')::int,1,'Staff cannot delete another user note');
+select lives_ok($$delete from public.notes where id='94000000-0000-0000-0000-000000000001'$$,'Staff can delete own note without replies');
+
+-- Admin can read audit logs and edit or delete another user's note
+select set_config('request.jwt.claims','{"sub":"91000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select is((select count(*) from public.activity_log where entity_type='notes' and action='update' and entity_id='94000000-0000-0000-0000-000000000001')::int,1,'Note update logs metadata');
+select is((select count(*) from public.activity_log where entity_type='notes' and action='delete' and entity_id='94000000-0000-0000-0000-000000000001')::int,1,'Note delete logs metadata');
+select lives_ok($$update public.notes set body='Admin edited secretary note' where body='Fake secretary note'$$,'Admin can edit another user note');
+select is((select count(*) from public.notes where body='Admin edited secretary note')::int,1,'Admin edit persists on another user note');
+select lives_ok($$delete from public.notes where body='Admin edited secretary note'$$,'Admin can delete another user note');
+
+select set_config('request.jwt.claims','{"sub":"91000000-0000-0000-0000-000000000003","role":"authenticated"}',true);
 select throws_ok($$insert into public.notes(client_id,attorney_id,body,author_id,author_name,author_role) values ('93000000-0000-0000-0000-000000000001','92000000-0000-0000-0000-000000000001','Both','91000000-0000-0000-0000-000000000003','','staff')$$,'23514',null,'A note belongs to one record');
 
 select set_config('request.jwt.claims','{"sub":"91000000-0000-0000-0000-000000000004","role":"authenticated"}',true);

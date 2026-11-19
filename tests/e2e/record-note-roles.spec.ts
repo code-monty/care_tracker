@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 
-test("Admin and Secretary can pin and reply on client and attorney notes", async ({ page }) => {
+test("Admin and Secretary can pin, reply, edit, and delete notes according to role permissions", async ({ page }) => {
   test.setTimeout(300_000);
   const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).filter((line) => /^[A-Z_]+=/.test(line)).map((line) => { const split = line.indexOf("="); return [line.slice(0, split), line.slice(split + 1).replace(/^['"]|['"]$/g, "")]; }));
   if (!/^http:\/\/(localhost|127\.0\.0\.1):54321$/.test(env.NEXT_PUBLIC_SUPABASE_URL ?? "")) throw new Error("Local Supabase required");
@@ -21,10 +21,12 @@ test("Admin and Secretary can pin and reply on client and attorney notes", async
   }
   const { data: attorney, error: attorneyError } = await db.from("attorneys").insert({ full_name: `Fake Role Attorney ${suffix}`, contact_no: "0912-345-6789", email: `role-lawyer-${suffix}@example.test` }).select("id").single();
   if (attorneyError || !attorney) throw attorneyError ?? new Error("Unable to seed attorney");
-  const { data: client, error: clientError } = await db.from("clients").insert({ full_name: `Fake Role Client ${suffix}`, birthdate: "1990-01-01", contact_no: "0912-345-6789", email: `role-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorney.id, created_by: accounts[0].id }).select("id").single();
+  const { data: client, error: clientError } = await db.from("clients").insert({ full_name: `Fake Role Client ${suffix}`, birthdate: "1990-01-01", sex: "Male", contact_no: "0912-345-6789", email: `role-client-${suffix}@example.test`, address: "Fake address", attorney_id: attorney.id, created_by: accounts[0].id }).select("id").single();
   if (clientError || !client) throw clientError ?? new Error("Unable to seed client");
-  const { error: respondentError } = await db.from("respondents").insert({ client_id: client.id, full_name: `Fake Role Respondent ${suffix}`, birthdate: "1991-01-01", contact_no: "0912-345-6789", email: `role-respondent-${suffix}@example.test`, address: "Fake address" });
+  const { error: respondentError } = await db.from("respondents").insert({ client_id: client.id, full_name: `Fake Role Respondent ${suffix}`, birthdate: "1991-01-01", sex: "Female", contact_no: "0912-345-6789", email: `role-respondent-${suffix}@example.test`, address: "Fake address" });
   if (respondentError) throw respondentError;
+
+  page.on("dialog", (dialog) => dialog.accept());
 
   async function login(account: typeof accounts[number], browserPage: Page) {
     await browserPage.context().clearCookies();
@@ -59,6 +61,10 @@ test("Admin and Secretary can pin and reply on client and attorney notes", async
   const secretaryClientNotes = page.getByRole("region", { name: "Notes" });
   const sameCard = secretaryClientNotes.locator("article").filter({ hasText: `Fake Admin priority ${suffix}` });
   await expect(sameCard.getByText(`Fake Admin reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  await expect(sameCard.getByRole("button", { name: "Edit note" })).toHaveCount(0);
+  await expect(sameCard.getByRole("button", { name: "Delete note" })).toHaveCount(0);
+  await expect(sameCard.getByRole("button", { name: "Edit reply" })).toHaveCount(0);
+  await expect(sameCard.getByRole("button", { name: "Delete reply" })).toHaveCount(0);
   await sameCard.getByRole("button", { name: "Unpin note" }).click();
   await expect(sameCard.getByRole("button", { name: "Pin note" })).toBeVisible({ timeout: 30_000 });
   await page.goto(`/attorneys/${attorney.id}`);
@@ -67,7 +73,12 @@ test("Admin and Secretary can pin and reply on client and attorney notes", async
   await attorneyNotes.getByRole("textbox", { name: "Note" }).fill(`Fake Secretary note ${suffix}`);
   await attorneyNotes.getByRole("button", { name: "Save note" }).click();
   await expect(attorneyNotes.getByRole("textbox", { name: "Note" })).toBeHidden({ timeout: 30_000 });
-  const secretaryCard = attorneyNotes.locator("article").filter({ hasText: `Fake Secretary note ${suffix}` });
+  let secretaryCard = attorneyNotes.locator("article").filter({ hasText: `Fake Secretary note ${suffix}` });
+  await secretaryCard.getByRole("button", { name: "Edit note" }).click();
+  await secretaryCard.getByRole("textbox", { name: "Edit note" }).fill(`Fake Secretary note edited ${suffix}`);
+  await secretaryCard.getByRole("button", { name: "Save changes" }).click();
+  await expect(attorneyNotes.getByText(`Fake Secretary note edited ${suffix}`)).toBeVisible({ timeout: 30_000 });
+  secretaryCard = attorneyNotes.locator("article").filter({ hasText: `Fake Secretary note edited ${suffix}` });
   await secretaryCard.getByRole("button", { name: "Pin note" }).click();
   await expect(secretaryCard.getByText("Pinned")).toBeVisible({ timeout: 30_000 });
   await secretaryCard.getByRole("button", { name: `Reply to note by Fake Notes secretary ${suffix}` }).click();
@@ -75,8 +86,17 @@ test("Admin and Secretary can pin and reply on client and attorney notes", async
   await secretaryCard.getByRole("button", { name: "Save reply" }).click();
   await expect(secretaryCard.getByRole("textbox", { name: "Reply" })).toBeHidden({ timeout: 30_000 });
   await expect(secretaryCard.getByText(`Fake Secretary reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
-  await page.reload();
-  await expect(attorneyNotes.getByText(`Fake Secretary reply ${suffix}`)).toBeVisible({ timeout: 30_000 });
+
+  await login(accounts[0], page);
+  await page.goto(`/attorneys/${attorney.id}`);
+  const adminAttorneyNotes = page.getByRole("region", { name: "Notes" });
+  const adminViewCard = adminAttorneyNotes.locator("article").filter({ hasText: `Fake Secretary note edited ${suffix}` });
+  await expect(adminViewCard.getByRole("button", { name: "Delete note" })).toBeDisabled();
+  await adminViewCard.getByRole("button", { name: "Delete reply" }).click();
+  await expect(adminViewCard.getByText(`Fake Secretary reply ${suffix}`)).toHaveCount(0, { timeout: 30_000 });
+  await expect(adminViewCard.getByRole("button", { name: "Delete note" })).toBeEnabled();
+  await adminViewCard.getByRole("button", { name: "Delete note" }).click();
+  await expect(adminAttorneyNotes.getByText(`Fake Secretary note edited ${suffix}`)).toHaveCount(0, { timeout: 30_000 });
 
   await db.from("clients").update({ is_archived: true }).eq("id", client.id);
   for (const account of accounts) await db.from("profiles").update({ status: "disabled" }).eq("id", account.id);

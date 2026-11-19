@@ -21,7 +21,7 @@
 .card { position: relative; min-width: 0; padding: .8rem .9rem .85rem; border: 1px solid var(--line); border-radius: .55rem; background: color-mix(in srgb, var(--surface) 88%, var(--hover)); box-shadow: 0 1px 2px #00000014; }
 .pinnedCard { border-color: #5ba98c; box-shadow: 0 0 0 1px #5ba98c36, 0 2px 8px #00000017; }
 .ribbon { position: absolute; top: 0; left: 0; display: grid; place-items: start; width: 2.5rem; height: 2.5rem; padding: .25rem .3rem; color: #102d26; background: #70bd9b; clip-path: polygon(0 0, 100% 0, 0 100%); border-top-left-radius: .5rem; }
-.cardTop { display: flex; justify-content: space-between; gap: .75rem; }
+.cardTop, .replyTop { display: flex; justify-content: space-between; gap: .75rem; }
 .attribution { display: flex; align-items: flex-start; gap: .55rem; min-width: 0; }
 .avatar { display: grid; flex: none; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; color: #75bd9c; background: color-mix(in srgb, var(--hover) 75%, #006948); }
 .pinnedCard > article > .cardTop > .attribution { padding-left: .55rem; }
@@ -29,8 +29,9 @@
 .person strong { overflow-wrap: anywhere; font-size: .83rem; font-weight: 650; line-height: 1.25; }
 .person time { display: grid; color: var(--muted); font-size: .72rem; line-height: 1.35; }
 .cardControls { display: flex; flex: none; align-items: flex-start; gap: .2rem; }
-.iconButton { display: grid; place-items: center; width: 1.85rem; height: 1.85rem; border-radius: 50%; color: var(--muted); }
-.iconButton:hover { color: var(--text); background: var(--hover); }
+.iconButton { display: grid; place-items: center; width: 1.85rem; height: 1.85rem; border-radius: 50%; color: var(--muted); cursor: pointer; }
+.iconButton:hover:not(:disabled) { color: var(--text); background: var(--hover); }
+.dangerIconButton:hover:not(:disabled) { color: #e36060; background: #e360601a; }
 .pinnedCard .iconButton:first-child { color: #70bd9b; }
 .pinnedLabel { align-self: center; padding: .22rem .45rem; border-radius: .35rem; color: var(--text); background: var(--hover); font-size: .69rem; }
 .noteBody { margin-top: .5rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .84rem; line-height: 1.5; }
@@ -41,4 +42,4 @@
 .replyFormHeading { display: flex; justify-content: space-between; gap: 1rem; font-size: .78rem; }
 .replyFormHeading span { color: var(--muted); text-align: right; line-height: 1.4; }
 .section :is(button, textarea):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-@media (max-width: 600px) { .header, .form { padding: 1rem; } .list { padding: .65rem; } .card { padding: .75rem; } .cardControls { flex-wrap: wrap; justify-content: flex-end; max-width: 5.8rem; } .pinnedLabel { order: 3; } .replies { padding-left: .55rem; } }
+@media (max-width: 600px) { .header, .form { padding: 1rem; } .list { padding: .65rem; } .card { padding: .75rem; } .cardControls { flex-wrap: wrap; justify-content: flex-end; max-width: 8rem; } .pinnedLabel { order: 5; } .replies { padding-left: .55rem; } }
