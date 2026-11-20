@@ -119,6 +119,17 @@ test("Admin manages users and temporary passwords require a change", async ({ pa
     await pendingRow.getByRole("button", { name: "Approve" }).click();
     await expect(pendingRow.getByText("Active")).toBeVisible({ timeout: 30_000 });
 
+    for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 740 }]) {
+      await page.setViewportSize(viewport);
+      const overflow = await page.evaluate(() => {
+        const tableWrap = document.querySelector("table")?.parentElement;
+        return {
+          pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          tableOverflow: tableWrap ? tableWrap.scrollWidth > tableWrap.clientWidth : true,
+        };
+      });
+      expect(overflow).toEqual({ pageOverflow: false, tableOverflow: false });
+    }
     await page.setViewportSize({ width: 390, height: 700 });
     await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
     await page.getByRole("button", { name: "Open profile menu" }).click();

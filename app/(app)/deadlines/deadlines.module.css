@@ -23,7 +23,7 @@
 .filter option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .filter select { color-scheme: light; }
 .tableScroll { overflow-x: auto; }
-.tableScroll table { width: 100%; min-width: 980px; table-layout: fixed; border-collapse: collapse; text-align: left; }
+.tableScroll table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; }
 .tableScroll th:nth-child(1) { width: 12%; }
 .tableScroll th:nth-child(2) { width: 13%; }
 .tableScroll th:nth-child(3) { width: 15%; }
@@ -107,5 +107,24 @@
 .page :is(button, input, select, a):focus-visible, .dialog :is(button, input, select, textarea):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .dialog .commentInput[aria-invalid="true"]:focus-visible { outline-color: #b91c1c; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 1024px) {
+  .tableScroll table:not(.archiveTable) th { padding: .75rem .6rem; white-space: normal; }
+  .tableScroll table:not(.archiveTable) td { padding: .75rem .6rem; }
+  .tableScroll table:not(.archiveTable) .dateCell { white-space: normal; }
+}
+@media (max-width: 767px) {
+  .tableScroll { overflow-x: visible; }
+  .tableScroll table:not(.archiveTable) thead { display: none; }
+  .tableScroll table:not(.archiveTable),
+  .tableScroll table:not(.archiveTable) tbody,
+  .tableScroll table:not(.archiveTable) tr { display: block; width: 100%; }
+  .tableScroll table:not(.archiveTable) tbody tr:not(:has(.empty)) { padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
+  .tableScroll table:not(.archiveTable) tbody tr:last-child { border-bottom: 0; }
+  .tableScroll table:not(.archiveTable) td:not([colspan]) { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: start; gap: .5rem; padding: .35rem 0; border-bottom: 0; }
+  .tableScroll table:not(.archiveTable) td:not([colspan])::before { content: attr(data-label); color: var(--muted); font-size: .75rem; font-weight: 600; }
+  .tableScroll table:not(.archiveTable) .actionsCell { justify-content: flex-start; }
+  .tableScroll table:not(.archiveTable) td[colspan] { display: block; width: 100%; padding: 0; border-bottom: 0; }
+  .tableScroll table:not(.archiveTable) td[colspan]::before { content: none; }
+}
 @media (max-width: 760px) { .page { padding: 1rem 1rem 3rem; } .toolbar { padding: 1rem; } .search { flex: 1 1 100%; width: 100%; } .footer { padding: .75rem 1rem; } }
 @media (max-width: 640px) { .historyItem { grid-template-columns: minmax(0, 1fr); } .historyComment { margin-left: 2.8rem; } }

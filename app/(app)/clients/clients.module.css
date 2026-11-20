@@ -14,13 +14,13 @@
 .statusField option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .statusField select { color-scheme: light; }
 .tableScroll { overflow-x: auto; }
-.tableScroll table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; }
+.tableScroll table { width: 100%; border-collapse: collapse; text-align: left; }
 .tableScroll table[data-archived-table] { min-width: 0; table-layout: fixed; }
 .tableScroll table[data-archived-table] :is(th, td):last-child { width: 8.5rem; }
 .tableScroll th { padding: .9rem 1.5rem; border-bottom: 1px solid var(--line); color: var(--muted); background: var(--hover); font-size: .78rem; font-weight: 600; white-space: nowrap; }
 .tableScroll th button { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; }
 .tableScroll th button span { color: var(--brand); font-size: 1rem; }
-.clientRow td { padding: .85rem 1.5rem; border-bottom: 1px solid var(--line); font-size: .85rem; }
+.clientRow td { padding: .85rem 1.5rem; border-bottom: 1px solid var(--line); font-size: .85rem; overflow-wrap: anywhere; }
 .clientRow:last-child td { border-bottom: 0; }
 .activeBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; color: var(--brand); background: var(--hover); font-size: .75rem; font-weight: 600; }
 .inactiveBadge { display: inline-block; padding: .3rem .65rem; border-radius: 999px; color: var(--muted); background: var(--hover); font-size: .75rem; font-weight: 600; }
@@ -103,5 +103,23 @@
 .detailsGrid dt { color: var(--muted); }
 .detailsGrid dd { overflow-wrap: anywhere; }
 .dialog :is(button, input, select, textarea):focus-visible, .addButton:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 1024px) {
+  .tableScroll table:not([data-archived-table]) th { padding: .75rem .75rem; white-space: normal; }
+  .tableScroll table:not([data-archived-table]) .clientRow td { padding: .75rem .75rem; }
+}
+@media (max-width: 767px) {
+  .tableScroll { overflow-x: visible; }
+  .tableScroll table:not([data-archived-table]) thead { display: none; }
+  .tableScroll table:not([data-archived-table]),
+  .tableScroll table:not([data-archived-table]) tbody,
+  .tableScroll table:not([data-archived-table]) .clientRow,
+  .tableScroll table:not([data-archived-table]) tr:has(.emptyCell),
+  .tableScroll table:not([data-archived-table]) .emptyCell { display: block; width: 100%; }
+  .tableScroll table:not([data-archived-table]) .clientRow { padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
+  .tableScroll table:not([data-archived-table]) .clientRow:last-child { border-bottom: 0; }
+  .tableScroll table:not([data-archived-table]) .clientRow td { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; gap: .5rem; padding: .35rem 0; border-bottom: 0; }
+  .tableScroll table:not([data-archived-table]) .clientRow td::before { content: attr(data-label); color: var(--muted); font-size: .75rem; font-weight: 600; }
+  .tableScroll table:not([data-archived-table]) .clientRow td :is(.activeBadge, .inactiveBadge, .detailsButton) { justify-self: start; }
+}
 @media (max-width: 760px) { .clients { padding: 1rem 1rem 3rem; } .toolbar { padding: 1rem; } .searchField { flex: 1 1 100%; width: 100%; } .footer { padding: .75rem 1rem; } }
 @media (max-width: 600px) { .dialog { width: calc(100vw - 1rem); max-height: 96dvh; } .dialogBody { max-height: calc(96dvh - 175px); padding: .25rem 1rem 1rem; } .dialogHeader, .dialogFooter { padding: .8rem 1rem; } .formGrid, .attorneyDetails div { grid-template-columns: 1fr; } .dialogFooter { align-items: stretch; flex-direction: column; } .dialogFooter > div { justify-content: flex-end; } }

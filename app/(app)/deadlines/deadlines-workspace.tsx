@@ -117,15 +117,15 @@ export default function DeadlinesWorkspace({ initialTasks, clients, staff, initi
       </div>
       <div className={styles.tableScroll}><table><thead><tr><th scope="col">Client Name</th><th scope="col">Task Name</th><th scope="col">Assign Personnel</th><th scope="col">Deadline (Date)</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead><tbody>
         {visible.map((task) => <tr key={task.id}>
-          <td><Link className={styles.clientLink} href={`/clients/${task.clientId}`}>{task.clientName}</Link></td>
-          <td>{role === "secretary" && task.status !== "awaiting_approval" ? <button type="button" className={styles.taskButton} onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}>{task.title}</button> : task.title}</td>
-          <td>{task.assignedName}</td>
-          <td className={styles.dateCell}>{showDate(task.dueDate)}</td>
-          <td><div className={styles.statusCell}>
+          <td data-label="Client Name"><Link className={styles.clientLink} href={`/clients/${task.clientId}`}>{task.clientName}</Link></td>
+          <td data-label="Task Name">{role === "secretary" && task.status !== "awaiting_approval" ? <button type="button" className={styles.taskButton} onClick={() => openEdit(task)} aria-label={`Edit ${task.title}`}>{task.title}</button> : task.title}</td>
+          <td data-label="Assign Personnel">{task.assignedName}</td>
+          <td data-label="Deadline (Date)" className={styles.dateCell}>{showDate(task.dueDate)}</td>
+          <td data-label="Status"><div className={styles.statusCell}>
             <div className={styles.statusBadges}>{task.status === "awaiting_approval" && <span className={`${styles.statusBadge} ${styles.awaiting}`}>Awaiting approval</span>}{task.status === "needs_changes" && <span className={`${styles.statusBadge} ${styles.changes}`}>Needs changes</span>}<span className={`${styles.statusBadge} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span></div>
             {role === "staff" && task.assignedTo === currentUserId && task.status === "needs_changes" && task.reviewHistory.some((entry) => entry.event === "returned") && <span className={styles.feedback}><strong>Admin feedback:</strong> {[...task.reviewHistory].reverse().find((entry) => entry.event === "returned")?.comment}</span>}
           </div></td>
-          <td><div className={styles.actionsCell}>
+          <td data-label="Actions"><div className={styles.actionsCell}>
             {task.reviewHistory.length > 0 && <button type="button" className={styles.doneButton} onClick={() => openHistory(task)}>Review history</button>}
             {role === "staff" && task.assignedTo === currentUserId && (task.status === "open" || task.status === "needs_changes") && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Submit for approval</button>}
             {role === "admin" && (task.status === "needs_changes" || (task.status === "open" && task.assignedRole === "secretary")) && <button type="button" className={styles.doneButton} onClick={() => advanceTask(task)} disabled={busy}>Mark Done</button>}

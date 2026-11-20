@@ -81,6 +81,17 @@ test("secretary task flows persist across deadlines, client detail, and dashboar
     await expect(page.getByRole("button", { name: "Mark Done" })).toHaveCount(0);
     await expect(page.getByRole("table").getByRole("row", { name: new RegExp(editedTitle) })).toBeVisible();
     await expect(page.getByRole("button", { name: `Edit ${editedTitle}` })).toBeVisible();
+    for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 740 }]) {
+      await page.setViewportSize(viewport);
+      const overflow = await page.evaluate(() => {
+        const tableWrap = document.querySelector("table")?.parentElement;
+        return {
+          pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          tableOverflow: tableWrap ? tableWrap.scrollWidth > tableWrap.clientWidth : true,
+        };
+      });
+      expect(overflow).toEqual({ pageOverflow: false, tableOverflow: false });
+    }
     await page.goto(`/clients/${clientId}`);
     await expect(page.getByText(editedTitle)).toBeVisible();
     await expect(page.getByText("Done", { exact: true })).toHaveCount(0);

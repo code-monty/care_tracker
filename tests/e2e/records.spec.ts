@@ -55,6 +55,17 @@ test("saved clients and appointments survive reload and appear on dashboard", as
   await page.reload();
   await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(name);
   await expect(page.getByText(name).first()).toBeVisible();
+  for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 740 }]) {
+    await page.setViewportSize(viewport);
+    const overflow = await page.evaluate(() => {
+      const tableWrap = document.querySelector("table")?.parentElement;
+      return {
+        pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        tableOverflow: tableWrap ? tableWrap.scrollWidth > tableWrap.clientWidth : true,
+      };
+    });
+    expect(overflow).toEqual({ pageOverflow: false, tableOverflow: false });
+  }
 
   await page.setViewportSize({ width: 390, height: 600 });
   await page.getByRole("button", { name: "Open profile menu" }).click();
