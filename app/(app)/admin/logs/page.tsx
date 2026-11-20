@@ -34,7 +34,7 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Pr
         <button type="submit">Apply filters</button><Link href="/admin/logs">Clear</Link>
       </form>
       <div className={styles.tableScroll}><table><thead><tr><th scope="col">UpdateID</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">User</th><th scope="col">Role</th><th scope="col">Activity</th></tr></thead><tbody>
-        {rows.map((row) => { const stamp = formatLogDateTime(row.created_at); return <tr key={row.id}><td>{row.id}</td><td>{stamp.date}</td><td>{stamp.time}</td><td>{logActorName(row)}</td><td>{logActorRole(row)}</td><td>{activityDescription(row)}</td></tr>; })}
+        {rows.map((row) => { const stamp = formatLogDateTime(row.created_at); return <tr key={row.id}><td data-label="UpdateID">{row.id}</td><td data-label="Date">{stamp.date}</td><td data-label="Time">{stamp.time}</td><td data-label="User">{logActorName(row)}</td><td data-label="Role">{logActorRole(row)}</td><td data-label="Activity">{activityDescription(row)}</td></tr>; })}
         {rows.length === 0 && <tr><td colSpan={6} className={styles.empty}>{count ? "No entries on this page." : "No activity matches these filters."}</td></tr>}
       </tbody></table></div>
       <footer className={styles.footer}><span>{count ? `Showing ${(page - 1) * LOG_PAGE_SIZE + 1}–${Math.min(page * LOG_PAGE_SIZE, count)} of ${count} events` : "Showing 0 events"}</span><nav aria-label="Activity pages">{page > 1 && <Link href={pageLink(page - 1)}>Previous</Link>}<span>Page {page} of {pages}</span>{page < pages && <Link href={pageLink(page + 1)}>Next</Link>}</nav></footer>

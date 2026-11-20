@@ -70,9 +70,19 @@ test("Admin views, filters, and exports activity while Staff is denied", async (
       await expect(page.locator("[data-theme]").first()).toHaveAttribute("data-theme", theme);
       await expect(page.getByRole("columnheader", { name: "Activity" })).toBeVisible();
     }
-    await page.setViewportSize({ width: 390, height: 740 });
-    await expect(page.getByRole("heading", { name: "Activity Logs" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Export to CSV" })).toBeVisible();
+    for (const viewport of [{ width: 768, height: 1024 }, { width: 390, height: 740 }]) {
+      await page.setViewportSize(viewport);
+      await expect(page.getByRole("heading", { name: "Activity Logs" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Export to CSV" })).toBeVisible();
+      const overflow = await page.evaluate(() => {
+        const tableWrap = document.querySelector("table")?.parentElement;
+        return {
+          pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          tableOverflow: tableWrap ? tableWrap.scrollWidth > tableWrap.clientWidth : true,
+        };
+      });
+      expect(overflow).toEqual({ pageOverflow: false, tableOverflow: false });
+    }
 
     const staffContext = await browser.newContext();
     const staffPage = await staffContext.newPage();
