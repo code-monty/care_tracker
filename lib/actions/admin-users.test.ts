@@ -1,9 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ requireActiveUser: vi.fn(), createAdminClient: vi.fn(), createClient: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  requireActiveUser: vi.fn(),
+  createAdminClient: vi.fn(),
+  createClient: vi.fn(),
+  sendTemporaryPasswordEmail: vi.fn(),
+}));
 vi.mock("@/lib/auth/session", () => ({ requireActiveUser: mocks.requireActiveUser }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
+vi.mock("@/lib/email/send-temporary-password", () => ({ sendTemporaryPasswordEmail: mocks.sendTemporaryPasswordEmail }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { createUserAccount, listUserAccounts, resetUserPassword, setUserStatus, updateUserAccount } from "./admin-users";
@@ -37,10 +43,11 @@ describe("Admin user action authorization", () => {
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
-  it("generates a random 10-character temporary password when Admin creates or resets a user", async () => {
+  it("emails a random 10-character temporary password to the user without returning it to Admin", async () => {
     const adminId = "10000000-0000-4000-8000-000000000002";
     const targetId = "10000000-0000-4000-8000-000000000003";
     mocks.requireActiveUser.mockResolvedValue({ user: { id: adminId }, profile: { role: "admin", status: "active" } });
+    mocks.sendTemporaryPasswordEmail.mockResolvedValue(undefined);
 
     const createUser = vi.fn().mockResolvedValue({ data: { user: { id: targetId } }, error: null });
     const updateUserById = vi.fn().mockResolvedValue({ data: { user: { id: targetId } }, error: null });
@@ -54,7 +61,7 @@ describe("Admin user action authorization", () => {
         select: () => ({
           eq: () => ({
             maybeSingle: vi.fn().mockResolvedValue({
-              data: { full_name: "Fake User", role: "staff", status: "active" },
+              data: { full_name: "Fake User", email: "fake@example.test", role: "staff", status: "active" },
               error: null,
             }),
           }),
@@ -65,14 +72,19 @@ describe("Admin user action authorization", () => {
     const created = await createUserAccount({ fullName: "Fake User", email: "fake@example.test", role: "staff" });
     const reset = await resetUserPassword(targetId);
 
-    expect(created.error).toBeUndefined();
-    expect(reset.error).toBeUndefined();
-    expect(created.password).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
-    expect(reset.password).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
-    expect(created.password).not.toBe("123456");
-    expect(reset.password).not.toBe("123456");
-    expect(created.password).not.toBe(reset.password);
-    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ password: created.password }));
-    expect(updateUserById).toHaveBeenCalledWith(targetId, { password: reset.password });
+    expect(created).toEqual({});
+    expect(reset).toEqual({});
+    expect("password" in created).toBe(false);
+    expect("password" in reset).toBe(false);
+
+    const createdPassword = createUser.mock.calls[0]?.[0]?.password as string;
+    const resetPassword = updateUserById.mock.calls[0]?.[1]?.password as string;
+    expect(createdPassword).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
+    expect(resetPassword).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
+    expect(createdPassword).not.toBe("123456");
+    expect(resetPassword).not.toBe("123456");
+    expect(createdPassword).not.toBe(resetPassword);
+    expect(mocks.sendTemporaryPasswordEmail).toHaveBeenNthCalledWith(1, "fake@example.test", createdPassword, "created");
+    expect(mocks.sendTemporaryPasswordEmail).toHaveBeenNthCalledWith(2, "fake@example.test", resetPassword, "reset");
   });
 });

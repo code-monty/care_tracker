@@ -1,7 +1,25 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+
+const MAILPIT_API = "http://127.0.0.1:54324/api/v1";
+
+async function latestTemporaryPasswordFor(request: APIRequestContext, email: string): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const res = await request.get(`${MAILPIT_API}/search`, { params: { query: `to:${email}` } });
+    const body = await res.json();
+    if (body.messages?.length) {
+      const latestId = body.messages[0].ID;
+      const full = await request.get(`${MAILPIT_API}/message/${latestId}`);
+      const fullBody = await full.json();
+      const match = /temporary password is ([A-HJ-NP-Za-km-z2-9!@#$%]{10})/.exec(fullBody.Text ?? "");
+      if (match) return match[1];
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`No temporary password email found for ${email} within the polling timeout`);
+}
 
 function localEnvironment() {
   const content = readFileSync(".env.local", "utf8");
@@ -16,7 +34,7 @@ async function setStepUp(page: import("@playwright/test").Page, userId: string, 
   await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
 }
 
-test("Admin manages users and temporary passwords require a change", async ({ page, browser }) => {
+test("Admin manages users and temporary passwords require a change", async ({ page, browser, request }) => {
   test.setTimeout(180_000);
   const env = localEnvironment();
   const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -51,12 +69,11 @@ test("Admin manages users and temporary passwords require a change", async ({ pa
     await form.getByLabel("Email address").fill(targetEmail);
     await expect(form.getByLabel("Role").locator("option")).toHaveText(["Staff", "Secretary", "Admin"]);
     await form.getByRole("button", { name: "Create user" }).click();
-    const secretDialog = page.getByRole("dialog", { name: "Temporary password" });
-    await expect(secretDialog).toBeVisible({ timeout: 30_000 });
-    const temporaryPassword = await secretDialog.locator("output").innerText();
+    await expect(form).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByRole("status")).toHaveText("Account created. A temporary password was sent to the user's registered email.");
+    await expect(page.getByRole("dialog", { name: "Temporary password" })).toBeHidden();
+    const temporaryPassword = await latestTemporaryPasswordFor(request, targetEmail);
     expect(temporaryPassword).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
-    await secretDialog.getByRole("button", { name: "Done" }).click();
-    await expect(secretDialog).toBeHidden();
     const { data: rows } = await admin.from("profiles").select("id, status, must_change_password").eq("email", targetEmail).single();
     if (!rows) throw new Error("Target account missing");
     targetId = rows.id;
@@ -98,10 +115,10 @@ test("Admin manages users and temporary passwords require a change", async ({ pa
     const revisedRow = page.getByRole("row", { name: new RegExp(revisedEmail) });
     await expect(revisedRow.getByText("Admin", { exact: true })).toBeVisible();
     await revisedRow.getByRole("button", { name: "Reset password" }).click();
-    const resetDialog = page.getByRole("dialog", { name: "Temporary password" });
-    await expect(resetDialog).toBeVisible({ timeout: 30_000 });
-    await expect(resetDialog.locator("output")).toHaveText(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
-    await resetDialog.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByRole("status")).toHaveText("Temporary password sent to the user's registered email.", { timeout: 30_000 });
+    await expect(page.getByRole("dialog", { name: "Temporary password" })).toBeHidden();
+    const resetPassword = await latestTemporaryPasswordFor(request, revisedEmail);
+    expect(resetPassword).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
     await revisedRow.getByRole("button", { name: "Deactivate" }).click();
     await expect(revisedRow.getByText("Disabled")).toBeVisible({ timeout: 30_000 });
     await revisedRow.getByRole("button", { name: "Reactivate" }).click();

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, X, Copy, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { createUserAccount, resetUserPassword, setUserStatus, updateUserAccount, type AccountRow } from "@/lib/actions/admin-users";
 import styles from "./users.module.css";
 
@@ -19,22 +19,21 @@ export function UsersWorkspace({ accounts, currentUserId }: { accounts: AccountR
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AccountRow["role"]>("staff");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const returnFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!mode && !password) return;
+    if (!mode) return;
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     const controls = () => Array.from(dialog?.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled)") ?? []);
     const focusable = controls();
-    (mode ? focusable.find((element) => element.tagName === "INPUT") : focusable.find((element) => element.textContent?.includes("Copy")))?.focus();
+    focusable.find((element) => element.tagName === "INPUT")?.focus();
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         if (dialog?.querySelector<HTMLButtonElement>("header button")?.disabled) return;
-        setMode(null); setPassword("");
+        setMode(null);
         requestAnimationFrame(() => returnFocus.current?.focus());
       }
       if (event.key !== "Tab") return;
@@ -45,7 +44,7 @@ export function UsersWorkspace({ accounts, currentUserId }: { accounts: AccountR
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [mode, password]);
+  }, [mode]);
 
   const filtered = accounts.filter((account) => {
     const needle = query.trim().toLowerCase();
@@ -78,8 +77,7 @@ export function UsersWorkspace({ accounts, currentUserId }: { accounts: AccountR
         : await updateUserAccount({ id: editing?.id, fullName, email, role });
       if (result.error) { setError(result.error); return; }
       setMode(null);
-      if (result.password) setPassword(result.password);
-      else setNotice("Account saved.");
+      setNotice(mode === "create" ? "Account created. A temporary password was sent to the user's registered email." : "Account saved.");
       router.refresh();
     } catch { setError("Unable to save account. Please try again."); }
     finally { setBusy(false); }
@@ -98,16 +96,15 @@ export function UsersWorkspace({ accounts, currentUserId }: { accounts: AccountR
   }
   async function resetPassword(account: AccountRow) {
     returnFocus.current = document.activeElement as HTMLElement;
-    if (!window.confirm(`Reset ${account.full_name ?? account.email}'s password? Their current password will stop working.`)) return;
+    if (!window.confirm(`Reset ${account.full_name ?? account.email}'s password? Their current password will stop working and a temporary password will be sent to their registered email.`)) return;
     setBusy(true); setError(""); setNotice("");
     try {
       const result = await resetUserPassword(account.id);
       if (result.error) setError(result.error);
-      else if (result.password) { setPassword(result.password); router.refresh(); }
+      else { setNotice("Temporary password sent to the user's registered email."); router.refresh(); }
     } catch { setError("Unable to reset password."); }
     finally { setBusy(false); }
   }
-  function closePassword() { setPassword(""); setNotice("Temporary password dialog closed."); requestAnimationFrame(() => returnFocus.current?.focus()); }
 
   return <main className={styles.page}>
     <header className={styles.heading}><div><h1>Users</h1><p>Manage access to CareTracker.</p></div><button type="button" className={styles.primary} onClick={openCreate}><Plus size={18} aria-hidden="true" /> Add user</button></header>
@@ -125,7 +122,6 @@ export function UsersWorkspace({ accounts, currentUserId }: { accounts: AccountR
       </tbody></table></div>
       <footer className={styles.footer}><span>{filtered.length ? `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} of ${filtered.length} users` : "Showing 0 users"}</span><nav aria-label="User pages"><button type="button" aria-label="Previous page" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft size={17} /></button><span aria-current="page">{currentPage}</span><button type="button" aria-label="Next page" disabled={currentPage === maxPage} onClick={() => setPage(currentPage + 1)}><ChevronRight size={17} /></button></nav></footer>
     </section>
-    {mode && <div className={styles.backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) closeForm(); }}><section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="user-dialog-title"><header><h2 id="user-dialog-title">{mode === "create" ? "Add user" : "Edit user"}</h2><button type="button" aria-label="Close" disabled={busy} onClick={closeForm}><X size={20} /></button></header><form onSubmit={submit}><div className={styles.fields}><label>Full name<input autoFocus required maxLength={120} value={fullName} onChange={(event) => setFullName(event.target.value)} /></label><label>Email address<input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Role<select value={role} onChange={(event) => setRole(event.target.value as AccountRow["role"])}><option value="staff">Staff</option><option value="secretary">Secretary</option><option value="admin">Admin</option></select></label>{mode === "create" && <p>New users are active immediately. A random 10-character temporary password will be shown once after creation and must be changed after sign-in.</p>}{mode === "edit" && editing?.email !== email.trim().toLowerCase() && <p>Google sign-in with the old email will stop working. The user can sign in with their password and new email.</p>}{error && <p role="alert" className={styles.error}>{error}</p>}</div><footer><button type="button" disabled={busy} onClick={closeForm}>Cancel</button><button className={styles.primary} type="submit" disabled={busy}>{busy ? "Saving…" : mode === "create" ? "Create user" : "Save changes"}</button></footer></form></section></div>}
-    {password && <div className={styles.backdrop}><section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="temporary-password-title"><header><h2 id="temporary-password-title">Temporary password</h2><button type="button" aria-label="Close" onClick={closePassword}><X size={20} /></button></header><div className={styles.fields}><p>Share this temporary password securely. The user must verify their email and change it to a password of at least 10 characters before using CareTracker.</p><output className={styles.secret}>{password}</output><button type="button" className={styles.copy} onClick={() => navigator.clipboard.writeText(password)}><Copy size={17} /> Copy password</button></div><footer><button type="button" className={styles.primary} onClick={closePassword}>Done</button></footer></section></div>}
+    {mode && <div className={styles.backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) closeForm(); }}><section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="user-dialog-title"><header><h2 id="user-dialog-title">{mode === "create" ? "Add user" : "Edit user"}</h2><button type="button" aria-label="Close" disabled={busy} onClick={closeForm}><X size={20} /></button></header><form onSubmit={submit}><div className={styles.fields}><label>Full name<input autoFocus required maxLength={120} value={fullName} onChange={(event) => setFullName(event.target.value)} /></label><label>Email address<input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Role<select value={role} onChange={(event) => setRole(event.target.value as AccountRow["role"])}><option value="staff">Staff</option><option value="secretary">Secretary</option><option value="admin">Admin</option></select></label>{mode === "create" && <p>New users are active immediately. A random 10-character temporary password will be sent to their registered email and must be changed after sign-in.</p>}{mode === "edit" && editing?.email !== email.trim().toLowerCase() && <p>Google sign-in with the old email will stop working. The user can sign in with their password and new email.</p>}{error && <p role="alert" className={styles.error}>{error}</p>}</div><footer><button type="button" disabled={busy} onClick={closeForm}>Cancel</button><button className={styles.primary} type="submit" disabled={busy}>{busy ? "Saving…" : mode === "create" ? "Create user" : "Save changes"}</button></footer></form></section></div>}
   </main>;
 }

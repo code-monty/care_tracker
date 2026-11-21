@@ -5,10 +5,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireActiveUser } from "@/lib/auth/session";
+import { sendTemporaryPasswordEmail } from "@/lib/email/send-temporary-password";
 import { accountIdSchema, createAccountSchema, statusActionSchema, updateAccountSchema } from "@/lib/validation/admin-user";
 
 export type AccountRow = { id: string; full_name: string | null; email: string | null; role: "admin" | "staff" | "secretary"; status: "pending" | "active" | "disabled"; created_at: string; must_change_password: boolean };
-type ActionResult = { error?: string; password?: string };
+type ActionResult = { error?: string };
 
 const TEMPORARY_PASSWORD_LENGTH = 10;
 const TEMPORARY_PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
@@ -53,8 +54,14 @@ export async function createUserAccount(input: unknown): Promise<ActionResult> {
     p_action: "create",
   });
   if (profileError) return { error: "Account was created pending. Please review it before allowing access." };
+  try {
+    await sendTemporaryPasswordEmail(parsed.data.email, password, "created");
+  } catch {
+    revalidatePath("/admin/users");
+    return { error: "Account was created, but the temporary password email could not be sent. Use Reset password to try again." };
+  }
   revalidatePath("/admin/users");
-  return { password };
+  return {};
 }
 
 export async function updateUserAccount(input: unknown): Promise<ActionResult> {
@@ -113,8 +120,9 @@ export async function resetUserPassword(input: unknown): Promise<ActionResult> {
   if (actor === parsed.data) return { error: "Manage your own account separately." };
   const supabase = await createClient();
   const { data: target } = await supabase.from("profiles")
-    .select("full_name, role, status").eq("id", parsed.data).maybeSingle();
+    .select("full_name, email, role, status").eq("id", parsed.data).maybeSingle();
   if (!target) return { error: "Account not found" };
+  if (!target.email) return { error: "Account has no registered email address." };
   const admin = createAdminClient();
   const password = generateTemporaryPassword();
   const { error: profileError } = await admin.rpc("admin_set_profile", {
@@ -125,6 +133,12 @@ export async function resetUserPassword(input: unknown): Promise<ActionResult> {
   if (profileError) return { error: "Unable to prepare account for a temporary password." };
   const { error: authError } = await admin.auth.admin.updateUserById(parsed.data, { password });
   if (authError) return { error: "Password reset failed. The account now requires a password change; retry the reset." };
+  try {
+    await sendTemporaryPasswordEmail(target.email, password, "reset");
+  } catch {
+    revalidatePath("/admin/users");
+    return { error: "Password was reset, but the temporary password email could not be sent. Retry Reset password." };
+  }
   revalidatePath("/admin/users");
-  return { password };
+  return {};
 }
