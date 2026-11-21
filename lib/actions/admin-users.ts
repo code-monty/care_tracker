@@ -1,5 +1,6 @@
 "use server";
 
+import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -9,7 +10,15 @@ import { accountIdSchema, createAccountSchema, statusActionSchema, updateAccount
 export type AccountRow = { id: string; full_name: string | null; email: string | null; role: "admin" | "staff" | "secretary"; status: "pending" | "active" | "disabled"; created_at: string; must_change_password: boolean };
 type ActionResult = { error?: string; password?: string };
 
-const TEMPORARY_PASSWORD = "123456";
+const TEMPORARY_PASSWORD_LENGTH = 10;
+const TEMPORARY_PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+
+function generateTemporaryPassword() {
+  return Array.from(
+    { length: TEMPORARY_PASSWORD_LENGTH },
+    () => TEMPORARY_PASSWORD_ALPHABET[randomInt(TEMPORARY_PASSWORD_ALPHABET.length)],
+  ).join("");
+}
 
 async function adminSession() {
   const { user, profile } = await requireActiveUser();
@@ -32,7 +41,7 @@ export async function createUserAccount(input: unknown): Promise<ActionResult> {
   const parsed = createAccountSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the account details" };
   const admin = createAdminClient();
-  const password = TEMPORARY_PASSWORD;
+  const password = generateTemporaryPassword();
   const { data, error } = await admin.auth.admin.createUser({
     email: parsed.data.email, password, email_confirm: true,
     user_metadata: { full_name: parsed.data.fullName },
@@ -107,7 +116,7 @@ export async function resetUserPassword(input: unknown): Promise<ActionResult> {
     .select("full_name, role, status").eq("id", parsed.data).maybeSingle();
   if (!target) return { error: "Account not found" };
   const admin = createAdminClient();
-  const password = TEMPORARY_PASSWORD;
+  const password = generateTemporaryPassword();
   const { error: profileError } = await admin.rpc("admin_set_profile", {
     p_actor: actor, p_target: parsed.data, p_full_name: target.full_name,
     p_role: target.role, p_status: target.status, p_force_password_change: true,

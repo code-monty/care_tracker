@@ -36,4 +36,43 @@ describe("Admin user action authorization", () => {
     expect(mocks.createAdminClient).not.toHaveBeenCalled();
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
+
+  it("generates a random 10-character temporary password when Admin creates or resets a user", async () => {
+    const adminId = "10000000-0000-4000-8000-000000000002";
+    const targetId = "10000000-0000-4000-8000-000000000003";
+    mocks.requireActiveUser.mockResolvedValue({ user: { id: adminId }, profile: { role: "admin", status: "active" } });
+
+    const createUser = vi.fn().mockResolvedValue({ data: { user: { id: targetId } }, error: null });
+    const updateUserById = vi.fn().mockResolvedValue({ data: { user: { id: targetId } }, error: null });
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    mocks.createAdminClient.mockReturnValue({
+      auth: { admin: { createUser, updateUserById } },
+      rpc,
+    });
+    mocks.createClient.mockResolvedValue({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { full_name: "Fake User", role: "staff", status: "active" },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    });
+
+    const created = await createUserAccount({ fullName: "Fake User", email: "fake@example.test", role: "staff" });
+    const reset = await resetUserPassword(targetId);
+
+    expect(created.error).toBeUndefined();
+    expect(reset.error).toBeUndefined();
+    expect(created.password).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
+    expect(reset.password).toMatch(/^[A-HJ-NP-Za-km-z2-9!@#$%]{10}$/);
+    expect(created.password).not.toBe("123456");
+    expect(reset.password).not.toBe("123456");
+    expect(created.password).not.toBe(reset.password);
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ password: created.password }));
+    expect(updateUserById).toHaveBeenCalledWith(targetId, { password: reset.password });
+  });
 });
