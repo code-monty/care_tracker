@@ -6,10 +6,10 @@
 .heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
 .panel { margin-bottom: 1.25rem; overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 1px 2px #0000000d; }
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line); }
-.searchField { display: flex; align-items: center; gap: .65rem; width: min(100%, 21rem); min-height: 2.75rem; padding: 0 .85rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--muted); }
+.searchField { display: flex; align-items: center; gap: .65rem; width: min(100%, 21rem); min-height: 2.75rem; padding: 0 .85rem; border: 1px solid var(--line); border-radius: .85rem; color: var(--muted); }
 .searchField input { width: 100%; min-width: 0; outline: 0; color: var(--text); background: transparent; font-size: .875rem; }
 .searchField input::placeholder { color: var(--muted); }
-.filterButton { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--text); background: var(--surface); font-size: .875rem; cursor: pointer; }
+.filterButton { min-height: 2.75rem; padding: .55rem .85rem; border: 1px solid var(--line); border-radius: .85rem; color: var(--text); background: var(--surface); font-size: .875rem; cursor: pointer; }
 .filterButton:hover { background: var(--hover); }
 .filterButton[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); background: var(--hover); font-weight: 600; }
 .directory { list-style: none; }
@@ -50,6 +50,7 @@
 .detailsButton { display: inline-flex; align-items: center; min-height: 2.25rem; padding: .35rem .65rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--brand); font-size: .8rem; font-weight: 600; white-space: nowrap; }
 .detailsButton:hover { background: var(--hover); }
 .page :is(a, button, input):focus-visible, .searchField:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.page .searchField input:focus-visible { outline: 0; box-shadow: none; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 760px) { .page { padding: 1rem 1rem 3rem; } .toolbar, .sectionHeader, .details, .footer { padding: 1rem; } .details { grid-template-columns: 1fr; } .attorneyRow { padding: 1rem; } .clientCount { align-self: flex-start; } }
 @media (max-width: 520px) { .attorneyRow { flex-wrap: wrap; } .attorneyInfo { flex-basis: calc(100% - 4rem); } .clientCount { margin-left: 3.75rem; } .chevron { margin-left: auto; } }

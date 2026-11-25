@@ -36,3 +36,36 @@ html[data-theme-animating] :is(body, body *, body *::before, body *::after) {
     transition-duration: 0ms;
   }
 }
+
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  select::picker-icon {
+    color: var(--muted);
+  }
+
+  ::picker(select) {
+    margin-top: .35rem;
+    padding: .35rem;
+    border: 1px solid var(--line);
+    border-radius: .85rem;
+    color: var(--text);
+    background: var(--surface);
+    box-shadow: 0 12px 28px #00000033;
+  }
+
+  select option {
+    padding: .45rem .7rem;
+    border-radius: .5rem;
+    color: var(--text);
+    background: transparent;
+  }
+
+  select option:hover,
+  select option:checked {
+    background: var(--hover);
+  }
+}

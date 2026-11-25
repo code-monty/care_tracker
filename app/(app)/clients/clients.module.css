@@ -5,12 +5,16 @@
 .heading p { margin-top: .35rem; color: var(--muted); font-size: .875rem; }
 .panel { overflow: hidden; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); box-shadow: 0 1px 2px #0000000d; }
 .toolbar { display: flex; flex-wrap: wrap; gap: .75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line); }
-.searchField, .statusField { display: flex; align-items: center; gap: .65rem; min-height: 2.75rem; padding: 0 .85rem; border: 1px solid var(--line); border-radius: .6rem; color: var(--muted); background: var(--surface); }
+.searchField, .statusField { display: flex; align-items: center; gap: .65rem; min-height: 2.75rem; padding: 0 .85rem; border: 1px solid var(--line); border-radius: .85rem; color: var(--muted); background: var(--surface); }
 .searchField { width: min(100%, 21rem); }
 .searchField input { width: 100%; min-width: 0; outline: 0; color: var(--text); background: transparent; font-size: .875rem; }
 .searchField input::placeholder { color: var(--muted); }
-.statusField { min-width: 10rem; font-size: .875rem; }
-.statusField select { flex: 1; appearance: none; outline: 0; color: var(--text); background: transparent; color-scheme: dark; cursor: pointer; }
+.statusField { gap: .25rem; min-width: 11rem; padding: 0 .65rem 0 .85rem; font-size: .875rem; }
+.statusField select { flex: 1; min-width: 7.5rem; padding: .5rem .65rem; border-radius: .6rem; appearance: none; outline: 0; color: var(--text); background: transparent; color-scheme: dark; cursor: pointer; }
+@supports (appearance: base-select) {
+  .statusField select { appearance: base-select; }
+  .statusField select::picker-icon { display: none; }
+}
 .statusField option { color: var(--text); background: var(--surface); }
 :global([data-theme="light"]) .statusField select { color-scheme: light; }
 .tableScroll { overflow-x: auto; }
@@ -37,6 +41,7 @@
 .pagination button:disabled { opacity: .45; cursor: not-allowed; }
 .pagination span { color: var(--text); background: var(--hover); }
 .clients :is(button, input, select):focus-visible, .clients :is(.searchField, .statusField):focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.clients :is(.searchField input, .statusField select):focus-visible { outline: 0; box-shadow: none; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .addButton { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.75rem; padding: .55rem 1rem; border-radius: .6rem; color: #fff; background: #006948; box-shadow: 0 4px 14px #00694830; font-size: .875rem; font-weight: 600; cursor: pointer; }
 .addButton:hover { background: #00543a; }
