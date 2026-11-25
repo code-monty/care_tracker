@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { TASKS_AND_DEADLINES_ENABLED } from "../../lib/config/features";
 
 test("client detail books a fixed-client appointment for Secretary only", async ({ page }) => {
   test.setTimeout(180_000);
@@ -44,7 +45,11 @@ test("client detail books a fixed-client appointment for Secretary only", async 
       await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
       await page.goto(`/clients/${clientId}`);
       await expect(page.getByRole("heading", { name: "Client Information" })).toBeVisible();
-      await expect(page.getByRole("link", { name: user.role === "admin" ? "Add Task / View Deadlines" : "View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
+      if (TASKS_AND_DEADLINES_ENABLED) {
+        await expect(page.getByRole("link", { name: user.role === "admin" ? "Add Task / View Deadlines" : "View Deadlines" })).toHaveAttribute("href", `/deadlines?client=${clientId}`);
+      } else {
+        await expect(page.getByRole("heading", { name: "Tasks / Assignments" })).toHaveCount(0);
+      }
       const open = page.getByRole("button", { name: "Add Appointment" });
       if (user.role !== "secretary") {
         await expect(open).toHaveCount(0);

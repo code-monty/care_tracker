@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { TASKS_AND_DEADLINES_ENABLED } from "../../lib/config/features";
 
 function localEnvironment() {
   const content = readFileSync(".env.local", "utf8");
@@ -52,20 +53,25 @@ test("Secretary uses daily workflows and cannot reach Admin pages or export logs
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
     await expect(page.locator("header").getByText("Secretary", { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Users" })).toHaveCount(0);
-    await page.goto("/deadlines?client=" + clientId);
-    await expect(page.getByRole("heading", { name: "Deadlines" })).toBeVisible();
-    await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
-    await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
-    await expect(page.getByLabel("Assigned personnel")).toContainText(`Fake Secretary ${suffix}`);
-    await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
-    await page.getByRole("button", { name: `Edit ${ownTask}` }).click();
-    const dialog = page.getByRole("dialog");
-    await dialog.getByLabel("Task Name").fill(`Fake Secretary edited task ${suffix}`);
-    await dialog.getByRole("button", { name: "Save Task" }).click();
-    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary edited task ${suffix}`) })).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
-    await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
-    await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary edited task ${suffix}`) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
+    if (TASKS_AND_DEADLINES_ENABLED) {
+      await page.goto("/deadlines?client=" + clientId);
+      await expect(page.getByRole("heading", { name: "Deadlines" })).toBeVisible();
+      await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
+      await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
+      await expect(page.getByLabel("Assigned personnel")).toContainText(`Fake Secretary ${suffix}`);
+      await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
+      await page.getByRole("button", { name: `Edit ${ownTask}` }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Task Name").fill(`Fake Secretary edited task ${suffix}`);
+      await dialog.getByRole("button", { name: "Save Task" }).click();
+      await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary edited task ${suffix}`) })).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByRole("row", { name: new RegExp(otherTask) })).toHaveCount(0);
+      await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
+      await expect(page.getByRole("table").getByRole("row", { name: new RegExp(`Fake Secretary edited task ${suffix}`) }).getByRole("button", { name: "Mark Done" })).toHaveCount(0);
+    } else {
+      await page.goto("/deadlines");
+      await expect(page).toHaveURL(/\/dashboard/);
+    }
 
     for (const path of ["/admin/users", "/admin/logs", "/admin/settings", "/admin/backup"]) {
       await page.goto(path);

@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { TASKS_AND_DEADLINES_ENABLED } from "../../lib/config/features";
 
 function localEnvironment() {
   const content = readFileSync(".env.local", "utf8");
@@ -67,7 +68,8 @@ test("signed-in pages animate on navigation while the shell stays still", async 
     let count = 1;
     for (const [label, path] of [
       ["Clients", "/clients"], ["Attorneys", "/attorneys"], ["Appointments", "/appointments"],
-      ["Deadlines", "/deadlines"], ["Users", "/admin/users"], ["Activity Logs", "/admin/logs"],
+      ...(TASKS_AND_DEADLINES_ENABLED ? [["Deadlines", "/deadlines"] as const] : []),
+      ["Users", "/admin/users"], ["Activity Logs", "/admin/logs"],
       ["Settings", "/admin/settings"], ["Backup", "/admin/backup"],
     ] as const) {
       await nav.getByRole("link", { name: label }).click();

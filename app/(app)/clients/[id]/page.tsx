@@ -7,6 +7,7 @@ import { ArrowLeft, BriefcaseBusiness, CalendarDays, ClipboardList, Plus, UserRo
 import { ageFromBirthdate } from "@/lib/validation/client";
 import { useClientStore, type ClientStatus } from "../client-store";
 import { clientTasksForClient, getClientAttorneyHistory } from "@/lib/actions/records";
+import { TASKS_AND_DEADLINES_ENABLED } from "@/lib/config/features";
 import type { DeadlineRecord } from "@/lib/rules/deadlines";
 import styles from "./client-detail.module.css";
 import actionStyles from "./record-actions.module.css";
@@ -33,12 +34,13 @@ export default function ClientDetailPage() {
   const [archiving, setArchiving] = useState(false);
   const client = clients.find((record) => record.id === id);
   const [tasks, setTasks] = useState<DeadlineRecord[]>([]);
-  const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksLoading, setTasksLoading] = useState(TASKS_AND_DEADLINES_ENABLED);
   const [tasksError, setTasksError] = useState(false);
   const [attorneyHistory, setAttorneyHistory] = useState<Awaited<ReturnType<typeof getClientAttorneyHistory>>>([]);
   const [attorneyHistoryError, setAttorneyHistoryError] = useState(false);
 
   useEffect(() => {
+    if (!TASKS_AND_DEADLINES_ENABLED) return;
     let current = true;
     clientTasksForClient(id).then((records) => { if (current) { setTasks(records); setTasksError(false); } }).catch(() => { if (current) setTasksError(true); }).finally(() => { if (current) setTasksLoading(false); });
     return () => { current = false; };
@@ -70,14 +72,16 @@ export default function ClientDetailPage() {
         <section className={styles.card} aria-labelledby="status-heading"><div className={styles.cardHeader}><span className={styles.icon}><CalendarDays size={20} aria-hidden="true" /></span><div><h2 id="status-heading">Status</h2></div></div>{role === "staff" ? <p>{client.status}</p> : <><label className={styles.statusControl} htmlFor="client-status">Client status<select id="client-status" value={client.status} onChange={(event) => setStatus(client.id, event.target.value as ClientStatus)}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label><p className={styles.statusHint}>Changes are saved to the client record.</p></>}</section>
       </div>
     </div>
-    <section className={`${styles.card} ${styles.tasksCard}`} aria-labelledby="tasks-heading">
-      <div className={styles.cardHeader}><span className={styles.icon}><ClipboardList size={20} aria-hidden="true" /></span><div><h2 id="tasks-heading">Tasks / Assignments</h2></div></div>
-      {tasksLoading ? <p className={styles.emptyTasks}>Loading tasks…</p> : tasksError ? <p className={styles.emptyTasks} role="alert">Tasks could not be loaded. Reload to try again.</p> : tasks.length ? <div className={styles.taskTableWrap} tabIndex={0} role="region" aria-label="Tasks table"><table className={styles.taskTable}>
-        <thead><tr><th scope="col">Task name</th><th scope="col">Assigned personnel</th><th scope="col">Deadline</th><th scope="col">Status</th></tr></thead>
-        <tbody>{tasks.map((task) => <tr key={task.id}><td><strong>{task.title}</strong></td><td>{task.assignedName}</td><td>{displayDate(task.dueDate)}</td><td><div className={styles.taskStatuses}>{task.status === "awaiting_approval" && <span className={`${styles.taskStatus} ${styles.awaiting}`}>Awaiting approval</span>}{task.status === "needs_changes" && <span className={`${styles.taskStatus} ${styles.changes}`}>Needs changes</span>}<span className={`${styles.taskStatus} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span></div></td></tr>)}</tbody>
-      </table></div> : <p className={styles.emptyTasks}>No tasks are tracked for this client yet.</p>}
-      <Link className={styles.taskLink} href={`/deadlines?client=${id}`}>{role === "admin" ? "Add Task / View Deadlines" : "View Deadlines"}</Link>
-    </section>
+    {TASKS_AND_DEADLINES_ENABLED && (
+      <section className={`${styles.card} ${styles.tasksCard}`} aria-labelledby="tasks-heading">
+        <div className={styles.cardHeader}><span className={styles.icon}><ClipboardList size={20} aria-hidden="true" /></span><div><h2 id="tasks-heading">Tasks / Assignments</h2></div></div>
+        {tasksLoading ? <p className={styles.emptyTasks}>Loading tasks…</p> : tasksError ? <p className={styles.emptyTasks} role="alert">Tasks could not be loaded. Reload to try again.</p> : tasks.length ? <div className={styles.taskTableWrap} tabIndex={0} role="region" aria-label="Tasks table"><table className={styles.taskTable}>
+          <thead><tr><th scope="col">Task name</th><th scope="col">Assigned personnel</th><th scope="col">Deadline</th><th scope="col">Status</th></tr></thead>
+          <tbody>{tasks.map((task) => <tr key={task.id}><td><strong>{task.title}</strong></td><td>{task.assignedName}</td><td>{displayDate(task.dueDate)}</td><td><div className={styles.taskStatuses}>{task.status === "awaiting_approval" && <span className={`${styles.taskStatus} ${styles.awaiting}`}>Awaiting approval</span>}{task.status === "needs_changes" && <span className={`${styles.taskStatus} ${styles.changes}`}>Needs changes</span>}<span className={`${styles.taskStatus} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span></div></td></tr>)}</tbody>
+        </table></div> : <p className={styles.emptyTasks}>No tasks are tracked for this client yet.</p>}
+        <Link className={styles.taskLink} href={`/deadlines?client=${id}`}>{role === "admin" ? "Add Task / View Deadlines" : "View Deadlines"}</Link>
+      </section>
+    )}
     <RecordNotes target={{ kind: "client", id }} />
   </main>;
 }

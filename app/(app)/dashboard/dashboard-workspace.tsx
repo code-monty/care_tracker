@@ -14,7 +14,7 @@ function shiftDate(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, initialTaskStats, role, showAppointments }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; initialTaskStats: DashboardTaskStats; role: "admin" | "secretary" | "staff"; showAppointments: boolean }) {
+export default function DashboardWorkspace({ initialDate, initialCount, initialAppointments, initialDeadlines, initialDeadlineCount, initialTaskStats, role, showAppointments, showDeadlines = true }: { initialDate: string; initialCount: number; initialAppointments: { id: string; guest_name: string | null; scheduled_at: string; reason: string; clients: { full_name: string } | { full_name: string }[] | null }[]; initialDeadlines: DeadlineRecord[]; initialDeadlineCount: number; initialTaskStats: DashboardTaskStats; role: "admin" | "secretary" | "staff"; showAppointments: boolean; showDeadlines?: boolean }) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [activeCount] = useState(initialCount);
   const [appointments, setAppointments] = useState(initialAppointments);
@@ -42,15 +42,18 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
         <span className={styles.summaryArrow}><ArrowRight aria-hidden="true" size={20} /></span>
       </Link>
 
-      <div className={`${styles.statsGrid} ${role === "secretary" ? styles.statsGridThree : ""}`} role="region" aria-label={`${role === "admin" ? "Admin" : "My"} task statistics`}>
-        <section className={`${styles.statCard} ${styles.statUpcoming}`} aria-labelledby="stat-upcoming"><h2 id="stat-upcoming"><ListTodo aria-hidden="true" size={18} />Upcoming / Ongoing Tasks</h2><strong>{taskStats.upcoming}</strong><p>Tasks with upcoming deadlines</p></section>
-        <section className={`${styles.statCard} ${styles.statDueSoon}`} aria-labelledby="stat-due-soon"><h2 id="stat-due-soon"><Clock3 aria-hidden="true" size={18} />Due Soon Tasks</h2><strong>{taskStats.dueSoon}</strong><p>Due today or within 3 days</p></section>
-        <section className={`${styles.statCard} ${styles.statOverdue}`} aria-labelledby="stat-overdue"><h2 id="stat-overdue"><TriangleAlert aria-hidden="true" size={18} />Overdue Tasks</h2><strong>{taskStats.overdue}</strong><p>Tasks past their due date</p></section>
-        {role !== "secretary" && <section className={`${styles.statCard} ${styles.statApproval}`} aria-labelledby="stat-approval"><h2 id="stat-approval"><ClipboardCheck aria-hidden="true" size={18} />{role === "admin" ? "Approval Waiting by Staff" : "Awaiting Admin Approval"}</h2><strong>{taskStats.awaitingApproval}</strong><p>{role === "admin" ? "Staff submissions awaiting Admin review" : "Your submissions awaiting Admin review"}</p></section>}
-      </div>
+      {showDeadlines && (
+        <div className={`${styles.statsGrid} ${role === "secretary" ? styles.statsGridThree : ""}`} role="region" aria-label={`${role === "admin" ? "Admin" : "My"} task statistics`}>
+          <section className={`${styles.statCard} ${styles.statUpcoming}`} aria-labelledby="stat-upcoming"><h2 id="stat-upcoming"><ListTodo aria-hidden="true" size={18} />Upcoming / Ongoing Tasks</h2><strong>{taskStats.upcoming}</strong><p>Tasks with upcoming deadlines</p></section>
+          <section className={`${styles.statCard} ${styles.statDueSoon}`} aria-labelledby="stat-due-soon"><h2 id="stat-due-soon"><Clock3 aria-hidden="true" size={18} />Due Soon Tasks</h2><strong>{taskStats.dueSoon}</strong><p>Due today or within 3 days</p></section>
+          <section className={`${styles.statCard} ${styles.statOverdue}`} aria-labelledby="stat-overdue"><h2 id="stat-overdue"><TriangleAlert aria-hidden="true" size={18} />Overdue Tasks</h2><strong>{taskStats.overdue}</strong><p>Tasks past their due date</p></section>
+          {role !== "secretary" && <section className={`${styles.statCard} ${styles.statApproval}`} aria-labelledby="stat-approval"><h2 id="stat-approval"><ClipboardCheck aria-hidden="true" size={18} />{role === "admin" ? "Approval Waiting by Staff" : "Awaiting Admin Approval"}</h2><strong>{taskStats.awaitingApproval}</strong><p>{role === "admin" ? "Staff submissions awaiting Admin review" : "Your submissions awaiting Admin review"}</p></section>}
+        </div>
+      )}
 
-      <div className={styles.columns}>
-        {showAppointments && <section className={styles.panel} aria-labelledby="appointments-heading">
+      {(showAppointments || showDeadlines) && (
+        <div className={`${styles.columns} ${!(showAppointments && showDeadlines) ? styles.columnsSingle : ""}`}>
+          {showAppointments && <section className={styles.panel} aria-labelledby="appointments-heading">
           <div className={styles.panelHeading}>
             <div>
               <div className={styles.headingTitle}><CalendarClock aria-hidden="true" size={21} /><h2 id="appointments-heading">Upcoming Appointments</h2></div>
@@ -75,22 +78,23 @@ export default function DashboardWorkspace({ initialDate, initialCount, initialA
           <Link href="/appointments" className={styles.panelLink}>View all appointments <ArrowRight aria-hidden="true" size={18} /></Link>
         </section>}
 
-        <section className={styles.panel} aria-labelledby="deadlines-heading">
-          <div className={styles.panelHeading}>
-            <div>
-              <div className={styles.headingTitle}><Gavel aria-hidden="true" size={21} /><h2 id="deadlines-heading">Deadlines</h2></div>
-              <p className={styles.headingDescription}>Track client tasks and assignments.</p>
+          {showDeadlines && <section className={styles.panel} aria-labelledby="deadlines-heading">
+            <div className={styles.panelHeading}>
+              <div>
+                <div className={styles.headingTitle}><Gavel aria-hidden="true" size={21} /><h2 id="deadlines-heading">Deadlines</h2></div>
+                <p className={styles.headingDescription}>Track client tasks and assignments.</p>
+              </div>
+              <span className={styles.badge}>{deadlineCount} tracked</span>
             </div>
-            <span className={styles.badge}>{deadlineCount} tracked</span>
-          </div>
-          {deadlines.length ? <div className={styles.appointmentTableWrap}><table className={`${styles.appointmentTable} ${styles.deadlineTable}`}><thead><tr><th scope="col">Client</th><th scope="col">Assigned personnel</th><th scope="col">Task</th><th scope="col">Date</th><th scope="col">Status</th></tr></thead><tbody>{deadlines.map((task) => <tr key={task.id}><td><Link href={`/clients/${task.clientId}`}>{task.clientName}</Link></td><td>{task.assignedName}</td><td>{task.title}</td><td>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" }).format(new Date(`${task.dueDate}T12:00:00+08:00`))}</td><td><span className={`${styles.deadlineStatus} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span>{task.status === "awaiting_approval" && " · Awaiting approval"}{task.status === "needs_changes" && " · Needs changes"}</td></tr>)}</tbody></table></div> : <div className={styles.emptyState}>
-            <CalendarClock aria-hidden="true" size={30} />
-            <p className={styles.emptyTitle}>No deadlines to show</p>
-            <p>Open tasks for active clients will appear here.</p>
-          </div>}
-          <Link href="/deadlines" className={styles.panelLink}>View all deadlines <ArrowRight aria-hidden="true" size={18} /></Link>
-        </section>
-      </div>
+            {deadlines.length ? <div className={styles.appointmentTableWrap}><table className={`${styles.appointmentTable} ${styles.deadlineTable}`}><thead><tr><th scope="col">Client</th><th scope="col">Assigned personnel</th><th scope="col">Task</th><th scope="col">Date</th><th scope="col">Status</th></tr></thead><tbody>{deadlines.map((task) => <tr key={task.id}><td><Link href={`/clients/${task.clientId}`}>{task.clientName}</Link></td><td>{task.assignedName}</td><td>{task.title}</td><td>{new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" }).format(new Date(`${task.dueDate}T12:00:00+08:00`))}</td><td><span className={`${styles.deadlineStatus} ${styles[task.deadlineStatus.replace(" ", "").toLowerCase()]}`}>{task.deadlineStatus}</span>{task.status === "awaiting_approval" && " · Awaiting approval"}{task.status === "needs_changes" && " · Needs changes"}</td></tr>)}</tbody></table></div> : <div className={styles.emptyState}>
+              <CalendarClock aria-hidden="true" size={30} />
+              <p className={styles.emptyTitle}>No deadlines to show</p>
+              <p>Open tasks for active clients will appear here.</p>
+            </div>}
+            <Link href="/deadlines" className={styles.panelLink}>View all deadlines <ArrowRight aria-hidden="true" size={18} /></Link>
+          </section>}
+        </div>
+      )}
     </main>
   );
 }

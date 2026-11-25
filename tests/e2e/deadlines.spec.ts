@@ -2,6 +2,9 @@ import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { TASKS_AND_DEADLINES_ENABLED } from "../../lib/config/features";
+
+test.skip(!TASKS_AND_DEADLINES_ENABLED, "Tasks and deadlines are temporarily hidden");
 
 test("secretary task flows persist across deadlines, client detail, and dashboard", async ({ page }) => {
   test.setTimeout(180_000);

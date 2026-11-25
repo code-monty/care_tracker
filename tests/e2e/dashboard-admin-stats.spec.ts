@@ -2,6 +2,9 @@ import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { TASKS_AND_DEADLINES_ENABLED } from "../../lib/config/features";
+
+test.skip(!TASKS_AND_DEADLINES_ENABLED, "Tasks and deadlines are temporarily hidden");
 
 const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/)
   .filter((line) => /^[A-Z_]+=/.test(line))

@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { TASKS_AND_DEADLINES_ENABLED } from "../../lib/config/features";
 
 test("Staff can view records and submit only an assigned task", async ({ page }) => {
   test.setTimeout(120_000);
@@ -48,12 +49,17 @@ test("Staff can view records and submit only an assigned task", async ({ page })
     await page.context().addCookies([{ name: "step_up", value: `${payload}.${signature}`, url: "http://localhost:3000", httpOnly: true, sameSite: "Lax" }]);
 
     await page.goto("/clients");
+    await page.getByRole("searchbox", { name: "Search clients or attorneys" }).fill(clientName);
     await expect(page.getByText(clientName)).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Clients" })).toHaveCount(0);
     await page.goto(`/clients/${clientId}`);
     await expect(page.getByText(clientName).first()).toBeVisible();
     await expect(page.getByLabel("Client status")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "View Deadlines" })).toBeVisible();
+    if (TASKS_AND_DEADLINES_ENABLED) {
+      await expect(page.getByRole("link", { name: "View Deadlines" })).toBeVisible();
+    } else {
+      await expect(page.getByRole("heading", { name: "Tasks / Assignments" })).toHaveCount(0);
+    }
     await page.goto("/attorneys");
     await page.getByRole("searchbox", { name: "Search attorneys" }).fill(`Fake Lawyer ${suffix}`);
     await expect(page.getByText(`Fake Lawyer ${suffix}`)).toBeVisible();
@@ -61,21 +67,26 @@ test("Staff can view records and submit only an assigned task", async ({ page })
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole("button", { name: "Add Appointment" })).toHaveCount(0);
 
-    await page.goto(`/deadlines?client=${clientId}`);
-    await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
-    const mine = page.getByRole("row", { name: new RegExp(myTask) });
-    const others = page.getByRole("row", { name: new RegExp(otherTask) });
-    await expect(mine.getByRole("button", { name: "Submit for approval" })).toBeVisible();
-    await expect(others).toHaveCount(0);
-    await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
-    await expect(page.getByRole("button", { name: `Edit ${myTask}` })).toHaveCount(0);
-    page.once("dialog", (confirmation) => confirmation.accept());
-    await mine.getByRole("button", { name: "Submit for approval" }).click();
-    await expect(page.getByRole("row", { name: new RegExp(myTask) }).getByText("Awaiting approval")).toBeVisible();
-    const { data: submitted } = await admin.from("tasks").select("status").eq("id", myTaskId).single();
-    expect(submitted?.status).toBe("awaiting_approval");
-    const { data: open } = await admin.from("tasks").select("status").eq("id", otherTaskId).single();
-    expect(open?.status).toBe("open");
+    if (TASKS_AND_DEADLINES_ENABLED) {
+      await page.goto(`/deadlines?client=${clientId}`);
+      await expect(page.getByRole("button", { name: "Add Task" })).toHaveCount(0);
+      const mine = page.getByRole("row", { name: new RegExp(myTask) });
+      const others = page.getByRole("row", { name: new RegExp(otherTask) });
+      await expect(mine.getByRole("button", { name: "Submit for approval" })).toBeVisible();
+      await expect(others).toHaveCount(0);
+      await expect(page.getByText(/Showing 1.*of 1 tasks/)).toBeVisible();
+      await expect(page.getByRole("button", { name: `Edit ${myTask}` })).toHaveCount(0);
+      page.once("dialog", (confirmation) => confirmation.accept());
+      await mine.getByRole("button", { name: "Submit for approval" }).click();
+      await expect(page.getByRole("row", { name: new RegExp(myTask) }).getByText("Awaiting approval")).toBeVisible();
+      const { data: submitted } = await admin.from("tasks").select("status").eq("id", myTaskId).single();
+      expect(submitted?.status).toBe("awaiting_approval");
+      const { data: open } = await admin.from("tasks").select("status").eq("id", otherTaskId).single();
+      expect(open?.status).toBe("open");
+    } else {
+      await page.goto(`/deadlines?client=${clientId}`);
+      await expect(page).toHaveURL(/\/dashboard/);
+    }
   } finally {
     await admin.from("clients").update({ is_archived: true }).eq("id", clientId);
     await admin.from("profiles").update({ status: "disabled" }).in("id", [staffId, otherId]);

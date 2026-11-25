@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Clock3, Grid2X2, UserCog, ScrollText, Settings, DatabaseBackup } from "lucide-react";
+import { TASKS_AND_DEADLINES_ENABLED } from "@/lib/config/features";
 import styles from "./app-shell.module.css";
 
 export const adminLinks = [
@@ -38,7 +39,11 @@ export function AppNavigation({ variant, isAdmin, isStaff, expanded = false }: {
     <nav id={mobile ? undefined : "desktop-sidebar-navigation"} aria-label={mobile ? "Mobile navigation" : "Main navigation"} className={mobile ? styles.mobileNav : styles.railNav} data-expanded={!mobile && expanded ? "true" : undefined}>
       <div className={styles.railTop}>
         <div className={mobile ? styles.mobileLinks : styles.railGroup}>
-          {mainLinks.filter(({ href }) => !isStaff || href !== "/appointments").map(({ href, label, icon: Icon, asset }) => (
+          {mainLinks.filter(({ href }) => {
+            if (isStaff && href === "/appointments") return false;
+            if (!TASKS_AND_DEADLINES_ENABLED && href === "/deadlines") return false;
+            return true;
+          }).map(({ href, label, icon: Icon, asset }) => (
             <Link key={href} href={href} aria-label={label} title={label} aria-current={activeRoute(pathname, href) ? "page" : undefined} className={styles.navLink}>
               {asset ? <Image src={asset} alt="" width={21} height={26} /> : Icon ? <Icon aria-hidden="true" size={26} strokeWidth={2.3} /> : null}
               <span className={styles.navLabel}>{label}</span>
