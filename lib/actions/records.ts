@@ -6,7 +6,7 @@ import { requireActiveUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { addClientSchema, clientDetailsSchema, editClientSchema, editedBirthdateIsAllowed, type AttorneyChoice, type EditClientInput } from "@/lib/validation/client";
 import { getDashboardRecords, getDeadlineRecords, getDeadlinesPageRecords } from "@/lib/data/records";
-import { APPOINTMENT_SLOTS, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
+import { APPOINTMENT_SLOTS, isPassedAppointmentSlot, occupiedAppointmentSlots } from "@/lib/rules/appointment-slots";
 
 const uuid = z.uuid();
 const statusSchema = z.enum(["active", "inactive"]);
@@ -130,31 +130,29 @@ export async function saveAppointment(input: z.infer<typeof appointmentSchema>, 
   const value = appointmentSchema.parse(input);
   const db = await createClient();
   const appointmentId = id ? uuid.parse(id) : undefined;
-  if (!APPOINTMENT_SLOTS.some((slot) => slot.value === value.time)) {
-    if (!appointmentId) throw new Error("Choose an available one-hour appointment slot.");
+  const scheduled_at = new Date(`${value.date}T${value.time}:00+08:00`).toISOString();
+  let scheduleChanged = !appointmentId;
+  if (appointmentId) {
     const { data: existing, error: existingError } = await db.from("appointments").select("scheduled_at").eq("id", appointmentId).single();
     if (existingError || !existing) fail(existingError);
-    const unchanged = new Date(`${value.date}T${value.time}:00+08:00`).toISOString() === existing.scheduled_at;
-    if (!unchanged) throw new Error("Choose an available one-hour appointment slot.");
+    scheduleChanged = scheduled_at !== new Date(existing.scheduled_at).toISOString();
+  }
+  if (!APPOINTMENT_SLOTS.some((slot) => slot.value === value.time) && scheduleChanged) {
+    throw new Error("Choose an available one-hour appointment slot.");
+  }
+  if (scheduleChanged && isPassedAppointmentSlot(value.date, value.time)) {
+    return { error: "past_time" as const };
   }
   if (value.clientId) {
     const { data: client } = await db.from("clients").select("id").eq("id", value.clientId).eq("is_archived", false).single();
     if (!client) throw new Error("Select an available client.");
   }
-  const scheduled_at = new Date(`${value.date}T${value.time}:00+08:00`).toISOString();
   const payload = { client_id: value.clientId, guest_name: value.guestName, scheduled_at, reason: value.reason, status: value.status };
   const { data, error } = appointmentId ? await db.from("appointments").update(payload).eq("id", appointmentId).select("id").single() : await db.from("appointments").insert({ ...payload, created_by: user.id }).select("id").single();
   if (error?.code === "23P01") return { error: "slot_unavailable" as const };
   if (error || !data) fail(error);
   refresh();
   return { id: data.id as string };
-}
-
-export async function appointmentWarnings(date: string, time: string) {
-  await requireActiveUser();
-  const value = appointmentFields.pick({ date: true, time: true }).parse({ date, time });
-  const scheduled = new Date(`${value.date}T${value.time}:00+08:00`);
-  return { past: scheduled.getTime() < Date.now() };
 }
 
 export async function unavailableAppointmentSlots(date: string, exceptId?: string) {

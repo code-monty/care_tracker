@@ -4,21 +4,15 @@ import { FormEvent, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, CalendarDays, ChevronLeft, ChevronRight, Clock3, Eye, List, MoreVertical, Plus, Search, UserRound, X } from "lucide-react";
 import { Appointment, AppointmentStatus, SortKey, filterAppointments, getCalendarDays, sortAppointments } from "@/lib/rules/appointments";
 import styles from "./appointments.module.css";
-import { appointmentWarnings, saveAppointment } from "@/lib/actions/records";
+import { saveAppointment } from "@/lib/actions/records";
 import AppointmentTimeFields from "./appointment-time-fields";
 import type { NameMatch } from "@/lib/actions/records";
 import AppointmentClientPicker from "./appointment-client-picker";
+import { todayInManila } from "@/lib/rules/appointment-slots";
 
 const PAGE_SIZE = 6;
-const manilaTodayFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" });
 const displayDateFormatter = new Intl.DateTimeFormat("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
 const monthFormatter = new Intl.DateTimeFormat("en-PH", { month: "long", year: "numeric" });
-
-function todayInManila() {
-  const parts = manilaTodayFormatter.formatToParts(new Date());
-  const value = (type: string) => parts.find((part) => part.type === type)?.value;
-  return `${value("year")}-${value("month")}-${value("day")}`;
-}
 
 function formatDate(date: string) {
   return displayDateFormatter.format(new Date(`${date}T12:00:00+08:00`));
@@ -114,11 +108,13 @@ export default function AppointmentsWorkspace({ initialAppointments, canCreate, 
       status: "Pending",
     };
     if (!appointment.date || !appointment.time) { setSlotError("Select an available time."); return; }
-    const warning = await appointmentWarnings(appointment.date, appointment.time);
-    if (warning.past && !window.confirm("Appointment is in the past. Save anyway?")) return;
     try {
       const result = await saveAppointment({ clientId: client?.id ?? null, guestName, date: appointment.date, time: appointment.time, reason, status: "pending" });
-      if ("error" in result) { setSlotError("Appointment time is no longer available."); setAvailabilityVersion((value) => value + 1); return; }
+      if ("error" in result) {
+        setSlotError(result.error === "past_time" ? "Select a current or upcoming appointment date and time." : "Appointment time is no longer available.");
+        setAvailabilityVersion((value) => value + 1);
+        return;
+      }
       appointment.id = result.id;
     } catch { setSlotError("Unable to save appointment."); return; }
     const updatedAppointments = [...appointments, appointment];
@@ -154,11 +150,13 @@ export default function AppointmentsWorkspace({ initialAppointments, canCreate, 
     if (editManual && !guestName) { setClientError("Enter a guest name."); return; }
     if (!reason || !date || !time) return;
     const status = String(data.get("status")) as AppointmentStatus;
-    const warning = await appointmentWarnings(date, time);
-    if (warning.past && !window.confirm("Appointment is in the past. Save anyway?")) return;
     try {
       const result = await saveAppointment({ clientId: client?.id ?? null, guestName, date, time, reason, status: status.toLowerCase() as "pending" | "confirmed" | "cancelled" }, editing.id);
-      if ("error" in result) { setSlotError("Appointment time is no longer available."); setAvailabilityVersion((value) => value + 1); return; }
+      if ("error" in result) {
+        setSlotError(result.error === "past_time" ? "Select a current or upcoming appointment date and time." : "Appointment time is no longer available.");
+        setAvailabilityVersion((value) => value + 1);
+        return;
+      }
     } catch { setSlotError("Unable to update appointment."); return; }
     setAppointments((current) => current.map((item) => item.id === editing.id ? { ...item, clientName, clientId: client?.id, clientContact: client?.contact, clientEmail: client?.detail, reason, date, time, status } : item));
     setNotice({ message: "Appointment updated." });

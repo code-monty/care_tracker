@@ -70,7 +70,7 @@ Active Admin, Secretary, and Staff accounts can change their own name and passwo
 
 ## Staff record access
 
-Only Secretary books appointments; Admin and Secretary can reschedule them using nine one-hour Asia/Manila slots from 8:00 AM to 5:00 PM. Each date allows one active appointment per overlapping slot; cancelled appointments free their time. Existing appointments with other start times remain at their saved time until rescheduled. Past appointments still prompt for confirmation.
+Only Secretary books appointments; Admin and Secretary can reschedule them using nine one-hour Asia/Manila slots from 8:00 AM to 5:00 PM. Each date allows one active appointment per overlapping slot; cancelled appointments free their time. Existing appointments with other start times remain at their saved time until rescheduled. Past dates and passed Manila time slots cannot be selected for new or rescheduled appointments; existing historical appointments can still have non-schedule fields updated without rescheduling.
 
 Staff can view shared clients, attorneys, appointments, and tasks. Admin and Secretary can add or edit clients and attorneys, edit existing appointments and tasks, and change client and appointment status. Only Secretary can add appointments; only Admin can add tasks. Staff can submit only their own assigned open or returned tasks for Admin approval. Other Staff access, including client information export and queue operations, is unchanged.
 

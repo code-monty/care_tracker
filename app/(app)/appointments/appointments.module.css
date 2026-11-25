@@ -112,6 +112,11 @@
 .form input[type="date"], .form input[type="time"] { color-scheme: dark; }
 :global([data-theme="light"]) .form input[type="date"], :global([data-theme="light"]) .form input[type="time"] { color-scheme: light; }
 .formRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.historicalSchedule { display: grid; gap: .45rem; }
+.historicalSummary { display: grid; gap: .35rem; font-size: .78rem; font-weight: 600; }
+.historicalSummary strong { min-height: 46px; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .5rem; color: var(--text); background: var(--hover); font-size: .82rem; font-weight: 400; font-variant-numeric: tabular-nums; }
+.rescheduleButton { justify-self: start; color: var(--brand); font-size: .78rem; font-weight: 600; cursor: pointer; }
+.rescheduleButton:hover { text-decoration: underline; }
 .customReason { display: grid; gap: .45rem; }
 .customReason > button { justify-self: start; color: var(--brand); font-size: .78rem; font-weight: 600; cursor: pointer; }
 .customReason > button:hover { text-decoration: underline; }

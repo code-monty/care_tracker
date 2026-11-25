@@ -42,10 +42,13 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
     const part = (type: string) => parts.find((entry) => entry.type === type)?.value ?? "";
     return { date: `${part("year")}-${part("month")}-${part("day")}`, start: Number(part("hour")) * 60 + Number(part("minute")) };
   });
+  const manilaToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const manilaHour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Manila", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
   const monthDate = Array.from({ length: new Date(Date.UTC(year, month, 0)).getUTCDate() }, (_, index) =>
     `${year}-${String(month).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`).reverse().find((day) =>
-    [8, 9, 10, 11, 12, 13, 16].every((hour) => occupied.every((item) => item.date !== day || item.start + 60 <= hour * 60 || item.start >= (hour + 1) * 60)));
-  if (!monthDate) throw new Error("No date has seven free appointment slots for the browser fixture");
+    (day > manilaToday || (day === manilaToday && manilaHour < 16))
+    && [8, 9, 10, 11, 12, 13, 16].every((hour) => occupied.every((item) => item.date !== day || item.start + 60 <= hour * 60 || item.start >= (hour + 1) * 60)));
+  if (!monthDate) throw new Error("No upcoming date has seven free appointment slots for the browser fixture");
   const { error: monthlyError } = await admin.from("appointments").insert(Array.from({ length: 6 }, (_, index) => ({
     client_id: clients[index].id, scheduled_at: `${monthDate}T${String(index + 8).padStart(2, "0")}:00:00+08:00`, reason: "Fake monthly appointment", created_by: created.user.id,
   })));
@@ -63,6 +66,14 @@ test("appointment client browsing and in-place Other reason", async ({ page }) =
   await page.goto("/appointments");
   await page.getByRole("button", { name: "Add Appointment" }).first().click();
   const add = page.getByRole("dialog", { name: "Add appointment" });
+  const dateInput = add.locator('input[name="date"]');
+  await expect(dateInput).toHaveAttribute("min", manilaToday);
+  const timeSelect = add.getByRole("combobox", { name: "Appointment time" });
+  await expect(timeSelect).toBeEnabled({ timeout: 20_000 });
+  for (let hour = 8; hour <= 16; hour++) {
+    const option = timeSelect.locator(`option[value="${String(hour).padStart(2, "0")}:00"]`);
+    if (hour <= manilaHour) await expect(option).toBeDisabled();
+  }
   const client = add.getByRole("combobox", { name: "Client *" });
   await client.click();
   const list = add.getByRole("listbox", { name: "Client * matches" });

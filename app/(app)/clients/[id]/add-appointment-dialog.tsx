@@ -2,18 +2,11 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { CalendarPlus, X } from "lucide-react";
-import { appointmentWarnings, saveAppointment } from "@/lib/actions/records";
+import { saveAppointment } from "@/lib/actions/records";
 import AppointmentTimeFields from "../../appointments/appointment-time-fields";
 import formStyles from "../../appointments/appointments.module.css";
 import styles from "./add-appointment-dialog.module.css";
-
-const manilaDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" });
-
-function todayInManila() {
-  const parts = manilaDate.formatToParts(new Date());
-  const value = (type: string) => parts.find((part) => part.type === type)?.value;
-  return `${value("year")}-${value("month")}-${value("day")}`;
-}
+import { todayInManila } from "@/lib/rules/appointment-slots";
 
 export default function AddClientAppointmentDialog({ clientId, clientName, onClose, onSaved }: {
   clientId: string; clientName: string; onClose: () => void; onSaved: () => void;
@@ -41,11 +34,9 @@ export default function AddClientAppointmentDialog({ clientId, clientName, onClo
     setSaving(true);
     setError("");
     try {
-      const warning = await appointmentWarnings(date, time);
-      if (warning.past && !window.confirm("Appointment is in the past. Save anyway?")) return;
       const result = await saveAppointment({ clientId, guestName: null, date, time, reason, status: "pending" });
       if ("error" in result) {
-        setError("Appointment time is no longer available.");
+        setError(result.error === "past_time" ? "Select a current or upcoming appointment date and time." : "Appointment time is no longer available.");
         setAvailabilityVersion((value) => value + 1);
         return;
       }

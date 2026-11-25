@@ -64,6 +64,8 @@ test("client detail books a fixed-client appointment for Secretary only", async 
       await expect(form.getByText(clientName)).toBeVisible();
       await expect(form.getByRole("combobox", { name: /Client/ })).toHaveCount(0);
       await expect(form.getByRole("button", { name: "Enter name manually" })).toHaveCount(0);
+      const todayInManila = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      await expect(form.locator('input[name="date"]')).toHaveAttribute("min", todayInManila);
       await form.locator('input[name="date"]').fill(date);
       const time = form.getByRole("combobox", { name: "Appointment time" });
       await expect(time).toBeEnabled({ timeout: 20_000 });
