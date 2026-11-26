@@ -7,6 +7,9 @@ describe("activity log presentation", () => {
     expect(activityDescription({ action: "assign", entity_type: "tasks" })).toBe("Assigned task");
     expect(activityDescription({ action: "update", entity_type: "notes" })).toBe("Updated note");
     expect(activityDescription({ action: "delete", entity_type: "note_replies" })).toBe("Deleted note reply");
+    expect(activityDescription({ action: "complete", entity_type: "client_procedures" })).toBe("Completed client procedure");
+    expect(activityDescription({ action: "status_change", entity_type: "client_procedures" })).toBe("Reopened client procedure");
+    expect(activityDescription({ action: "pin", entity_type: "client_procedure_notes" })).toBe("Pinned procedure note");
   });
   it("shows Manila time in 12-hour format without seconds", () => {
     expect(formatLogDateTime("2026-10-28T05:53:03.123Z").time).toBe("1:53 PM");

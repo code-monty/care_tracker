@@ -1,6 +1,6 @@
 import type { LogRow } from "@/lib/data/activity-logs";
 
-const nouns: Record<string, string> = { clients: "client", attorneys: "attorney", respondents: "respondent", appointments: "appointment", tasks: "task", profiles: "user", notes: "note", note_replies: "note reply" };
+const nouns: Record<string, string> = { clients: "client", attorneys: "attorney", respondents: "respondent", appointments: "appointment", tasks: "task", profiles: "user", notes: "note", note_replies: "note reply", client_procedures: "client procedure", client_procedure_notes: "procedure note" };
 const verbs: Record<string, string> = { create: "Added", update: "Updated", delete: "Deleted", pin: "Pinned", unpin: "Unpinned", profile_picture_update: "Updated picture for", archive: "Archived", restore: "Restored", approve: "Approved", role_change: "Changed role for", deactivate: "Deactivated", reactivate: "Reactivated", email_change: "Changed email for", password_reset: "Reset password for", password_change: "Changed password for", export: "Exported" };
 
 export function activityDescription(row: Pick<LogRow, "action" | "entity_type">) {
@@ -8,8 +8,10 @@ export function activityDescription(row: Pick<LogRow, "action" | "entity_type">)
   if (row.action === "logout") return "Signed out";
   if (row.action === "failed_login") return "Failed sign-in attempt";
   if (row.action === "complete" && row.entity_type === "tasks") return "Completed task";
+  if (row.action === "complete" && row.entity_type === "client_procedures") return "Completed client procedure";
   if (row.action === "assign" && row.entity_type === "tasks") return "Assigned task";
   if (row.action === "status_change" && row.entity_type === "tasks") return "Changed task review status";
+  if (row.action === "status_change" && row.entity_type === "client_procedures") return "Reopened client procedure";
   if (row.action === "status_change") return `Changed ${nouns[row.entity_type ?? ""] ?? "record"} status`;
   const verb = verbs[row.action] ?? "Changed";
   const noun = row.entity_type === "activity_log" ? "activity logs" : nouns[row.entity_type ?? ""] ?? "record";

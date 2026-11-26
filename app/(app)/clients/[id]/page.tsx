@@ -13,6 +13,7 @@ import styles from "./client-detail.module.css";
 import actionStyles from "./record-actions.module.css";
 import EditClientDialog from "./edit-client-dialog";
 import AddClientAppointmentDialog from "./add-appointment-dialog";
+import ClientProcedures from "@/components/client-procedures";
 import RecordNotes from "@/components/record-notes";
 
 function displayDate(value: string) {
@@ -72,6 +73,7 @@ export default function ClientDetailPage() {
         <section className={styles.card} aria-labelledby="status-heading"><div className={styles.cardHeader}><span className={styles.icon}><CalendarDays size={20} aria-hidden="true" /></span><div><h2 id="status-heading">Status</h2></div></div>{role === "staff" ? <p>{client.status}</p> : <><label className={styles.statusControl} htmlFor="client-status">Client status<select id="client-status" value={client.status} onChange={(event) => setStatus(client.id, event.target.value as ClientStatus)}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label><p className={styles.statusHint}>Changes are saved to the client record.</p></>}</section>
       </div>
     </div>
+    <ClientProcedures clientId={id} />
     {TASKS_AND_DEADLINES_ENABLED && (
       <section className={`${styles.card} ${styles.tasksCard}`} aria-labelledby="tasks-heading">
         <div className={styles.cardHeader}><span className={styles.icon}><ClipboardList size={20} aria-hidden="true" /></span><div><h2 id="tasks-heading">Tasks / Assignments</h2></div></div>

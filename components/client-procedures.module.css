@@ -1,0 +1,493 @@
+.card {
+  min-width: 0;
+  margin-top: 1.5rem;
+  padding: 1.4rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: .75rem;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px #0000000d;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.cardHeader h2 {
+  font-size: 1.13rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.cardHeader p {
+  margin-top: .2rem;
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: .65rem;
+  color: var(--brand);
+  background: var(--hover);
+}
+
+.error {
+  margin: .85rem 0 0;
+  color: #e36060;
+  font-size: .85rem;
+}
+
+.empty {
+  padding: 1.25rem 0 .25rem;
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.tableWrap {
+  width: 100%;
+  margin-top: .25rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: .86rem;
+}
+
+.table th,
+.table td {
+  padding: 1rem .75rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table th {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 0;
+  width: 18%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2),
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 15%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  width: 8%;
+  text-align: center;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0;
+  width: 44%;
+}
+
+.nameCell strong {
+  display: inline-block;
+  padding-top: .35rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.dateInput {
+  width: 100%;
+  max-width: 10.5rem;
+  min-height: 2.35rem;
+  padding: .4rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: .55rem;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 88%, var(--hover));
+  color-scheme: dark;
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+:global([data-theme="light"]) .dateInput {
+  color-scheme: light;
+}
+
+.dateInput:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.readOnlyDate,
+.emptyDate {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  color: var(--text);
+  font-size: .83rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyDate {
+  color: var(--muted);
+}
+
+.completedDate {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 2.35rem;
+  padding: .3rem .65rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
+  border-radius: .55rem;
+  color: var(--brand);
+  background: color-mix(in srgb, var(--hover) 72%, var(--surface));
+  font-size: .8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.statusCheckboxLabel {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 2.35rem;
+  cursor: pointer;
+}
+
+.statusCheckboxInput {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.statusCheckboxInput:disabled {
+  cursor: not-allowed;
+}
+
+.statusCheckboxBox {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 1.5px solid var(--line);
+  border-radius: .35rem;
+  background: var(--surface);
+  color: #fff;
+  pointer-events: none;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.statusChecked {
+  border-color: #006948;
+  background: #006948;
+}
+
+.statusCheckboxInput:focus-visible + .statusCheckboxBox {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.statusCheckboxInput:disabled + .statusCheckboxBox {
+  opacity: .65;
+}
+
+.statusText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.notesStack {
+  display: grid;
+  gap: .55rem;
+}
+
+.noteCard {
+  padding: .7rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: .55rem;
+  background: color-mix(in srgb, var(--surface) 88%, var(--hover));
+  box-shadow: 0 1px 2px #00000014;
+}
+
+.pinnedNoteCard {
+  border-color: #5ba98c;
+  box-shadow: 0 0 0 1px #5ba98c36, 0 2px 8px #00000017;
+}
+
+.noteMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .45rem;
+  font-size: .78rem;
+}
+
+.noteMeta strong {
+  font-weight: 650;
+}
+
+.noteMeta time {
+  color: var(--muted);
+  font-size: .73rem;
+}
+
+.pinnedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-left: auto;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  color: var(--brand);
+  background: var(--hover);
+  font-size: .68rem;
+  font-weight: 600;
+}
+
+.noteBody {
+  margin-top: .45rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: .83rem;
+  line-height: 1.45;
+}
+
+.noteActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .55rem;
+}
+
+.noteActionBtn,
+.addNoteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: .32rem;
+  min-height: 1.9rem;
+  padding: .25rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: .45rem;
+  background: var(--surface);
+  color: var(--text);
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.noteActionBtn:hover:not(:disabled),
+.addNoteBtn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.noteActionActive {
+  border-color: #5ba98c;
+  color: var(--brand);
+}
+
+.noteDeleteBtn {
+  border-color: color-mix(in srgb, #e36060 45%, var(--line));
+  color: #e36060;
+}
+
+.noteDeleteBtn:hover:not(:disabled) {
+  background: #e360601a;
+}
+
+.noteActionBtn:disabled,
+.addNoteBtn:disabled,
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.noteForm {
+  display: grid;
+  gap: .5rem;
+  padding: .75rem;
+  border: 1px solid var(--line);
+  border-radius: .55rem;
+  background: var(--surface);
+}
+
+.noteForm label {
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.noteForm textarea {
+  width: 100%;
+  padding: .6rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--surface);
+  color: var(--text);
+  font-size: .83rem;
+  resize: vertical;
+}
+
+.warning {
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: .4rem .8rem;
+  border-radius: .5rem;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  color: #fff;
+  background: #006948;
+  box-shadow: 0 4px 14px #00694830;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: #00543a;
+}
+
+.secondaryBtn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.card :is(button, input, textarea):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1024px) {
+  .table th,
+  .table td {
+    padding: .85rem .5rem;
+  }
+
+  .table th {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 900px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    padding: .9rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .table td,
+  .table td:first-child,
+  .table td:nth-child(2),
+  .table td:nth-child(3),
+  .table td:nth-child(4),
+  .table td:last-child {
+    display: grid;
+    grid-template-columns: 8.2rem minmax(0, 1fr);
+    align-items: start;
+    gap: .5rem .75rem;
+    width: 100%;
+    padding: .4rem 0;
+    border-bottom: 0;
+    text-align: left;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    padding-top: .3rem;
+    color: var(--muted);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .table td.notesCell {
+    grid-template-columns: 1fr;
+  }
+
+  .statusCheckboxLabel {
+    justify-content: flex-start;
+  }
+
+  .statusText {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+}

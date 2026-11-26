@@ -185,13 +185,15 @@ On November 8, 2026, the owner approved restoring an archived client without fir
 
 On November 19, 2026, the owner approved editing and deleting client and attorney notes and replies. Active Admin, Secretary, and Staff users may edit or delete their own top-level notes and replies, and active Admins may edit or delete any note or reply. Top-level notes that have replies cannot be deleted until their replies are removed; deleting a reply-free top-level note removes any pin on that note. Author attribution and creation timestamps remain immutable, and note or reply edits and deletions write metadata-only Activity Log events. This supersedes the earlier insert-only note restriction.
 
+On November 26, 2026, the owner added the Procedures / Requirements checklist on the Client Information page (`Battery of Exams`, `Marital History`, `Witnesses`, `Home Visit`, `Letter of Invitation`, and `Judicial Affidavit`). Admin and Secretary may enter manual `Date Created` values and toggle completion status (`Date Completed` is hidden until checked, auto-populated in `Asia/Manila` by the database when checked, and cleared when unchecked); Staff has read-only date/status access. All active users (Admin, Secretary, and Staff) may add, pin/unpin, and edit/delete their own procedure notes (Admin may edit/delete any procedure note).
+
 **Defaults in effect (pending client confirmation):** all Staff can see all clients (Q-03). Accounts are admin-created only, with no open sign-up (Q-04). If a "Sign Up" button remains in the UI, it only creates a `Pending` account that RLS blocks from all data (relabel it "Request access").
 
 ---
 
 ## 7. Data model and business rules
 
-**Entities:** `profiles` (role, status), `clients`, `respondents`, `attorneys`, `appointments`, `tasks`, `notes`, `activity_log`, `queue_entries`, `settings`, `backup_runs`.
+**Entities:** `profiles` (role, status), `clients`, `respondents`, `attorneys`, `appointments`, `tasks`, `notes`, `client_procedures`, `client_procedure_notes`, `client_procedure_note_pins`, `activity_log`, `queue_entries`, `settings`, `backup_runs`.
 
 Key relationships: a client has **one** respondent and **one** attorney; an attorney has **many** clients; a client has many appointments, tasks and notes. `profiles.id` equals the Supabase Auth user id.
 
